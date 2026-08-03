@@ -59,6 +59,69 @@
   display: none !important;
 }
 
+/* ---------------------------------------------------------------------------
+ * TOP-LEVEL NAV: CAPS, RULED, AND COLLAPSED
+ *
+ *   PRODUCTION
+ *   ─────────────
+ *   SAFETY
+ *   ─────────────
+ *   DOC SPECS
+ *
+ * The sidebar's job is to answer "what kinds of thing are on this site" before
+ * it answers "which page." Caps and a rule give the top level a different
+ * WEIGHT from everything nested under it, so the shape of the site is legible
+ * at a glance instead of being one undifferentiated list of links.
+ *
+ * ⚠️ THE RULE IS A BORDER, NOT AN UNDERLINE, and that distinction is the whole
+ * reason it is safe. Michael asked for these underlined; a `text-decoration`
+ * underline on a web page reads as a link, and these are labels. A bottom
+ * BORDER on the row gives the same separation and does not lie about being
+ * clickable. Restored 2026-08-03 after I removed it and argued the point --
+ * the objection was to underlined TEXT, and this was never that.
+ *
+ * ⚠️ `text-transform` ONLY -- the underlying titles are untouched. A page still
+ * knows itself as "Doc Specs", search still matches it, and doc-index.json
+ * still publishes the real title for sibling sites to resolve against.
+ * Shouting is a presentation choice and it stops at the stylesheet.
+ *
+ * Depth is targeted with `> .md-nav__list > .md-nav__item`, i.e. direct
+ * children of the PRIMARY nav only. A descendant selector would cap every
+ * nested folder too and the distinction would be lost.
+ *
+ * The collapse is not here: it comes from NOT enabling `navigation.sections`
+ * in mkdocs.yml, which is where that note lives.
+ * ------------------------------------------------------------------------ */
+.md-nav--primary > .md-nav__list > .md-nav__item > .md-nav__link,
+.md-nav--primary > .md-nav__list > .md-nav__item > label.md-nav__link {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--dr-ink);
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--dr-rule);
+  margin-bottom: 0.2rem;
+}
+
+/* Nested items stay sentence case at normal weight. Stated explicitly rather
+ * than left to inheritance, because the rule above is a big enough hammer that
+ * the next person should be able to see exactly where it stops. */
+.md-nav--primary .md-nav .md-nav__link {
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+  border-bottom: 0;
+}
+
+/* The section a reader is inside gets the accent, so the caps row doubles as a
+ * position indicator rather than only a label. */
+.md-nav--primary > .md-nav__list > .md-nav__item--active > .md-nav__link,
+.md-nav--primary > .md-nav__list > .md-nav__item--active > label.md-nav__link {
+  color: var(--dr-accent);
+  border-bottom-color: var(--dr-accent);
+}
+
 /* The lede.
  * The first paragraph after the H1 is also what a search result shows, so it
  * is styled as a real element rather than left to the author to fake with
@@ -153,23 +216,13 @@
  *    are tracing (R1zAA) and the header is what the cell you land on MEANS.
  *    Scroll far enough right without them and every value is an orphan.
  *
- * 🐛 BOTH OF THOSE WERE FALSE UNTIL 2026-08-03, and the reason is worth the
- * paragraph because it will come back if anyone reverts these three rules.
- *
- * Material styles `.md-typeset table:not([class])` with `display: block` plus
- * its own `overflow: auto`, so wide tables get their own scrollbar. Our table
- * shipped with no class, so it was caught by that rule, and:
- *
- *   - `display: block` stops the element being a table. A `position: sticky`
- *     cell needs a table row to stick WITHIN; inside a block it has no
- *     containing context and simply does nothing. No error, no warning, just
- *     a header that scrolls away.
- *   - the table then owned a SECOND scroll container nested inside `.dr-data`,
- *     so even correct sticky rules would have been measuring the wrong box.
- *
- * Three defences, because one is not enough: the table now carries a class so
- * `:not([class])` cannot match it, `display: table` is forced anyway, and
- * Material's JS scroll wrapper is neutralised if it ever appears around one.
+ * 🐛 BOTH OF THOSE WERE FALSE UNTIL 2026-08-03. Material styles
+ * `.md-typeset table:not([class])` with `display: block` so wide tables get
+ * their own scrollbar. Our table shipped with no class, so `display: block`
+ * stopped it being a table -- and a `position: sticky` cell inside a block has
+ * no row context to stick within, so it silently did nothing. Three defences:
+ * the table carries a class, `display: table` is forced anyway, and Material's
+ * JS scroll wrapper is neutralised if it appears.
  * ------------------------------------------------------------------------ */
 .dr-data {
   margin: 1.4rem 0;
@@ -180,9 +233,6 @@
   background: var(--dr-surface);
 }
 
-/* Defence three: if Material's table JS wraps ours, the wrapper must not
- * become a scroll container of its own -- a sticky cell can only stick to the
- * NEAREST scrolling ancestor, and that has to be .dr-data. */
 .dr-data .md-typeset__scrollwrap,
 .dr-data .md-typeset__table {
   margin: 0;
@@ -193,7 +243,7 @@
 
 .md-typeset .dr-data__table,
 .dr-data__table {
-  display: table;          /* defence two: never a block, whatever Material says */
+  display: table;
   border-collapse: separate;
   border-spacing: 0;
   width: max-content;
@@ -230,8 +280,6 @@
   min-width: 6rem;
   max-width: 12rem;
 }
-/* Column one is the identifier, so it survives a horizontal scroll. It needs
- * an opaque background or the scrolled cells show through underneath it. */
 .dr-data__table tbody td:first-child {
   position: sticky;
   left: 0;
@@ -240,14 +288,11 @@
   font-weight: 600;
   color: var(--dr-accent);
 }
-/* The corner cell sits above both, so it needs the highest layer of the four. */
 .dr-data__table thead th:first-child {
   position: sticky;
   left: 0;
   z-index: 4;
 }
-/* A section row (RACK 2, ML PANEL 1) is a heading inside the sheet, not a
- * record. It spans, and it stays put on the left like the identifiers do. */
 .dr-data__table .dr-data__section th {
   position: sticky;
   left: 0;
@@ -282,17 +327,9 @@
  * coming rather than as something broken.
  *
  * ⚠️ TONED DOWN 2026-08-03 AND IT SHOULD STAY DOWN. It was strikethrough plus
- * an alarm-red `[broken link]` badge, sharing the `danger` colour. On a real
- * page -- an inventory index where most entries were simply not written yet --
- * eight of nine lines rendered as struck-out red and the page read as a
- * catastrophe instead of as a work in progress. Michael: *"less obtrusive, no
- * strikethrough anywhere, more disconnected maroon."*
- *
- * So: no line through the text, a desaturated maroon of its own (`dead` is now
- * a separate token from `danger`, deliberately), and a small monospace `[err]`
- * carrying the detail in its tooltip. Legible at a glance, invisible at a
- * distance -- which is the correct weight for a note that concerns the author
- * far more than the reader.
+ * an alarm-red badge sharing the `danger` colour, and on a real inventory index
+ * where most entries were simply not written yet, eight of nine lines rendered
+ * struck out -- the page read as a catastrophe instead of a work in progress.
  * ------------------------------------------------------------------------ */
 .docrender-dead {
   color: var(--dr-dead);
