@@ -1,0 +1,24 @@
+# build output
+site/
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+
+# editor / os
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# NOT ignored on purpose: the cross-repo link cache.
+# It is COMMITTED so a build can still resolve sibling-site links when a peer
+# site is unreachable. See the architecture README, cross-repo referencing.
+
+# ⚠️ This is NOT a data guard. Ignoring a file does not make this site private:
+# a Pages site is public even from a private repo. See README section 2.
