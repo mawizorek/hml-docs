@@ -1,0 +1,9 @@
+# Intentionally present and effectively empty.
+#
+# GitHub Pages runs every commit through Jekyll by default, and Jekyll treats
+# {{ }} and {% %} as template tags. A Jekyll build FAILS SILENTLY, and a failed
+# build makes Pages keep serving the LAST SUCCESSFUL build for the WHOLE SITE.
+# Symptom: the commit is correct on main, the live URL is frozen, and it looks
+# like a cache problem but is not.
+#
+# This file disables Jekyll so files deploy verbatim. NEVER DELETE IT.
