@@ -85,6 +85,13 @@
  * still publishes the real title for sibling sites to resolve against.
  * Shouting is a presentation choice and it stops at the stylesheet.
  *
+ * ⚠️ AND IT STOPS AT THE STYLESHEET BUT NOT AT THE ELEMENT: `text-transform`,
+ * `letter-spacing`, `font-weight` and `font-size` are all INHERITED, so
+ * anything injected INSIDE one of these rows gets bold 700 caps for free.
+ * That is exactly what happened to the router's revealed menu in
+ * doc-render-engine#48 -- see assets/router.css, which now declares its own
+ * typography rather than trusting the DOM.
+ *
  * Depth is targeted with `> .md-nav__list > .md-nav__item`, i.e. direct
  * children of the PRIMARY nav only. A descendant selector would cap every
  * nested folder too and the distinction would be lost.
@@ -102,6 +109,34 @@
   padding-bottom: 0.4rem;
   border-bottom: 1px solid var(--dr-rule);
   margin-bottom: 0.2rem;
+}
+
+/* 🐛 A DOUBLE RULE BETWEEN TOP-LEVEL ROWS, ON PHONES ONLY (found 2026-08-04 by
+ * Michael, from a screenshot: "not sure where the double line between root tree
+ * headers came from").
+ *
+ * NEITHER LINE WAS A BUG ON ITS OWN, WHICH IS WHY NOBODY SAW IT COMING.
+ * Material's DRAWER draws its own separators -- inside the mobile breakpoint
+ * `.md-nav--primary .md-nav__item` carries a `border-top`, which is why
+ * Material's own `_nav.scss` needs a `> :first-child { border-top: 0 }` reset
+ * next to it. A reset like that only exists if every sibling has a border. Then
+ * the rule above adds a `border-bottom` to the link, and the 0.2rem
+ * `margin-bottom` sits between the two: line, gap, line, on every row.
+ *
+ * ⚠️ DESKTOP DRAWS NEITHER OF MATERIAL'S BORDERS, so the sidebar we look at
+ * while building was never wrong. A style collision that only exists at one
+ * breakpoint is invisible to whoever is not on that device -- and every review
+ * of this nav happened on a laptop.
+ *
+ * OURS WINS because ours carries meaning: it turns the accent colour on for the
+ * section the reader is inside (next rule down), so it is a position indicator
+ * rather than a divider. Material's is only a divider, and we already have one.
+ *
+ * Scoped to DIRECT children so nested items keep Material's separators, which
+ * are doing a real job inside a long folder on a small screen.
+ * ------------------------------------------------------------------------ */
+.md-nav--primary > .md-nav__list > .md-nav__item {
+  border-top: 0;
 }
 
 /* Nested items stay sentence case at normal weight. Stated explicitly rather
