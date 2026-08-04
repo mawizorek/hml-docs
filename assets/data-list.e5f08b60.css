@@ -62,26 +62,54 @@
     min-width: 0;
   }
 
-  /* THE SUMMARY. The id reads as an eyebrow and the other key columns as the line
-   * you actually scan. That hierarchy is what a list needs and a table does not:
-   * in a grid the header supplies it, and here the header is gone. */
-  .md-typeset .dr-data--list .dr-data__table td.dr-key.dr-col--id,
-  .dr-data--list .dr-data__table td.dr-key.dr-col--id {
+  /* ------------------------------------------------------------------------
+   * THE SUMMARY: an eyebrow, then the line you actually scan.
+   *
+   * That hierarchy is what a list needs and a table does not -- in a grid the
+   * header supplies it, and here the header is gone.
+   *
+   * ⭐ THE EYEBROW IS THE FIRST KEY COLUMN, WHATEVER TYPE IT IS, and the
+   * correction matters more than the rule. This first read `.dr-key.dr-col--id`,
+   * which welded "is this an identifier" (a TYPE question) to "is this the small
+   * line above the title" (a POSITION question) -- the exact conflation the
+   * two-axis header grammar was built to prevent, committed inside the PR that
+   * argued for it.
+   *
+   * It looked right because the first two sheets to adopt list mode both happen
+   * to lead with an id. The revision log does not: its first key column is a
+   * TIMESTAMP, and the only way to get an eyebrow was to declare `when::id`,
+   * which is false about the data. ⚑ A stylesheet that pushes an author toward a
+   * wrong declaration to buy a visual result has inverted the whole design.
+   *
+   * `.dr-key ~ .dr-key` is every key cell with another key cell before it, so
+   * the first one keeps the eyebrow and the rest take the title. GENERAL sibling,
+   * not adjacent, because a detail cell can sit between two keys and must not
+   * break the chain.
+   * --------------------------------------------------------------------- */
+  .md-typeset .dr-data--list .dr-data__table td.dr-key,
+  .dr-data--list .dr-data__table td.dr-key {
     position: static;
     box-shadow: none;
     background: transparent;
     padding-top: 11px;
+    padding-bottom: 0;
+    font-family: var(--dr-data-font, var(--dr-font-mono));
     font-size: 0.72rem;
+    font-weight: 600;
     letter-spacing: 0.08em;
+    text-align: left;
     color: var(--dr-accent);
   }
-  .md-typeset .dr-data--list .dr-data__table td.dr-key:not(.dr-col--id),
-  .dr-data--list .dr-data__table td.dr-key:not(.dr-col--id) {
+
+  .md-typeset .dr-data--list .dr-data__table td.dr-key ~ td.dr-key,
+  .dr-data--list .dr-data__table td.dr-key ~ td.dr-key {
+    padding-top: 0;
     padding-bottom: 11px;
     font-family: var(--dr-data-prose-font, var(--dr-font-body));
     font-size: 0.95rem;
+    font-weight: 400;
+    letter-spacing: normal;
     line-height: 1.35;
-    text-align: left;
     color: var(--dr-ink);
     text-wrap: pretty;
   }
@@ -168,6 +196,15 @@
   .dr-data__toggle:focus-visible {
     outline: 2px solid var(--dr-accent);
     outline-offset: -3px;
+  }
+
+  /* ⚠️ A LIST WITH NO DETAILS IS A CONTROL THAT DOES NOTHING. If every column in
+   * a sheet is `.key` -- or `hide:` removed the ones that were not -- the chevron
+   * opens an empty row. Hidden rather than left as a dead affordance; the rows
+   * still read correctly as a list. `:not(:has(...))` degrades safely on an engine
+   * without :has, where the chevron simply stays, which is the old behaviour. */
+  .dr-data--list .dr-data__table tr:not(:has(td.dr-detail)) .dr-data__more {
+    display: none;
   }
 
   /* A section band still spans the sheet, but there are no columns left to span,
