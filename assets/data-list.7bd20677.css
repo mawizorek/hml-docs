@@ -1,0 +1,182 @@
+/* LIST MODE -- when the table stops being a table.
+ *
+ *     THTR 123
+ *     Intro to Lighting for the Stage             v
+ *     ------------------------------------------------
+ *     CREDITS    4
+ *     LAB        section
+ *     ENGL       124
+ *
+ * Split out of data.css on 2026-08-04, an hour after data.css was itself split
+ * out of base.css. That is not thrash: the first split separated the TABLE from
+ * everything else, and this one separates the table from a feature layer only
+ * some sheets use -- the same shape as router.css. data.css was 19.2KB, past the
+ * warn line, and an attempted trim recovered 22 bytes, which is the clearest
+ * possible evidence that prose was not the problem.
+ *
+ * APPLIES ONLY TO .dr-data--list, which docrender/table.py sets only when a
+ * column declared `.key` in the sheet's own header:
+ *
+ *     thtr::id.key    slug    title::.key    credits::num
+ *
+ * A sheet that declares nothing keeps the sideways scroll it has today, so
+ * shipping this cannot re-shape a page nobody touched (DL J15).
+ *
+ * WARNING: THE DETAILS HIDE ONLY UNDER html.dr-data-js, AND THAT IS LOAD-BEARING
+ * TWICE OVER. A reader with no JavaScript gets the whole table rather than a list
+ * that cannot be opened -- fail OPEN, because a list nobody can expand looks like
+ * data loss and reports nothing. And the class is set by an inline script during
+ * PARSE, not by data.js, because setting it from a deferred sheet would let the
+ * detail rows paint and then vanish on every load. That flash is PR #49, the same
+ * day, one feature over.
+ *
+ * A CONTAINER QUERY, NOT A VIEWPORT ONE. The table restructures when its own box
+ * runs out of room, so it does the right thing in a narrow column or a split view
+ * and not only on a phone. .dr-data declares the container in data.css.
+ * ------------------------------------------------------------------------- */
+
+@container (max-width: 45em) {
+  .dr-data--list .dr-data__table,
+  .dr-data--list .dr-data__table tbody,
+  .dr-data--list .dr-data__table tr,
+  .dr-data--list .dr-data__table td {
+    display: block;
+    width: auto;
+    max-width: none;
+  }
+  .dr-data--list .dr-data__table { min-width: 0; }
+  .dr-data--list .dr-data__table thead { display: none; }
+
+  .dr-data--list .dr-data__table tr {
+    position: relative;
+    border-bottom: 1px solid var(--dr-rule);
+  }
+  .dr-data--list .dr-data__table tr:last-child { border-bottom: 0; }
+
+  .md-typeset .dr-data--list .dr-data__table td,
+  .dr-data--list .dr-data__table td {
+    border: 0;
+    padding: 2px 46px 2px 14px;
+    white-space: normal;
+    max-width: none;
+    min-width: 0;
+  }
+
+  /* THE SUMMARY. The id reads as an eyebrow and the other key columns as the line
+   * you actually scan. That hierarchy is what a list needs and a table does not:
+   * in a grid the header supplies it, and here the header is gone. */
+  .md-typeset .dr-data--list .dr-data__table td.dr-key.dr-col--id,
+  .dr-data--list .dr-data__table td.dr-key.dr-col--id {
+    position: static;
+    box-shadow: none;
+    background: transparent;
+    padding-top: 11px;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    color: var(--dr-accent);
+  }
+  .md-typeset .dr-data--list .dr-data__table td.dr-key:not(.dr-col--id),
+  .dr-data--list .dr-data__table td.dr-key:not(.dr-col--id) {
+    padding-bottom: 11px;
+    font-family: var(--dr-data-prose-font, var(--dr-font-body));
+    font-size: 0.95rem;
+    line-height: 1.35;
+    text-align: left;
+    color: var(--dr-ink);
+    text-wrap: pretty;
+  }
+
+  /* THE DETAILS. Label and value, because the header row is gone and the value
+   * has to carry its own field name -- which is what table.py writes data-label
+   * for. */
+  .dr-data-js .dr-data--list .dr-data__table td.dr-detail { display: none; }
+
+  .md-typeset .dr-data--list .dr-data__table tr[data-open="true"] td.dr-detail,
+  .dr-data--list .dr-data__table tr[data-open="true"] td.dr-detail {
+    display: grid;
+    grid-template-columns: 6.6rem 1fr;
+    gap: 0 12px;
+    align-items: baseline;
+    padding-block: 5px;
+    font-size: 0.84rem;
+    text-align: left;
+    max-width: none;
+  }
+  .dr-data--list .dr-data__table tr[data-open="true"] td.dr-detail:last-of-type {
+    padding-bottom: 14px;
+  }
+  .dr-data--list .dr-data__table td.dr-detail::before {
+    content: attr(data-label);
+    padding-top: 0.15em;
+    font-family: var(--dr-font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--dr-ink-muted);
+  }
+  /* The currency symbol rides on the VALUE. Without this the money ::before in
+   * data.css wins and the field name is replaced by a dollar sign. */
+  .dr-data--list .dr-data__table td.dr-detail.dr-col--money::before {
+    content: attr(data-label);
+    margin-right: 0;
+  }
+
+  .dr-data--list .dr-data__table tr[data-open="true"] {
+    background: var(--dr-surface-raised);
+  }
+  .dr-data--list .dr-data__table tbody tr:hover td { background: transparent; }
+
+  /* THE CONTROL. 44px, the minimum real target, sitting on the summary line. The
+   * whole row is clickable too (data.js), because a chevron in the corner is a
+   * poor target when the thing being tapped is a course -- but a control that
+   * exists only inside a click handler is a control a keyboard user does not
+   * have, so this is a real button and it stays. */
+  .dr-data-js .dr-data--list .dr-data__more {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0;
+  }
+  .dr-data__toggle {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    width: 44px;
+    height: 44px;
+    cursor: pointer;
+    position: relative;
+  }
+  .dr-data__toggle::after {
+    content: "";
+    position: absolute;
+    top: 17px;
+    left: 17px;
+    width: 9px;
+    height: 9px;
+    border-right: 1.5px solid var(--dr-ink-muted);
+    border-bottom: 1.5px solid var(--dr-ink-muted);
+    transform: rotate(45deg);
+    transform-origin: 70% 70%;
+    transition: transform .26s cubic-bezier(0.22, 1, 0.36, 1),
+                border-color .26s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .dr-data__table tr[data-open="true"] .dr-data__toggle::after {
+    transform: rotate(-135deg);
+    border-color: var(--dr-accent);
+  }
+  .dr-data__toggle:focus-visible {
+    outline: 2px solid var(--dr-accent);
+    outline-offset: -3px;
+  }
+
+  /* A section band still spans the sheet, but there are no columns left to span,
+   * so it becomes what it always was: a heading. */
+  .dr-data--list .dr-data__table .dr-data__section th { padding: 0; }
+  .dr-data--list .dr-data__section-label { position: static; display: block; }
+
+  .dr-data--list .dr-data__source {
+    padding: 12px 14px;
+    border-top: 1px solid var(--dr-rule);
+  }
+}

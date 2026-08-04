@@ -1,0 +1,340 @@
+/* The TSV data table (docrender/table.py, sheet.py, datatable.py).
+ *
+ * SPLIT OUT OF base.css ON 2026-08-04, because that file reached 18.4KB and the
+ * per-column work would have carried it over the 22KB read-whole line -- the
+ * point where a file stops coming back whole from one read and therefore stops
+ * being safely editable. The answer to a file doing two jobs is a SPLIT.
+ *
+ * (The header comment first written here cited a warn line that could not fire:
+ * the size budget walked only content and docrender until the same PR taught it
+ * about assets/. The split was right; the sentence was not. See sizecheck.py.)
+ *
+ * WARNING: THE TABLE RULES LIVE HERE AND NOWHERE ELSE. Nothing was left behind in
+ * base.css as a layer to override. Two homes for one rule is the defect this
+ * engine spends its docstrings arguing against, and a stylesheet is the easiest
+ * place in the world to build one by accident. The one legitimate neighbour is
+ * assets/data-list.css, which is a FEATURE layer rather than a second copy: it
+ * touches only .dr-data--list and only inside a container query.
+ *
+ * Consumes --dr-* tokens only. A site retunes every colour, font, measure and
+ * currency symbol from its own theme.css and never edits this file.
+ * ------------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------------
+ * THE SHELL
+ *
+ * A spreadsheet exported by somebody who had to use it: 130 rows, eight columns,
+ * section breaks in the middle. Three decisions carry the weight.
+ *
+ * 1. IT SCROLLS SIDEWAYS INSTEAD OF WRAPPING -- for the columns where that is
+ *    true. A wrapped VALUE turns one row into three and destroys the horizontal
+ *    scan. See THE COLUMN KINDS for why that stopped being true of every column.
+ * 2. THE FIRST COLUMN AND THE HEADER STICK. Column one is the identifier you are
+ *    tracing and the header is what the cell you land on MEANS. Scroll far
+ *    enough right without them and every value is an orphan.
+ * 3. THE BOX DOES NOT TRAP A PHONE. See THE ONE VIEWPORT RULE at the foot.
+ *
+ * BUG: (1) AND (2) WERE BOTH FALSE UNTIL 2026-08-03. Material styles
+ * .md-typeset table:not([class]) with display:block so wide tables can scroll.
+ * Ours shipped with no class, so display:block stopped it being a table -- and a
+ * position:sticky cell inside a block has no row context to stick within, so it
+ * silently did nothing. Three defences: the table carries a class, display:table
+ * is forced anyway, and Material's JS scroll wrapper is neutralised if it shows.
+ *
+ * CONTAINER, NOT VIEWPORT (2026-08-04). container-type makes the rules that need
+ * it answer to the width of THIS BOX rather than the window, so the table behaves
+ * inside a narrow column or a split view and not only on a phone. A table is a
+ * component; it should answer to the space it is given, not the size of the
+ * glass. data-list.css queries this container too.
+ * ------------------------------------------------------------------------ */
+.dr-data {
+  container-type: inline-size;
+  margin: 1.4rem 0;
+  max-height: 78vh;
+  overflow: auto;
+  /* Stop a sideways swipe that runs out of table from becoming a browser
+   * back-navigation, which on iOS is one flick away at all times. */
+  overscroll-behavior-x: contain;
+  border: 1px solid var(--dr-rule);
+  border-radius: 3px;
+  background: var(--dr-surface);
+}
+
+.dr-data .md-typeset__scrollwrap,
+.dr-data .md-typeset__table {
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  max-width: none;
+}
+
+.md-typeset .dr-data__table,
+.dr-data__table {
+  display: table;
+  border-collapse: separate;
+  border-spacing: 0;
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
+  margin: 0;
+  overflow: visible;
+  font-family: var(--dr-data-font, var(--dr-font-body));
+  font-size: var(--dr-data-size);
+  line-height: 1.35;
+}
+
+.md-typeset .dr-data__table th,
+.md-typeset .dr-data__table td,
+.dr-data__table th,
+.dr-data__table td {
+  padding: var(--dr-data-pad);
+  border-bottom: 1px solid var(--dr-rule);
+  border-right: 1px solid var(--dr-rule);
+  white-space: nowrap;
+  text-align: left;
+  vertical-align: top;
+}
+
+.dr-data__table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--dr-surface-raised);
+  color: var(--dr-ink-muted);
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: normal;
+  min-width: 6rem;
+  max-width: 12rem;
+}
+
+/* The frozen identifier column. The box-shadow is not decoration: without an edge
+ * nothing on screen says the table scrolls, and a reader who does not know to
+ * swipe reads the first two columns and leaves. */
+.dr-data__table tbody td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--dr-surface);
+  font-weight: 600;
+  color: var(--dr-accent);
+  box-shadow: 1px 0 0 var(--dr-rule), 10px 0 10px -10px rgb(0 0 0 / 45%);
+}
+.dr-data__table thead th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+}
+
+.dr-data__table tbody tr:hover td {
+  background: var(--dr-surface-raised);
+}
+
+/* The toggle cell is in the markup of every list table and is furniture until
+ * there is no room. Hidden rather than absent, so the row does not change shape
+ * between the two layouts. data-list.css reveals it. */
+.dr-data__more { display: none; }
+
+/* ---------------------------------------------------------------------------
+ * THE COLUMN KINDS -- id / num / money / tok / prose
+ *
+ * Written by docrender/table.py as dr-col--<kind>. DERIVED from the values by
+ * sheet.classify_columns, OVERRIDDEN by a ::type in the header cell.
+ *
+ * WHY THIS EXISTS. white-space:nowrap above was CORRECT when a cell was a value,
+ * and stopped being correct the moment a cell became prose (PR #50). With nowrap
+ * on everything, THE LONGEST SENTENCE IN THE SHEET SETS THE SCROLL WIDTH OF THE
+ * WHOLE TABLE, and every column after it lives off the right edge of a phone.
+ * Kinds keep nowrap exactly where it earns its keep.
+ *
+ * WARNING: SPECIFICITY IS DELIBERATE AND FRAGILE. The blanket rule above is
+ * .md-typeset .dr-data__table td = (0,2,1); these have to beat it, which is why
+ * each attaches the kind class to td/th and repeats itself with and without the
+ * .md-typeset prefix. Do not tidy them down to a bare class selector -- it will
+ * lose to the rule ninety lines above it, and it will lose silently.
+ *
+ * WARNING: THE FONTS ARE TWO TOKENS, NOT ONE. --dr-data-font was always the whole
+ * table's font, and a site setting it to mono meant it -- for the ids and the
+ * counts, which is what a monospaced face is FOR. It costs roughly 60% more
+ * width per character on a sentence, the column that can least afford it. So
+ * prose reads --dr-data-prose-font and falls back to the body face.
+ * ------------------------------------------------------------------------ */
+
+.md-typeset .dr-data__table td.dr-col--id,
+.md-typeset .dr-data__table td.dr-col--num,
+.md-typeset .dr-data__table td.dr-col--money,
+.md-typeset .dr-data__table td.dr-col--tok,
+.dr-data__table td.dr-col--id,
+.dr-data__table td.dr-col--num,
+.dr-data__table td.dr-col--money,
+.dr-data__table td.dr-col--tok {
+  white-space: nowrap;
+  font-family: var(--dr-data-font, var(--dr-font-mono));
+}
+
+/* AN ID IS NOT A QUANTITY, and this rule exists because the engine got it wrong
+ * for three hours. A course number is all digits, so derivation called it `num`
+ * and right-aligned 44 course codes as though they were counts. An id is a NAME
+ * written in digits: it left-aligns like any other label and takes tabular
+ * figures only so the codes line up as a column of names. */
+.md-typeset .dr-data__table td.dr-col--id,
+.dr-data__table td.dr-col--id {
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tabular figures so a column of counts lines up instead of ragging by glyph
+ * width, right-aligned so magnitudes compare at a glance. A number column you
+ * have to read digit by digit is a list. */
+.md-typeset .dr-data__table td.dr-col--num,
+.md-typeset .dr-data__table td.dr-col--money,
+.dr-data__table td.dr-col--num,
+.dr-data__table td.dr-col--money {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.md-typeset .dr-data__table thead th.dr-col--num,
+.md-typeset .dr-data__table thead th.dr-col--money,
+.dr-data__table thead th.dr-col--num,
+.dr-data__table thead th.dr-col--money {
+  text-align: right;
+}
+
+/* THE CURRENCY SYMBOL IS DRAWN, NOT STORED, and that is the whole design. The
+ * cell holds 1200.00 -- a number, still sortable, still summable, still honest in
+ * the TSV somebody downloads. The symbol is presentation and lives here, so a
+ * site sets --dr-money-symbol to a pound or a euro and this file never learns
+ * that dollars exist. An empty cell gets nothing: a bare symbol against no value
+ * reads as zero, which is a different claim from 'nobody has said'. */
+.dr-data__table td.dr-col--money:not(:empty)::before {
+  content: var(--dr-money-symbol, "$");
+  color: var(--dr-ink-muted);
+  margin-right: 0.15em;
+}
+
+/* THE ONE THAT WRAPS. max-width is a MEASURE, in ch, so it tracks the font rather
+ * than a guessed pixel count. min-width stops a two-word prose column collapsing
+ * into a column of single words. */
+.md-typeset .dr-data__table td.dr-col--prose,
+.dr-data__table td.dr-col--prose {
+  white-space: normal;
+  font-family: var(--dr-data-prose-font, var(--dr-font-body));
+  min-width: 14ch;
+  max-width: var(--dr-data-measure, 34ch);
+  line-height: 1.4;
+}
+.md-typeset .dr-data__table thead th.dr-col--prose,
+.dr-data__table thead th.dr-col--prose {
+  max-width: var(--dr-data-measure, 34ch);
+}
+
+/* ---------------------------------------------------------------------------
+ * THE SECTION BAND -- e.g. CONSOLES & MIXERS [8110]
+ *
+ * A heading INSIDE the sheet (sheet.is_section). It is a th with colspan=N, and
+ * that is the whole reason the LABEL is a separate span.
+ *
+ * BUG: STICKY ON THE CELL DID NOTHING, AND LOOKED LIKE A PAINT BUG. Sticky needs
+ * slack between the element and its scroll container. A cell spanning every
+ * column has none -- its width IS the scroll width -- so the band scrolled away
+ * with the row and a reader three columns in saw WARE [2000] where the sheet said
+ * HARDWARE [2000]. An inline-block inside it has all the slack in the world.
+ * Geometry, not paint.
+ * ------------------------------------------------------------------------ */
+.md-typeset .dr-data__table .dr-data__section th,
+.dr-data__table .dr-data__section th {
+  position: static;
+  padding: 0;
+  background: var(--dr-surface-raised);
+  border-top: 2px solid var(--dr-accent);
+  white-space: nowrap;
+}
+
+.dr-data__section-label {
+  position: sticky;
+  left: 0;
+  display: inline-block;
+  padding: var(--dr-data-pad);
+  color: var(--dr-ink);
+  font-weight: 700;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------------------------
+ * THE CAPTION AND THE SOURCE LINE
+ *
+ * Both sit OUTSIDE the table and inside the scrolling box, so both have to be
+ * pinned or they slide out of view the moment a reader scrolls right.
+ *
+ * BUG: the caption had no rule in this engine at all until 2026-08-04. The
+ * drawing code has emitted .dr-data__caption since the day captions shipped and
+ * nothing ever styled it, so it inherited Material paragraph styling and scrolled
+ * away. The source line one element below it had been pinned correctly the whole
+ * time, which is the clue nobody followed.
+ * ------------------------------------------------------------------------ */
+.md-typeset .dr-data__caption,
+.dr-data__caption {
+  position: sticky;
+  left: 0;
+  margin: 0;
+  padding: 0.5rem 0.6rem 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--dr-ink-muted);
+  letter-spacing: 0.02em;
+}
+
+.md-typeset .dr-data__source,
+.dr-data__source {
+  position: sticky;
+  left: 0;
+  margin: 0;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.72rem;
+  color: var(--dr-ink-muted);
+}
+
+/* ---------------------------------------------------------------------------
+ * A NARROW BOX THAT IS NOT IN LIST MODE
+ *
+ * Most sheets declare no `.key` and therefore never restructure. They still get
+ * a narrower measure when the box is tight, so the prose column stops setting
+ * the scroll width for everything to its right.
+ *
+ * LIST MODE ITSELF LIVES IN assets/data-list.css. It moved there when this file
+ * passed the warn line and an attempted trim recovered 22 bytes -- the clearest
+ * possible evidence that prose was not the problem and the file was doing two
+ * jobs. Do not re-add a .dr-data--list rule here.
+ * ------------------------------------------------------------------------ */
+@container (max-width: 45em) {
+  .md-typeset .dr-data__table td.dr-col--prose,
+  .dr-data__table td.dr-col--prose {
+    max-width: 22ch;
+    min-width: 12ch;
+  }
+  .dr-data__table thead th { min-width: 4.5rem; }
+}
+
+/* ---------------------------------------------------------------------------
+ * THE ONE VIEWPORT RULE
+ *
+ * max-height is measured in vh, so it is a question about the GLASS and not the
+ * column -- and an element cannot answer a container query it establishes itself.
+ * Both reasons point the same way, which is the only reason this is not a
+ * compromise. On a phone the page scrolls vertically and the table scrolls
+ * sideways; a 78vh box that swallows a vertical swipe is the worst thing on this
+ * page on a small screen and the best thing on it on a large one.
+ *
+ * WARNING: EVERY DEFECT THIS FILE FIXES WAS FOUND ON A PHONE AND WAS INVISIBLE ON
+ * A LAPTOP, three times in two days (see base.css on the double nav rule, and
+ * router.css on the revealed menu). The engine has a build report, a size gate, a
+ * leak scan and a contrast gate, and nothing that looks at a rendered page at
+ * 390px. Until it does, this is where the phone gets thought about on purpose.
+ * ------------------------------------------------------------------------ */
+@media screen and (max-width: 44.9375em) {
+  .dr-data { max-height: none; }
+}
