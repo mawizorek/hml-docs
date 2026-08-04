@@ -122,15 +122,58 @@
   border-bottom-color: var(--dr-accent);
 }
 
-/* The lede.
- * The first paragraph after the H1 is also what a search result shows, so it
- * is styled as a real element rather than left to the author to fake with
- * bold or a blockquote. */
-.md-typeset h1 + p {
+/* ---------------------------------------------------------------------------
+ * THE LEDE
+ *
+ * The first thing under the title, and also what a search result shows, so it
+ * is styled as a real element rather than left to an author to fake with bold
+ * or a blockquote.
+ *
+ * ⚠️ TWO SELECTORS, AND THAT IS TEMPORARY BY DESIGN (2026-08-03).
+ *
+ *   .dr-lede    what docrender/lede.py emits from the `summary:` field
+ *   h1 + p      the old positional rule: whatever paragraph sat under the H1
+ *
+ * The lede became a FIELD, and the engine now reports every page still keeping
+ * it in the body. But the content tree migrates one page at a time, and
+ * dropping `h1 + p` before that finishes would strip the lede styling from
+ * every page not yet moved -- a sitewide visual regression on pages that are
+ * otherwise perfectly fine. So both are live and IDENTICAL in style, and a
+ * page changes nothing visually as it crosses over.
+ *
+ * `h1 + p` comes out once the tree is migrated. ⚠️ It is a fallback in THIS
+ * FILE ONLY: the engine reports every page relying on it, so this cannot
+ * quietly become the permanent field-plus-fallback arrangement that was
+ * considered and rejected. If you are reading this and the content is
+ * migrated, delete the second selector.
+ * ------------------------------------------------------------------------ */
+.md-typeset h1 + p,
+.md-typeset .dr-lede {
   font-size: var(--dr-lede-size);
   font-weight: var(--dr-lede-weight);
   color: var(--dr-ink-muted);
   max-width: var(--dr-measure);
+}
+
+/* ---------------------------------------------------------------------------
+ * THE AKA LINE
+ *
+ *     Also called: genie, personnel lift, MEWP
+ *
+ * From `also_known_as:`. It sits at the foot, above the edit rule, and it is
+ * VISIBLE on purpose: these words are indexed because they are genuinely on
+ * the page, not because a hidden element was injected into a search index.
+ *
+ * A hidden keywords block was the rejected alternative. Nobody can see it, so
+ * nobody can audit it, so it rots -- and the first symptom of a rotted one is
+ * a search that quietly stopped matching, which is close to undiagnosable.
+ * Quiet is the requirement here, not invisible.
+ * ------------------------------------------------------------------------ */
+.md-typeset .dr-aka {
+  margin-top: 2rem;
+  font-size: 0.78rem;
+  color: var(--dr-ink-muted);
+  opacity: 0.85;
 }
 
 /* ---------------------------------------------------------------------------
