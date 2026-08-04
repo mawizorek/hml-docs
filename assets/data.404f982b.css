@@ -110,17 +110,42 @@
   max-width: 12rem;
 }
 
-/* The frozen identifier column. The box-shadow is not decoration: without an edge
- * nothing on screen says the table scrolls, and a reader who does not know to
- * swipe reads the first two columns and leaves. */
+/* ---------------------------------------------------------------------------
+ * THE FROZEN FIRST COLUMN, IN TWO PARTS, AND THE SPLIT IS THE POINT
+ *
+ * STRUCTURE (always): it sticks, it carries the surface colour so rows do not
+ * bleed under it, and it has an edge shadow. The shadow is not decoration --
+ * without an edge nothing on screen says the table scrolls, and a reader who does
+ * not know to swipe reads the first two columns and leaves.
+ *
+ * IDENTITY (conditional): bold and accent-coloured, because the first column is
+ * normally the thing a reader is TRACING.
+ *
+ * 🐛 THOSE WERE ONE RULE UNTIL 2026-08-04, AND THAT WELDED A POSITION TO A
+ * MEANING. `hide:` can remove a sheet's ID column, which promotes whatever was
+ * second into `:first-child` -- so hiding ID on the audio inventory rendered
+ * `Count`, a right-aligned number, as the accent identifier. The stylesheet was
+ * asserting something about the data that the data no longer supported.
+ *
+ * ⚑ FOURTH INSTANCE OF THAT SHAPE TODAY (the two `sticky` traps below and above,
+ * the eyebrow bound to the `id` type in data-list.css, this). A rule bound to
+ * POSITION standing in for a rule about MEANING survives exactly as long as the
+ * two happen to coincide.
+ *
+ * A num or money column is never an identifier -- `sheet.classify_columns` and
+ * the `::type` declaration both already know which columns those are, so the
+ * question is answerable rather than guessed.
+ * ------------------------------------------------------------------------ */
 .dr-data__table tbody td:first-child {
   position: sticky;
   left: 0;
   z-index: 2;
   background: var(--dr-surface);
+  box-shadow: 1px 0 0 var(--dr-rule), 10px 0 10px -10px rgb(0 0 0 / 45%);
+}
+.dr-data__table tbody td:first-child:not(.dr-col--num):not(.dr-col--money) {
   font-weight: 600;
   color: var(--dr-accent);
-  box-shadow: 1px 0 0 var(--dr-rule), 10px 0 10px -10px rgb(0 0 0 / 45%);
 }
 .dr-data__table thead th:first-child {
   position: sticky;

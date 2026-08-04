@@ -63,28 +63,38 @@
   }
 
   /* ------------------------------------------------------------------------
-   * THE SUMMARY: an eyebrow, then the line you actually scan.
+   * THE SUMMARY: a title, optionally with an eyebrow above it.
+   *
+   *     THTR 123                          <- eyebrow, only if a key follows
+   *     Intro to Lighting for the Stage   <- title, always
    *
    * That hierarchy is what a list needs and a table does not -- in a grid the
    * header supplies it, and here the header is gone.
    *
-   * ⭐ THE EYEBROW IS THE FIRST KEY COLUMN, WHATEVER TYPE IT IS, and the
-   * correction matters more than the rule. This first read `.dr-key.dr-col--id`,
-   * which welded "is this an identifier" (a TYPE question) to "is this the small
-   * line above the title" (a POSITION question) -- the exact conflation the
-   * two-axis header grammar was built to prevent, committed inside the PR that
-   * argued for it.
+   * ⭐ THE RULE IS: THE LAST KEY COLUMN IS THE TITLE. EVERYTHING BEFORE IT IS AN
+   * EYEBROW. Read it that way round and the one-column case falls out for free,
+   * which is the whole reason it is written this way round.
    *
-   * It looked right because the first two sheets to adopt list mode both happen
-   * to lead with an id. The revision log does not: its first key column is a
-   * TIMESTAMP, and the only way to get an eyebrow was to declare `when::id`,
-   * which is false about the data. ⚑ A stylesheet that pushes an author toward a
-   * wrong declaration to buy a visual result has inverted the whole design.
+   * 🐛 IT WAS THE OTHER WAY ROUND FOR AN HOUR AND THAT WAS A BUG. "First key is
+   * the eyebrow, the rest are the title" is correct for two keys and wrong for
+   * one: a sheet with a single `.key` rendered its only visible line as a small
+   * mono accent label. The name of the thing became a tag. Found the moment the
+   * audio inventory hid its ID column and was left with exactly one key -- which
+   * is not an edge case, it is the shape of every list whose identifier is not
+   * worth showing.
    *
-   * `.dr-key ~ .dr-key` is every key cell with another key cell before it, so
-   * the first one keeps the eyebrow and the rest take the title. GENERAL sibling,
-   * not adjacent, because a detail cell can sit between two keys and must not
-   * break the chain.
+   * ⚑ AND THAT IS THE THIRD TIME IN SIX HOURS a rule was written against the
+   * sheets in front of me and broke on the first sheet with a different shape
+   * (see also: the eyebrow bound to the `id` TYPE, and the size gate that never
+   * walked assets/). Two examples is a sample, not a specification.
+   *
+   * `:has(~ .dr-key)` is "there is another key column after me." Without `:has`
+   * support every key takes the title style -- readable and unlayered, rather
+   * than a page of tiny labels. Degrade toward the legible one.
+   *
+   * ⚠️ GENERAL sibling throughout, never adjacent: a hidden detail cell sits
+   * between two keys whenever the sheet's column order interleaves them, and an
+   * adjacent combinator would silently stop matching.
    * --------------------------------------------------------------------- */
   .md-typeset .dr-data--list .dr-data__table td.dr-key,
   .dr-data--list .dr-data__table td.dr-key {
@@ -92,26 +102,31 @@
     box-shadow: none;
     background: transparent;
     padding-top: 11px;
-    padding-bottom: 0;
-    font-family: var(--dr-data-font, var(--dr-font-mono));
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-align: left;
-    color: var(--dr-accent);
-  }
-
-  .md-typeset .dr-data--list .dr-data__table td.dr-key ~ td.dr-key,
-  .dr-data--list .dr-data__table td.dr-key ~ td.dr-key {
-    padding-top: 0;
     padding-bottom: 11px;
     font-family: var(--dr-data-prose-font, var(--dr-font-body));
     font-size: 0.95rem;
     font-weight: 400;
     letter-spacing: normal;
     line-height: 1.35;
+    text-align: left;
     color: var(--dr-ink);
     text-wrap: pretty;
+  }
+
+  .md-typeset .dr-data--list .dr-data__table td.dr-key:has(~ td.dr-key),
+  .dr-data--list .dr-data__table td.dr-key:has(~ td.dr-key) {
+    padding-bottom: 0;
+    font-family: var(--dr-data-font, var(--dr-font-mono));
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--dr-accent);
+  }
+
+  /* The title closes the block, so only the FIRST line in it opens one. */
+  .md-typeset .dr-data--list .dr-data__table td.dr-key ~ td.dr-key,
+  .dr-data--list .dr-data__table td.dr-key ~ td.dr-key {
+    padding-top: 0;
   }
 
   /* THE DETAILS. Label and value, because the header row is gone and the value
