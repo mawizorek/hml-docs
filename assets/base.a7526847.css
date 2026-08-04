@@ -50,7 +50,7 @@
 }
 
 /* Material reads ANY `status:` in frontmatter as a doc-status badge and hangs
- * an ⓘ next to the nav entry and the title. Ours means PUBLICATION STATE --
+ * an i next to the nav entry and the title. Ours means PUBLICATION STATE --
  * hidden / unlisted / public -- which is a build instruction, not a note to
  * the reader. Every page carries one, so every page grew an icon that means
  * nothing. */
@@ -63,9 +63,9 @@
  * TOP-LEVEL NAV: CAPS, RULED, AND COLLAPSED
  *
  *   PRODUCTION
- *   ─────────────
+ *   -------------
  *   SAFETY
- *   ─────────────
+ *   -------------
  *   DOC SPECS
  *
  * The sidebar's job is to answer "what kinds of thing are on this site" before
@@ -73,22 +73,22 @@
  * WEIGHT from everything nested under it, so the shape of the site is legible
  * at a glance instead of being one undifferentiated list of links.
  *
- * ⚠️ THE RULE IS A BORDER, NOT AN UNDERLINE, and that distinction is the whole
- * reason it is safe. Michael asked for these underlined; a `text-decoration`
- * underline on a web page reads as a link, and these are labels. A bottom
- * BORDER on the row gives the same separation and does not lie about being
- * clickable. Restored 2026-08-03 after I removed it and argued the point --
- * the objection was to underlined TEXT, and this was never that.
+ * WARNING: THE RULE IS A BORDER, NOT AN UNDERLINE, and that distinction is the
+ * whole reason it is safe. Michael asked for these underlined; a
+ * `text-decoration` underline on a web page reads as a link, and these are
+ * labels. A bottom BORDER on the row gives the same separation and does not lie
+ * about being clickable. Restored 2026-08-03 after I removed it and argued the
+ * point -- the objection was to underlined TEXT, and this was never that.
  *
- * ⚠️ `text-transform` ONLY -- the underlying titles are untouched. A page still
- * knows itself as "Doc Specs", search still matches it, and doc-index.json
- * still publishes the real title for sibling sites to resolve against.
- * Shouting is a presentation choice and it stops at the stylesheet.
+ * WARNING: `text-transform` ONLY -- the underlying titles are untouched. A page
+ * still knows itself as "Doc Specs", search still matches it, and
+ * doc-index.json still publishes the real title for sibling sites to resolve
+ * against. Shouting is a presentation choice and it stops at the stylesheet.
  *
- * ⚠️ AND IT STOPS AT THE STYLESHEET BUT NOT AT THE ELEMENT: `text-transform`,
- * `letter-spacing`, `font-weight` and `font-size` are all INHERITED, so
- * anything injected INSIDE one of these rows gets bold 700 caps for free.
- * That is exactly what happened to the router's revealed menu in
+ * WARNING: AND IT STOPS AT THE STYLESHEET BUT NOT AT THE ELEMENT:
+ * `text-transform`, `letter-spacing`, `font-weight` and `font-size` are all
+ * INHERITED, so anything injected INSIDE one of these rows gets bold 700 caps
+ * for free. That is exactly what happened to the router's revealed menu in
  * doc-render-engine#48 -- see assets/router.css, which now declares its own
  * typography rather than trusting the DOM.
  *
@@ -111,7 +111,7 @@
   margin-bottom: 0.2rem;
 }
 
-/* 🐛 A DOUBLE RULE BETWEEN TOP-LEVEL ROWS, ON PHONES ONLY (found 2026-08-04 by
+/* A DOUBLE RULE BETWEEN TOP-LEVEL ROWS, ON PHONES ONLY (found 2026-08-04 by
  * Michael, from a screenshot: "not sure where the double line between root tree
  * headers came from").
  *
@@ -123,8 +123,8 @@
  * the rule above adds a `border-bottom` to the link, and the 0.2rem
  * `margin-bottom` sits between the two: line, gap, line, on every row.
  *
- * ⚠️ DESKTOP DRAWS NEITHER OF MATERIAL'S BORDERS, so the sidebar we look at
- * while building was never wrong. A style collision that only exists at one
+ * WARNING: DESKTOP DRAWS NEITHER OF MATERIAL'S BORDERS, so the sidebar we look
+ * at while building was never wrong. A style collision that only exists at one
  * breakpoint is invisible to whoever is not on that device -- and every review
  * of this nav happened on a laptop.
  *
@@ -164,7 +164,7 @@
  * is styled as a real element rather than left to an author to fake with bold
  * or a blockquote.
  *
- * ⚠️ TWO SELECTORS, AND THAT IS TEMPORARY BY DESIGN (2026-08-03).
+ * WARNING: TWO SELECTORS, AND THAT IS TEMPORARY BY DESIGN (2026-08-03).
  *
  *   .dr-lede    what docrender/lede.py emits from the `summary:` field
  *   h1 + p      the old positional rule: whatever paragraph sat under the H1
@@ -176,11 +176,11 @@
  * otherwise perfectly fine. So both are live and IDENTICAL in style, and a
  * page changes nothing visually as it crosses over.
  *
- * `h1 + p` comes out once the tree is migrated. ⚠️ It is a fallback in THIS
- * FILE ONLY: the engine reports every page relying on it, so this cannot
- * quietly become the permanent field-plus-fallback arrangement that was
- * considered and rejected. If you are reading this and the content is
- * migrated, delete the second selector.
+ * `h1 + p` comes out once the tree is migrated. It is a fallback in THIS FILE
+ * ONLY: the engine reports every page relying on it, so this cannot quietly
+ * become the permanent field-plus-fallback arrangement that was considered and
+ * rejected. If you are reading this and the content is migrated, delete the
+ * second selector.
  * ------------------------------------------------------------------------ */
 .md-typeset h1 + p,
 .md-typeset .dr-lede {
@@ -214,17 +214,17 @@
 /* ---------------------------------------------------------------------------
  * INLINE CONFIDENCE MARKERS (docrender/markers.py, theme/markers.tsv)
  *
- * [To be confirmed]{.tbc} · [40'-0"]{.conf} · [18'-0"]{.est} · [48'-0"]{.was}
+ * [To be confirmed]{.tbc} - [40 ft]{.conf} - [18 ft]{.est} - [48 ft]{.was}
  *
  * Every one says how much to TRUST the thing beside it. They sit INSIDE a
  * sentence, which is the whole reason they exist rather than being callouts:
  * the doubt belongs to one value, not to the paragraph. So they must be
  * legible without shouting -- a marked figure should still read as a figure.
  *
- * ⭐ SHAPE AND COLOUR ARE SEPARATE. Every rule below styles SHAPE only and
- * takes its colour from `--dr-mark-color`, which the hook writes inline on the
- * span from the `color` column of markers.tsv. So a new marker in any colour
- * is a row in a TSV, with no rule added here and no class to invent.
+ * SHAPE AND COLOUR ARE SEPARATE. Every rule below styles SHAPE only and takes
+ * its colour from `--dr-mark-color`, which the hook writes inline on the span
+ * from the `color` column of markers.tsv. So a new marker in any colour is a
+ * row in a TSV, with no rule added here and no class to invent.
  *
  * There are exactly four shapes because a reader can distinguish four at a
  * glance and cannot distinguish nine. Colour is the open axis; shape is not.
@@ -282,132 +282,33 @@
 }
 
 /* ---------------------------------------------------------------------------
- * TSV DATA TABLE (docrender/datatable.py)
+ * THE TSV DATA TABLE MOVED OUT -- assets/data.css (2026-08-04)
  *
- * A spreadsheet exported by somebody who had to actually use it: 130 rows,
- * eight columns, section breaks in the middle. Two decisions carry the weight.
+ * Every `.dr-data*` and `.dr-col--*` rule lives there, and there only. It left
+ * because this file was 18.4KB, past the engine's own 18KB warn line, and the
+ * per-column work would have carried it over the 22KB hard line -- the point at
+ * which a file stops coming back whole from one read and therefore stops being
+ * safely editable.
  *
- * 1. IT SCROLLS SIDEWAYS INSTEAD OF WRAPPING. A wrapped cell turns one row
- *    into three and destroys the horizontal scan that makes a table readable
- *    at all. On a phone you swipe; you never lose the row.
- * 2. THE FIRST COLUMN AND THE HEADER STICK. Column one is the identifier you
- *    are tracing (R1zAA) and the header is what the cell you land on MEANS.
- *    Scroll far enough right without them and every value is an orphan.
- *
- * 🐛 BOTH OF THOSE WERE FALSE UNTIL 2026-08-03. Material styles
- * `.md-typeset table:not([class])` with `display: block` so wide tables get
- * their own scrollbar. Our table shipped with no class, so `display: block`
- * stopped it being a table -- and a `position: sticky` cell inside a block has
- * no row context to stick within, so it silently did nothing. Three defences:
- * the table carries a class, `display: table` is forced anyway, and Material's
- * JS scroll wrapper is neutralised if it appears.
+ * WARNING: DO NOT ADD A TABLE RULE HERE, not even a small override. A second
+ * home for one rule is how a stylesheet starts disagreeing with itself, and the
+ * table layer is now the one part of this engine with a single address.
  * ------------------------------------------------------------------------ */
-.dr-data {
-  margin: 1.4rem 0;
-  max-height: 78vh;
-  overflow: auto;
-  border: 1px solid var(--dr-rule);
-  border-radius: 3px;
-  background: var(--dr-surface);
-}
-
-.dr-data .md-typeset__scrollwrap,
-.dr-data .md-typeset__table {
-  margin: 0;
-  padding: 0;
-  overflow: visible;
-  max-width: none;
-}
-
-.md-typeset .dr-data__table,
-.dr-data__table {
-  display: table;
-  border-collapse: separate;
-  border-spacing: 0;
-  width: max-content;
-  min-width: 100%;
-  max-width: none;
-  margin: 0;
-  overflow: visible;
-  font-family: var(--dr-data-font, var(--dr-font-body));
-  font-size: var(--dr-data-size);
-  line-height: 1.35;
-}
-.md-typeset .dr-data__table th,
-.md-typeset .dr-data__table td,
-.dr-data__table th,
-.dr-data__table td {
-  padding: var(--dr-data-pad);
-  border-bottom: 1px solid var(--dr-rule);
-  border-right: 1px solid var(--dr-rule);
-  white-space: nowrap;
-  text-align: left;
-  vertical-align: top;
-}
-.dr-data__table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  background: var(--dr-surface-raised);
-  color: var(--dr-ink-muted);
-  font-weight: 600;
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: normal;
-  min-width: 6rem;
-  max-width: 12rem;
-}
-.dr-data__table tbody td:first-child {
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  background: var(--dr-surface);
-  font-weight: 600;
-  color: var(--dr-accent);
-}
-.dr-data__table thead th:first-child {
-  position: sticky;
-  left: 0;
-  z-index: 4;
-}
-.dr-data__table .dr-data__section th {
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  background: var(--dr-surface-raised);
-  color: var(--dr-ink);
-  font-weight: 700;
-  font-size: 0.74rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  border-top: 2px solid var(--dr-accent);
-}
-.dr-data__table tbody tr:hover td {
-  background: var(--dr-surface-raised);
-}
-.dr-data__source {
-  position: sticky;
-  left: 0;
-  margin: 0;
-  padding: 0.4rem 0.6rem;
-  font-size: 0.72rem;
-  color: var(--dr-ink-muted);
-}
 
 /* ---------------------------------------------------------------------------
  * A REFERENCE THAT RESOLVED NOWHERE
  *
- *     Electrics — Lighting Inventory [err]
+ *     Electrics - Lighting Inventory [err]
  *
  * Not an anchor: no href, nothing to click, so the link cannot ACT. Still
  * marked, so the failure is not hidden either. It reads as a document that is
  * coming rather than as something broken.
  *
- * ⚠️ TONED DOWN 2026-08-03 AND IT SHOULD STAY DOWN. It was strikethrough plus
- * an alarm-red badge sharing the `danger` colour, and on a real inventory index
- * where most entries were simply not written yet, eight of nine lines rendered
- * struck out -- the page read as a catastrophe instead of a work in progress.
+ * WARNING: TONED DOWN 2026-08-03 AND IT SHOULD STAY DOWN. It was strikethrough
+ * plus an alarm-red badge sharing the `danger` colour, and on a real inventory
+ * index where most entries were simply not written yet, eight of nine lines
+ * rendered struck out -- the page read as a catastrophe instead of a work in
+ * progress.
  * ------------------------------------------------------------------------ */
 .docrender-dead {
   color: var(--dr-dead);
@@ -451,10 +352,10 @@
 /* ---------------------------------------------------------------------------
  * FOOTER
  *
- * ⚠️ THE font-size: 0 IS NOT A TYPO. Material's generator credit is a bare
- * text node plus a link, with no class of its own to target. The only way to
- * remove it without overriding the theme template -- which we would then have
- * to maintain across upgrades -- is to zero the container's font size and
+ * WARNING: THE font-size: 0 IS NOT A TYPO. Material's generator credit is a
+ * bare text node plus a link, with no class of its own to target. The only way
+ * to remove it without overriding the theme template -- which we would then
+ * have to maintain across upgrades -- is to zero the container's font size and
  * restore it on the child we keep.
  * ------------------------------------------------------------------------ */
 .md-footer-meta {
