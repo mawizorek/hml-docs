@@ -1,0 +1,129 @@
+/* THE NAVIGATION LAYER. Split out of base.css 2026-08-04 at 22,743 B, past the
+ * engine's 22KB hard read limit.
+ *
+ * A pure MOVE -- every rule and every comment below is byte-faithful to what was
+ * in base.css, because a split that also edits is two changes wearing one commit
+ * and you cannot tell which one broke the render.
+ *
+ * WHY THIS IS THE SEAM. The nav is a distinct feature layer in the same shape as
+ * router.css and data.css: one surface, its own breakpoint behaviour, and its own
+ * history of collisions with Material's own rules. It is not "the leftover bytes
+ * that made the file fit."
+ *
+ * ⚠️ LOADS AFTER base.css AND BEFORE THE TABLE LAYERS. Order is set in
+ * docrender/assets.py `_DATA_ASSETS` and is not alphabetical: these rules
+ * override Material's drawer borders, so they must land after the base Material
+ * mapping. Move it and the double rule comes back on phones.
+ */
+
+/* ---------------------------------------------------------------------------
+ * TOP-LEVEL NAV: CAPS, RULED, AND COLLAPSED
+ *
+ *   PRODUCTION
+ *   -------------
+ *   SAFETY
+ *   -------------
+ *   DOC SPECS
+ *
+ * The sidebar's job is to answer "what kinds of thing are on this site" before
+ * it answers "which page." Caps and a rule give the top level a different
+ * WEIGHT from everything nested under it, so the shape of the site is legible
+ * at a glance instead of being one undifferentiated list of links.
+ *
+ * ⚠️ THE RULE IS A BORDER, NOT AN UNDERLINE, and that distinction is the whole
+ * reason it is safe. Michael asked for these underlined; a `text-decoration`
+ * underline on a web page reads as a link, and these are labels. A bottom BORDER
+ * on the row gives the same separation and does not lie about being clickable.
+ * Restored 2026-08-03 after I removed it and argued the point -- the objection
+ * was to underlined TEXT, and this was never that.
+ *
+ * ⚠️ `text-transform` ONLY -- the underlying titles are untouched. A page still
+ * knows itself as "Doc Specs", search still matches it, and doc-index.json still
+ * publishes the real title for sibling sites to resolve against. Shouting is a
+ * presentation choice and it stops at the stylesheet.
+ *
+ * ⚠️ AND IT STOPS AT THE STYLESHEET BUT NOT AT THE ELEMENT: `text-transform`,
+ * `letter-spacing`, `font-weight` and `font-size` are all INHERITED, so anything
+ * injected INSIDE one of these rows gets bold 700 caps for free. That is exactly
+ * what happened to the router's revealed menu in doc-render-engine#48 -- see
+ * assets/router.css, which now declares its own typography rather than trusting
+ * the DOM.
+ *
+ * Depth is targeted with `> .md-nav__list > .md-nav__item`, i.e. direct children
+ * of the PRIMARY nav only. A descendant selector would cap every nested folder
+ * too and the distinction would be lost.
+ *
+ * The collapse is not here: it comes from NOT enabling `navigation.sections` in
+ * mkdocs.yml, which is where that note lives.
+ *
+ * ⚠️ `letter-spacing` stays a literal on purpose. Canonical has `track-tight` and
+ * `track-btn`, and neither means "shouted section label" -- forcing a near-miss
+ * into a token is worse than an honest gap, because it looks wired and renders
+ * wrong.
+ * ------------------------------------------------------------------------ */
+.md-nav--primary > .md-nav__list > .md-nav__item > .md-nav__link,
+.md-nav--primary > .md-nav__list > .md-nav__item > label.md-nav__link {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--dr-ink);
+  padding-bottom: 0.4rem;
+  border-bottom: var(--dr-border-w, 1px) solid var(--dr-rule);
+  margin-bottom: 0.2rem;
+}
+
+/* A DOUBLE RULE BETWEEN TOP-LEVEL ROWS, ON PHONES ONLY (found 2026-08-04 by
+ * Michael, from a screenshot: "not sure where the double line between root tree
+ * headers came from").
+ *
+ * NEITHER LINE WAS A BUG ON ITS OWN, WHICH IS WHY NOBODY SAW IT COMING.
+ * Material's DRAWER draws its own separators -- inside the mobile breakpoint
+ * `.md-nav--primary .md-nav__item` carries a `border-top`, which is why
+ * Material's own `_nav.scss` needs a `> :first-child { border-top: 0 }` reset
+ * next to it. A reset like that only exists if every sibling has a border. Then
+ * the rule above adds a `border-bottom` to the link, and the 0.2rem
+ * `margin-bottom` sits between the two: line, gap, line, on every row.
+ *
+ * ⚠️ DESKTOP DRAWS NEITHER OF MATERIAL'S BORDERS, so the sidebar we look at while
+ * building was never wrong. A style collision that only exists at one breakpoint
+ * is invisible to whoever is not on that device -- and every review of this nav
+ * happened on a laptop.
+ *
+ * OURS WINS because ours carries meaning: it turns the accent colour on for the
+ * section the reader is inside (next rule down), so it is a position indicator
+ * rather than a divider. Material's is only a divider, and we already have one.
+ *
+ * Scoped to DIRECT children so nested items keep Material's separators, which
+ * are doing a real job inside a long folder on a small screen.
+ * ------------------------------------------------------------------------ */
+.md-nav--primary > .md-nav__list > .md-nav__item {
+  border-top: 0;
+}
+
+/* Nested items stay sentence case at normal weight. Stated explicitly rather
+ * than left to inheritance, because the rule above is a big enough hammer that
+ * the next person should be able to see exactly where it stops. */
+.md-nav--primary .md-nav .md-nav__link {
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+  border-bottom: 0;
+}
+
+/* The section a reader is inside gets the accent, so the caps row doubles as a
+ * position indicator rather than only a label.
+ *
+ * ⚠️ THIS RULE IS THE WITNESS FOR THE CHROME BLOCK IN base.css, and it is worth
+ * keeping the story next to the code. Both declarations read the SAME token.
+ * Before the chrome fix, the border rendered the canonical magenta and the colour
+ * rendered Material's blue -- one rule, one variable, two answers, because
+ * Material's compound primary rule reached `color` and had nothing to say about
+ * `border-bottom-color`. A custom property is not a value; it is a question the
+ * cascade answers separately at every property that asks it.
+ * ------------------------------------------------------------------------ */
+.md-nav--primary > .md-nav__list > .md-nav__item--active > .md-nav__link,
+.md-nav--primary > .md-nav__list > .md-nav__item--active > label.md-nav__link {
+  color: var(--dr-accent);
+  border-bottom-color: var(--dr-accent);
+}

@@ -3,5 +3,5 @@
    plus the one static rule for the @term: link form.
    Shape lives in assets/base.css; colour is data. */
 .md-typeset .dr-mark--cls-confidence { --dr-mark-color: var(--dr-warn); }
-.md-typeset .dr-mark--cls-terminology { --dr-mark-color: currentColor; }
+.md-typeset .dr-mark--cls-terminology { --dr-mark-color: var(--dr-accent-2); }
 .md-typeset a.dr-term { color: var(--dr-mark-color); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.15em; }

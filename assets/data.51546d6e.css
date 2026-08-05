@@ -42,9 +42,15 @@
  * inside a narrow column or a split view and not only on a phone. A table is a
  * component; it should answer to the space it is given, not the size of the
  * glass. data-list.css queries this container too.
+ *
+ * ⚠️ THE CONTAINER IS NAMED. An unnamed @container binds to the NEAREST
+ * ancestor container, which is whatever happens to be closest on the day -- and
+ * this tree gained layers all through 2026-08-04. `container-name` makes the
+ * binding explicit so a query cannot silently start answering a different box.
  * ------------------------------------------------------------------------ */
 .dr-data {
   container-type: inline-size;
+  container-name: dr-table;
   margin: 1.4rem 0;
   max-height: 78vh;
   overflow: auto;
@@ -296,13 +302,24 @@
  * with the row and a reader three columns in saw WARE [2000] where the sheet said
  * HARDWARE [2000]. An inline-block inside it has all the slack in the world.
  * Geometry, not paint.
+ *
+ * ⭐ THE BAND READS `accent-2`, NOT `accent` (2026-08-05), and that is a
+ * distinction rather than a decoration. The sticky first column above is
+ * `accent` because it is the IDENTIFIER a reader is tracing. This band is
+ * STRUCTURE -- where one group of rows ends and the next begins. They were the
+ * same colour, so neither was saying anything the other was not, which is the
+ * whole job the second accent exists to do.
+ *
+ * ⚠️ The fallback is load-bearing: the three local nine-token themes emit no
+ * `accent-2`, and a bare var() here would collapse the rule and take the band's
+ * only visible edge with it. Falls back to the colour it used to be.
  * ------------------------------------------------------------------------ */
 .md-typeset .dr-data__table .dr-data__section th,
 .dr-data__table .dr-data__section th {
   position: static;
   padding: 0;
   background: var(--dr-surface-raised);
-  border-top: 2px solid var(--dr-accent);
+  border-top: 2px solid var(--dr-accent-2, var(--dr-accent));
   white-space: nowrap;
 }
 
@@ -363,8 +380,16 @@
  * passed the warn line and an attempted trim recovered 22 bytes -- the clearest
  * possible evidence that prose was not the problem and the file was doing two
  * jobs. Do not re-add a .dr-data--list rule here.
+ *
+ * ⚠️ THE THRESHOLD IS PX AND THE CONTAINER IS NAMED, and both halves are a fix
+ * (2026-08-05). `em` inside a container query resolves against the QUERY
+ * CONTAINER's own font size, not the root -- and .dr-data inherits Material's
+ * .md-typeset sizing, which is not 16px. 45em was therefore not 720px and
+ * nobody could say what it was. 640px is below every phone (390-430) and 116px
+ * clear of this site's real desktop content column (~756px), where 45em was
+ * firing list mode on a 1457px desktop.
  * ------------------------------------------------------------------------ */
-@container (max-width: 45em) {
+@container dr-table (max-width: 640px) {
   .md-typeset .dr-data__table td.dr-col--prose,
   .dr-data__table td.dr-col--prose {
     max-width: 22ch;

@@ -1,0 +1,159 @@
+/* THE CHROME LAYER. Our tokens mapped onto Material's own variables.
+ *
+ * Split from base.css on 2026-08-05, at a seam that had already been named one
+ * commit earlier and then not taken: THE CHROME BLOCK and THE ARMOUR are one
+ * concern -- everything here answers "which Material variable does this token
+ * land on" -- and base.css had reached 25,560 B against a 22,528 B hard read
+ * limit because prose was added instead.
+ *
+ * A PURE MOVE. Every rule, value and comment below is byte-faithful to what was
+ * in base.css. A split that also edits is two changes wearing one commit, and
+ * when the render goes wrong you cannot tell which one did it.
+ *
+ * 🔴 LOAD ORDER IS LOAD-BEARING AND ITS FAILURE MODE IS A LIVE BUG, NOT A
+ * WOBBLE. THE ARMOUR below is a specificity TIE with Material's own compound
+ * rule, won purely on source order. `docrender/assets.py` `_DATA_ASSETS` puts
+ * this file after base.css, and every sheet this engine ships is linked after
+ * Material's `palette.css`. Move this earlier and every dark-mode link goes
+ * back to Material's indigo -- the defect that took a full day to diagnose
+ * because the first fix was written from a remembered selector.
+ *
+ * ⚠️ DO NOT ADD A NON-CHROME RULE HERE. Same rule as nav.css, type.css and the
+ * table layers: one surface, one address. If it does not map a --dr-* token onto
+ * an --md-* variable, or defend one of those mappings from Material, it belongs
+ * somewhere else.
+ */
+
+/* ---------------------------------------------------------------------------
+ * THE CHROME BLOCK -- header, drawer and interactive accents (2026-08-04)
+ *
+ * The header colour used to be `palette.primary` in site.yml, a NAMED Material
+ * colour hand-picked to sit near whatever the theme's accent happened to be.
+ * site.yml said so: "Kept in step with the eos accent by hand." A documented
+ * hand-sync is a drift defect with a note attached, and it went out of step the
+ * moment the palette became canonical.
+ *
+ * ⚠️ EVERY VALUE HERE CARRIES A FALLBACK AND THEY ARE NOT DECORATION. A
+ * canonical theme emits --dr-surface-1 and --dr-on-accent; the local nine-token
+ * table does not. Without the fallback, `utility`, `database` and `base` would
+ * paint their chrome with an empty variable -- and an empty custom property is
+ * not an error, it is a blank, which is the class of failure this engine keeps
+ * catching.
+ * ------------------------------------------------------------------------ */
+[data-md-color-scheme="slate"],
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: var(--dr-surface-1, var(--dr-surface-raised));
+  --md-primary-fg-color--light: var(--dr-surface-raised);
+  --md-primary-fg-color--dark: var(--dr-surface);
+  --md-primary-bg-color: var(--dr-ink);
+  --md-primary-bg-color--light: var(--dr-ink-muted);
+
+  /* ⭐ AND THIS IS WHERE A LINK'S HOVER STATE COMES FROM, which is why it stays
+   * `accent` now that the resting state does not. Material's
+   * `.md-typeset a:hover` reads `--md-accent-fg-color`, so a link sits in its
+   * own quiet colour and moves TOWARD the site identity under the pointer.
+   * Unchanged on purpose: splitting the two colours is what turned an unnoticed
+   * sameness into a deliberate transition. */
+  --md-accent-fg-color: var(--dr-accent);
+  --md-accent-fg-color--transparent: var(--dr-accent-soft, transparent);
+  --md-accent-bg-color: var(--dr-on-accent, var(--dr-surface));
+  --md-accent-bg-color--light: var(--dr-on-accent, var(--dr-surface));
+
+  /* ⭐ THE ELEVATION SCALE, AND ITS FIRST CONSUMERS ARE MATERIAL'S OWN
+   * (2026-08-05). `--md-shadow-z1/z2/z3` are real Material variables, read by
+   * the admonition box, kbd keys, the code-block nav and the consent dialog. So
+   * three lines here reach four surfaces without a rule of ours.
+   *
+   * ⚠️ THIS RETIRES AN EXCUSE base.css WROTE AND WAS WRONG ABOUT. Its header
+   * used to say elev-* and the motion set have no consumer because that file
+   * sets `box-shadow: none` on the header and declares no transitions, so wiring
+   * them would mean ADDING shadows to a documentation site -- a design decision.
+   * True of base.css. False of the engine: Material has been painting these
+   * shadows from its own defaults since day one. Nothing is added; the paint
+   * changes hands.
+   *
+   * ⚠️ THE FALLBACKS ARE MATERIAL'S OWN LITERALS AND THEY ARE LOAD-BEARING. A
+   * local nine-token theme emits no elev-*, and `box-shadow: var(--md-shadow-z1)`
+   * with nothing behind it is invalid at computed-value time -- which means NO
+   * SHADOW, silently, on three of the four sites. A callout that loses its
+   * shadow reads as a rendering fault. */
+  --md-shadow-z1: var(--dr-elev-1, 0 0.2rem 0.5rem #0000000d, 0 0 0.05rem #0000001a);
+  --md-shadow-z2: var(--dr-elev-2, 0 0.2rem 0.5rem #0000001a, 0 0 0.05rem #00000040);
+  --md-shadow-z3: var(--dr-elev-3, 0 0.2rem 0.5rem #0003, 0 0 0.05rem #00000059);
+
+  /* A callout is the raised-most panel on the page, not the same colour as the
+   * canvas Material defaults it to. MEASURED IN BOTH SCHEMES BEFORE SHIPPING,
+   * because body text sits on it: ink 9.90 dark / 11.98 light, ink-muted 5.02 /
+   * 5.13. `surface-3` had no consumer anywhere before this line.
+   *
+   * The per-family border, title bar, icon and marker colours are generated
+   * from theme/blocks.tsv into blocks.css -- see docrender/blocks.py. */
+  --md-admonition-bg-color: var(--dr-surface-3, var(--dr-surface));
+}
+
+/* ---------------------------------------------------------------------------
+ * 🔴 THE ARMOUR -- because the 2026-08-04 fix was WRONG (2026-08-05)
+ *
+ * READ OUT OF MATERIAL'S palette.css, NOT REMEMBERED THIS TIME:
+ *
+ *     [data-md-color-scheme=slate][data-md-color-primary=indigo]
+ *       { --md-typeset-a-color: #5488e8 }
+ *
+ * TWO attribute selectors, (0,2,0), against the ONE the scheme block in base.css
+ * scopes with. It wins on SPECIFICITY, so loading later cannot save us.
+ *
+ * 🔴 The note that used to sit here claimed Material writes
+ * `data-md-color-primary` ONLY when palette.primary is set, so deleting the key
+ * was "structural -- no way for the override to return." Both halves false: the
+ * key is gone and the published body still reads
+ * `data-md-color-primary="indigo"`. Material DEFAULTS it, so it was never ours
+ * to remove, and the guessed value was `black`. That paragraph was written from
+ * memory of a stylesheet nobody had opened and shipped as a fix; the symptom
+ * outlived it by a day. ⚠️ DO NOT DELETE THIS BLOCK AS REDUNDANT.
+ *
+ * ⭐ THE ASYMMETRY IS THE FINGERPRINT. These compounds exist ONLY under
+ * `[data-md-color-scheme=slate]` -- the plain `[data-md-color-primary=indigo]`
+ * block sets primary colours and NOT `--md-typeset-a-color`. So light falls
+ * through to us and paints the canonical colour while dark paints Material's
+ * blue, from one declaration in one file. Any explanation that does not predict
+ * that split is the wrong explanation.
+ *
+ * ⭐ MATCH THE ATTRIBUTE, NEVER ITS VALUE. `[data-md-color-primary]` is
+ * (0,2,0) beside the scheme, level with Material, and this file loads after
+ * palette.css, so we take the tie. Matching `=indigo` would win today and break
+ * the day the default moves or somebody sets a primary on purpose.
+ *
+ * ⚠️ IT IS A SPECIFICITY TIE AND THAT IS ITS ONLY HONEST NAME. A structural
+ * fix was never available: the attribute comes from the theme's own template.
+ *
+ * ⚠️ AND THIS IS THE SECOND PLACE `--md-typeset-a-color` IS SET, WHICH IS WHY
+ * THE LINK ROLE HAD TO BE CHANGED IN BOTH (2026-08-05). The other is the scheme
+ * block in base.css. Leaving this one on `accent` would have put dark mode on
+ * the old colour and light mode on the new one -- the identical dark/light split
+ * this block exists to fix, recreated by a half-finished edit. If you change
+ * one, grep for the other.
+ *
+ * Only what Material contests belongs here. `.md-header` is armed alongside
+ * because `[data-md-color-primary=black] .md-header` sets a background
+ * directly, which would beat the variable indirection rather than tie with it.
+ * ------------------------------------------------------------------------ */
+[data-md-color-scheme="slate"][data-md-color-primary],
+[data-md-color-scheme="default"][data-md-color-primary] {
+  --md-typeset-a-color: var(--dr-link, var(--dr-accent));
+}
+
+[data-md-color-primary] .md-header {
+  background-color: var(--dr-surface-1, var(--dr-surface-raised));
+}
+
+/* The header sits on the page rather than above it: a hairline instead of
+ * Material's drop shadow, because the chrome is now a canonical surface and a
+ * shadow would make it read as a floating bar in a different palette.
+ *
+ * ⚠️ This `box-shadow: none` is deliberate on the HEADER and is not a statement
+ * about the engine. Material's own shadow scale is mapped to elev-1/2/3 above
+ * and paints callouts and kbd keys; this rule opts one surface out of it. */
+.md-header {
+  box-shadow: none;
+  border-bottom: var(--dr-border-w, 1px) solid var(--dr-rule);
+}

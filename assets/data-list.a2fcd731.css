@@ -10,9 +10,7 @@
  * Split out of data.css on 2026-08-04, an hour after data.css was itself split
  * out of base.css. That is not thrash: the first split separated the TABLE from
  * everything else, and this one separates the table from a feature layer only
- * some sheets use -- the same shape as router.css. data.css was 19.2KB, past the
- * warn line, and an attempted trim recovered 22 bytes, which is the clearest
- * possible evidence that prose was not the problem.
+ * some sheets use -- the same shape as router.css.
  *
  * APPLIES ONLY TO .dr-data--list, which docrender/table.py sets only when a
  * column declared `.key` in the sheet's own header:
@@ -27,15 +25,17 @@
  * that cannot be opened -- fail OPEN, because a list nobody can expand looks like
  * data loss and reports nothing. And the class is set by an inline script during
  * PARSE, not by data.js, because setting it from a deferred sheet would let the
- * detail rows paint and then vanish on every load. That flash is PR #49, the same
- * day, one feature over.
+ * detail rows paint and then vanish on every load. That flash is PR #49.
  *
- * A CONTAINER QUERY, NOT A VIEWPORT ONE. The table restructures when its own box
- * runs out of room, so it does the right thing in a narrow column or a split view
- * and not only on a phone. .dr-data declares the container in data.css.
+ * ⚠️ THE QUERY IS NAMED AND MEASURED IN PIXELS, AND BOTH MATTER. An unnamed
+ * container binds to whatever ancestor happens to be nearest; `em` inside a
+ * container query resolves against the QUERY CONTAINER's font size rather than
+ * the root. Together those shipped list mode onto a 1457px desktop on 2026-08-05.
+ * data.css carries the full account and declares `container-name: dr-table` --
+ * KEEP THE THRESHOLD HERE IN STEP WITH THE ONE THERE.
  * ------------------------------------------------------------------------- */
 
-@container (max-width: 45em) {
+@container dr-table (max-width: 640px) {
   .dr-data--list .dr-data__table,
   .dr-data--list .dr-data__table tbody,
   .dr-data--list .dr-data__table tr,
@@ -47,11 +47,43 @@
   .dr-data--list .dr-data__table { min-width: 0; }
   .dr-data--list .dr-data__table thead { display: none; }
 
+  /* ------------------------------------------------------------------------
+   * THE ROW IS A FLEX COLUMN, AND THAT IS ONLY SO `order` WORKS.
+   *
+   * 🐛 AN EXPANDED ROW WAS SPLITTING ITS OWN SUMMARY IN HALF. List mode keeps the
+   * sheet's COLUMN ORDER, and the audio inventory has `Count` sitting between
+   * `ID` and `Name` -- so tapping a row gave INV-75 / COUNT 3 / SM58, with the
+   * eyebrow and its title separated by a field that belongs in the details.
+   *
+   * The eyebrow and the title are ONE unit and the markup has no way to say so.
+   * Keys go to -1, details stay at 0, and every key lands above every detail
+   * regardless of where its column sits in the sheet.
+   *
+   * ⚠️ THE COST, STATED BECAUSE IT IS THE REASON THIS WAS MICHAEL'S CALL AND NOT
+   * MINE: `order` moves the VISUAL order only. The DOM order is unchanged, so a
+   * screen reader still reads the details in sheet order -- one cell of
+   * divergence between what is seen and what is announced. Bought against a
+   * summary line split in half, on his ruling (2026-08-05, "css option").
+   *
+   * ⚠️ The alternative was moving `Name` before `Count` in the FIXTURES export.
+   * Zero cost and zero cleverness, but it fixes ONE sheet and this fixes the
+   * shape -- which matters because the next sheet to declare keys will not have
+   * been checked for adjacency either.
+   *
+   * `display: block` above is overridden here rather than replaced there: block
+   * is what every OTHER element in this cascade needs, and only the row needs to
+   * be a flex parent.
+   * --------------------------------------------------------------------- */
   .dr-data--list .dr-data__table tr {
     position: relative;
-    border-bottom: 1px solid var(--dr-rule);
+    display: flex;
+    flex-direction: column;
+    border-bottom: var(--dr-border-w, 1px) solid var(--dr-rule);
   }
   .dr-data--list .dr-data__table tr:last-child { border-bottom: 0; }
+
+  .dr-data--list .dr-data__table td.dr-key { order: -1; }
+  .dr-data--list .dr-data__table td.dr-detail { order: 0; }
 
   .md-typeset .dr-data--list .dr-data__table td,
   .dr-data--list .dr-data__table td {
@@ -68,9 +100,6 @@
    *     THTR 123                          <- eyebrow, only if a key follows
    *     Intro to Lighting for the Stage   <- title, always
    *
-   * That hierarchy is what a list needs and a table does not -- in a grid the
-   * header supplies it, and here the header is gone.
-   *
    * ⭐ THE RULE IS: THE LAST KEY COLUMN IS THE TITLE. EVERYTHING BEFORE IT IS AN
    * EYEBROW. Read it that way round and the one-column case falls out for free,
    * which is the whole reason it is written this way round.
@@ -79,22 +108,15 @@
    * the eyebrow, the rest are the title" is correct for two keys and wrong for
    * one: a sheet with a single `.key` rendered its only visible line as a small
    * mono accent label. The name of the thing became a tag. Found the moment the
-   * audio inventory hid its ID column and was left with exactly one key -- which
-   * is not an edge case, it is the shape of every list whose identifier is not
-   * worth showing.
-   *
-   * ⚑ AND THAT IS THE THIRD TIME IN SIX HOURS a rule was written against the
-   * sheets in front of me and broke on the first sheet with a different shape
-   * (see also: the eyebrow bound to the `id` TYPE, and the size gate that never
-   * walked assets/). Two examples is a sample, not a specification.
+   * audio inventory hid its ID column and was left with exactly one key.
    *
    * `:has(~ .dr-key)` is "there is another key column after me." Without `:has`
    * support every key takes the title style -- readable and unlayered, rather
    * than a page of tiny labels. Degrade toward the legible one.
    *
-   * ⚠️ GENERAL sibling throughout, never adjacent: a hidden detail cell sits
-   * between two keys whenever the sheet's column order interleaves them, and an
-   * adjacent combinator would silently stop matching.
+   * ⚠️ GENERAL sibling throughout, never adjacent: a detail cell can sit between
+   * two keys in the DOM (that is the whole reason `order` exists above), and an
+   * adjacent combinator would silently stop matching on exactly those sheets.
    * --------------------------------------------------------------------- */
   .md-typeset .dr-data--list .dr-data__table td.dr-key,
   .dr-data--list .dr-data__table td.dr-key {
@@ -131,7 +153,8 @@
 
   /* THE DETAILS. Label and value, because the header row is gone and the value
    * has to carry its own field name -- which is what table.py writes data-label
-   * for. */
+   * for. An empty detail is never emitted at all (PR #59), so a label with no
+   * value beside it cannot happen. */
   .dr-data-js .dr-data--list .dr-data__table td.dr-detail { display: none; }
 
   .md-typeset .dr-data--list .dr-data__table tr[data-open="true"] td.dr-detail,
@@ -173,7 +196,11 @@
    * whole row is clickable too (data.js), because a chevron in the corner is a
    * poor target when the thing being tapped is a course -- but a control that
    * exists only inside a click handler is a control a keyboard user does not
-   * have, so this is a real button and it stays. */
+   * have, so this is a real button and it stays.
+   *
+   * ⚠️ position:absolute, so it is OUT of the flex flow and `order` cannot reach
+   * it. That is why it needs no order of its own and stays pinned to the top
+   * right whatever the row contains. */
   .dr-data-js .dr-data--list .dr-data__more {
     display: block;
     position: absolute;
@@ -213,11 +240,13 @@
     outline-offset: -3px;
   }
 
-  /* ⚠️ A LIST WITH NO DETAILS IS A CONTROL THAT DOES NOTHING. If every column in
-   * a sheet is `.key` -- or `hide:` removed the ones that were not -- the chevron
-   * opens an empty row. Hidden rather than left as a dead affordance; the rows
-   * still read correctly as a list. `:not(:has(...))` degrades safely on an engine
-   * without :has, where the chevron simply stays, which is the old behaviour. */
+  /* ⚠️ A LIST WITH NO DETAILS IS A CONTROL THAT DOES NOTHING. If every visible
+   * column is `.key` -- the revision log, after hiding two -- the chevron would
+   * open an empty row. Hidden rather than left as a dead affordance.
+   *
+   * ⭐ This could not fire until PR #59 stopped emitting empty detail cells:
+   * every row carried one regardless of content, so `:not(:has(...))` never
+   * matched. A guard is only as real as the state it is allowed to observe. */
   .dr-data--list .dr-data__table tr:not(:has(td.dr-detail)) .dr-data__more {
     display: none;
   }
@@ -229,6 +258,6 @@
 
   .dr-data--list .dr-data__source {
     padding: 12px 14px;
-    border-top: 1px solid var(--dr-rule);
+    border-top: var(--dr-border-w, 1px) solid var(--dr-rule);
   }
 }

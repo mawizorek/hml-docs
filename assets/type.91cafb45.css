@@ -1,0 +1,106 @@
+/* THE TYPE LAYER. Headings, the tokens only headings read, and the standing
+ * finding about what the type vector can and cannot reach.
+ *
+ * Split from base.css on 2026-08-05: that file was at 18,874 B against a
+ * 22,528 B hard read limit -- the point where a file stops coming back whole
+ * from one read and therefore stops being safely editable. nav.css and data.css
+ * left for the same reason, and chrome.css left the same day.
+ *
+ * ⚠️ LOADS AFTER base.css AND BEFORE THE TABLE LAYERS. Order is set in
+ * docrender/assets.py `_DATA_ASSETS`. These rules override Material's own
+ * heading styles, so they must land after the base Material mapping.
+ *
+ * ⭐ WHY THIS FILE EXISTS AT ALL: `font-display` had ZERO consumers. Every
+ * canonical typography entity names a display face -- eos Archivo, papyrus
+ * Gabarito, sharp-racing Chakra Petch -- and no heading on any site had ever
+ * used one. Headings rendered in the BODY font from the day the vector was
+ * vendored. The token was emitted, documented, and read by nothing.
+ */
+
+/* ---------------------------------------------------------------------------
+ * HEADINGS TAKE THE DISPLAY FACE
+ *
+ * h1, h2 and h3 only. h4/h5/h6 stay on the body font deliberately: by that
+ * depth a heading is a run-in label inside prose rather than a piece of
+ * structure, and a display face at 0.8em reads as a font mistake.
+ *
+ * ⚠️ SPECIFICITY. Material's rules are `.md-typeset h1` = (0,1,1), so these
+ * MATCH rather than beat them and win on load order -- assets.py puts this file
+ * after base.css and Material's own sheet is earlier still. Same mechanism as
+ * THE ARMOUR in chrome.css, and the same honest name for it: a tie won on source
+ * order, not a structural fix.
+ *
+ * ⚠️ `letter-spacing` CHANGES NOTHING ON THIS SITE TODAY. Material sets -.01em
+ * and eos's `track-tight` is -0.01em, identical. It is wired because `grounded`
+ * and `racing-archivo` set -0.02em, and a site adopting either should get its
+ * own tracking without an engine edit. A token wired at parity is not a no-op:
+ * it is the difference between a value that follows the theme and one that only
+ * happens to agree with it.
+ *
+ * NO `font-weight`. Material sets 300 on h1/h2 and 400 on h3, and the canonical
+ * typography vector has no weight column at all -- so there is nothing to read.
+ * An honest gap, and forcing a display face to 300 when a family ships no 300
+ * cut would make the browser synthesise one.
+ * ------------------------------------------------------------------------ */
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3 {
+  font-family: var(--dr-font-display, var(--dr-font-body));
+  letter-spacing: var(--dr-track-tight, -0.01em);
+}
+
+/* ---------------------------------------------------------------------------
+ * 🔴 THE FONT NAMES CHANGE AND NOTHING IS FETCHED (found 2026-08-05)
+ *
+ * This is the standing limit on everything above, and on the whole typography
+ * vector. It is written here rather than in base.css because it is a fact about
+ * TYPE, and this is the type layer.
+ *
+ * Material's font loading is driven by `theme.font` in mkdocs.yml, which this
+ * engine has never set. So the published page carries Material's default loader
+ * and its default values:
+ *
+ *     <link href="...fonts.googleapis.com/css?family=Roboto...">
+ *     <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+ *
+ * base.css then OVERRIDES those two variables with `var(--dr-font-body)` and
+ * `var(--dr-font-mono)`. So the font NAME becomes 'Inter' or 'IBM Plex Mono',
+ * and the font FILE is never requested -- the name resolves against locally
+ * installed families, finds nothing, and falls through to `system-ui`.
+ *
+ * ⚑ CONSEQUENCE, AND IT IS OLDER THAN THE DAY IT WAS FOUND: the typography
+ * vector's three font columns have NEVER rendered on any site in this family.
+ * Body text has been system-ui since the vector was vendored, not Inter. The
+ * SIZES and the TRACKING work correctly -- those are just numbers -- but the
+ * FACES are a name with nothing behind it. The rule above is correct and is not
+ * sufficient.
+ *
+ * ⭐ Same shape as the accent/on-accent pair: a token that is emitted, read by a
+ * real consumer, and still produces nothing, because the gap is further out than
+ * anybody was looking. The token audit reports `font-display` as CONSUMED and is
+ * telling the truth about the CSS while being wrong about the page.
+ *
+ * 🚫 NOT FIXED, AND IT IS NOT A WIRING JOB. Two options, both real decisions:
+ * Google Fonts adds a third-party request to every page of a reference site read
+ * in venues on variable connections, and self-hosting means committing font
+ * binaries to a repo that currently holds only text. Michael rules.
+ * ------------------------------------------------------------------------ */
+
+/* ---------------------------------------------------------------------------
+ * 🚫 AND WHAT IS DELIBERATELY NOT HERE: `fs-body`
+ *
+ * The obvious rule is `.md-typeset { font-size: var(--dr-fs-body) }`, and it is
+ * a trap. Material's value is 0.8rem; eos's fs-body is 0.9rem. Because every
+ * size inside `.md-typeset` is em-relative, that one line makes EVERY WORD ON
+ * THE SITE 12.5% bigger -- headings, tables, callouts, captions, all of it.
+ *
+ * ⚠️ THAT IS THE EXACT SHAPE OF THE BRIDGE ROW PR #82 HAD TO REVERT. `data-size
+ * -> fs-sm` was justified as byte-different and visually identical, which was
+ * true of ONE typography entity and false of the site actually being rendered.
+ * Michael reported it as the table font being massive. This would be the same
+ * mistake with the whole page as its blast radius.
+ *
+ * So fs-body stays an honest gap. It is a design decision about how big this
+ * site's text should be, it is one line whenever that is ruled, and the token
+ * audit lists it as unconsumed until then.
+ * ------------------------------------------------------------------------ */
