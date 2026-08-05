@@ -5,10 +5,6 @@
  * point where a file stops coming back whole from one read and therefore stops
  * being safely editable. The answer to a file doing two jobs is a SPLIT.
  *
- * (The header comment first written here cited a warn line that could not fire:
- * the size budget walked only content and docrender until the same PR taught it
- * about assets/. The split was right; the sentence was not. See sizecheck.py.)
- *
  * WARNING: THE TABLE RULES LIVE HERE AND NOWHERE ELSE. Nothing was left behind in
  * base.css as a layer to override. Two homes for one rule is the defect this
  * engine spends its docstrings arguing against, and a stylesheet is the easiest
@@ -163,7 +159,7 @@
 .dr-data__more { display: none; }
 
 /* ---------------------------------------------------------------------------
- * THE COLUMN KINDS -- id / num / money / tok / prose
+ * THE COLUMN KINDS -- id / num / money / date / tok / prose
  *
  * Written by docrender/table.py as dr-col--<kind>. DERIVED from the values by
  * sheet.classify_columns, OVERRIDDEN by a ::type in the header cell.
@@ -190,10 +186,12 @@
 .md-typeset .dr-data__table td.dr-col--id,
 .md-typeset .dr-data__table td.dr-col--num,
 .md-typeset .dr-data__table td.dr-col--money,
+.md-typeset .dr-data__table td.dr-col--date,
 .md-typeset .dr-data__table td.dr-col--tok,
 .dr-data__table td.dr-col--id,
 .dr-data__table td.dr-col--num,
 .dr-data__table td.dr-col--money,
+.dr-data__table td.dr-col--date,
 .dr-data__table td.dr-col--tok {
   white-space: nowrap;
   font-family: var(--dr-data-font, var(--dr-font-mono));
@@ -203,9 +201,15 @@
  * for three hours. A course number is all digits, so derivation called it `num`
  * and right-aligned 44 course codes as though they were counts. An id is a NAME
  * written in digits: it left-aligns like any other label and takes tabular
- * figures only so the codes line up as a column of names. */
+ * figures only so the codes line up as a column of names.
+ *
+ * A DATE IS THE SAME ARGUMENT. `Aug 4 · 7:58p` is a label for a moment, not a
+ * magnitude, so it left-aligns; tabular figures keep a column of them from
+ * ragging. table.py renders it from the ISO stamp the cell actually holds. */
 .md-typeset .dr-data__table td.dr-col--id,
-.dr-data__table td.dr-col--id {
+.md-typeset .dr-data__table td.dr-col--date,
+.dr-data__table td.dr-col--id,
+.dr-data__table td.dr-col--date {
   text-align: left;
   font-variant-numeric: tabular-nums;
 }
@@ -253,6 +257,31 @@
 .md-typeset .dr-data__table thead th.dr-col--prose,
 .dr-data__table thead th.dr-col--prose {
   max-width: var(--dr-data-measure, 34ch);
+}
+
+/* ---------------------------------------------------------------------------
+ * A MARKER INSIDE A TABLE CELL WRAPS. IN A SENTENCE IT STILL DOES NOT.
+ *
+ * base.css gives .dr-mark `white-space: nowrap`, and that is right where it was
+ * written: a dimension like 18'-0" broken across two lines is unreadable, and a
+ * marked value inside a paragraph can always make the line longer.
+ *
+ * 🐛 A TABLE CELL CANNOT MAKE THE LINE LONGER. A 40-character `.conf` note in a
+ * verify column is one unbreakable box inside a grid column that has a fixed
+ * width, so it clipped off the right edge mid-sentence -- found by Michael on an
+ * expanded row: "I don't think we need to wrap the entire 40-character prose in
+ * our markers, especially if it's in a table like this."
+ *
+ * ⚑ THIRD TIME nowrap has been correct for VALUES and wrong for PROSE (see the
+ * column kinds above, and PR #50). The pattern is not that nowrap is wrong -- it
+ * is that a rule written for the short case gets applied to the long one by
+ * inheritance, and nothing about the rule says which case it was for.
+ *
+ * Scoped INSIDE .dr-data only. Page prose is untouched, the box shape survives,
+ * and a marked note still reads as marked -- it just breaks like text.
+ * ------------------------------------------------------------------------ */
+.dr-data .dr-mark {
+  white-space: normal;
 }
 
 /* ---------------------------------------------------------------------------
