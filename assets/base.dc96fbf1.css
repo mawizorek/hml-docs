@@ -8,8 +8,13 @@
  * NOTE THE SCOPING, because getting it wrong is a known trap. Everything here
  * is scoped to a [data-md-color-scheme] selector or is scheme-independent.
  * Setting a Material colour in an unscoped :root hits BOTH schemes and
- * silently breaks the dark toggle. Chrome colour is not set here at all; it is
- * theme.palette, applied by docrender/instance.py.
+ * silently breaks the dark toggle.
+ *
+ * CHROME IS SET HERE NOW, AS OF 2026-08-04. It used to be theme.palette,
+ * applied by docrender/instance.py, and this file said so. That split existed
+ * to dodge the unscoped-:root trap above -- but the trap is about SCOPE, not
+ * about which file the rule lives in, and everything here is already scoped.
+ * See THE CHROME BLOCK below for what the old arrangement cost.
  */
 
 [data-md-color-scheme="slate"],
@@ -25,6 +30,70 @@
   --md-footer-fg-color: var(--dr-ink);
   --md-footer-fg-color--light: var(--dr-ink-muted);
   --md-footer-fg-color--lighter: var(--dr-ink-muted);
+}
+
+/* ---------------------------------------------------------------------------
+ * THE CHROME BLOCK -- header, drawer and interactive accents (2026-08-04)
+ *
+ * Until tonight the header colour was `palette.primary` in site.yml, a NAMED
+ * Material colour, hand-picked to sit near whatever the theme's accent happened
+ * to be. site.yml said so in a comment: "Kept in step with the eos accent by
+ * hand." A documented hand-sync is a drift defect with a note attached, and it
+ * went out of step the moment the palette became canonical.
+ *
+ * IT ALSO COST MORE THAN A COLOUR, WHICH IS THE REAL REASON THIS EXISTS.
+ * Material emits `data-md-color-primary` on the body ONLY when palette.primary
+ * is set, and it ships a rule for the case where that primary cannot serve as a
+ * link colour:
+ *
+ *     [data-md-color-scheme="slate"][data-md-color-primary="black"]
+ *
+ * TWO attribute selectors, against the ONE this file scopes with -- so it won,
+ * and `--md-typeset-a-color: var(--dr-accent)` above was silently overridden.
+ * Live symptom: every link and the active nav row rendered BLUE in dark mode
+ * while rendering the canonical accent in light mode, from the same declaration
+ * in the same file. Michael found it in a screenshot of the drawer, where one
+ * rule painted the active row's TEXT blue and its BORDER magenta.
+ *
+ * WARNING: THE PRE-CANONICAL BASELINE PROVES THIS WAS ALWAYS BROKEN. With the
+ * old local palette the accent was amber and the links were already blue --
+ * close enough to pass for correct for weeks. A wrong value hides best when the
+ * right value looks similar.
+ *
+ * THE FIX IS STRUCTURAL, NOT A SPECIFICITY WAR. instance.py no longer sets
+ * primary or accent, so the attribute is never written, so the compound rule
+ * has nothing to match. No !important, and no way for the override to return by
+ * accident, because the hook it hangs from is gone.
+ *
+ * WARNING: EVERY VALUE HERE CARRIES A FALLBACK AND THEY ARE NOT DECORATION. A
+ * canonical theme emits --dr-surface-1 and --dr-on-accent; the local nine-token
+ * table does not. Without the fallback, `utility`, `database` and `base` would
+ * paint their chrome with an empty variable -- and an empty custom property is
+ * not an error, it is a blank, which is the class of failure this engine keeps
+ * catching. Canonical themes get `surface-1`, whose documented role is exactly
+ * "raised chrome: top/bottom bars, part-header, nav"; everyone else gets the
+ * nearest surface they own.
+ * ------------------------------------------------------------------------ */
+[data-md-color-scheme="slate"],
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: var(--dr-surface-1, var(--dr-surface-raised));
+  --md-primary-fg-color--light: var(--dr-surface-raised);
+  --md-primary-fg-color--dark: var(--dr-surface);
+  --md-primary-bg-color: var(--dr-ink);
+  --md-primary-bg-color--light: var(--dr-ink-muted);
+
+  --md-accent-fg-color: var(--dr-accent);
+  --md-accent-fg-color--transparent: var(--dr-accent-soft, transparent);
+  --md-accent-bg-color: var(--dr-on-accent, var(--dr-surface));
+  --md-accent-bg-color--light: var(--dr-on-accent, var(--dr-surface));
+}
+
+/* The header sits on the page rather than above it: a hairline instead of
+ * Material's drop shadow, because the chrome is now a canonical surface and a
+ * shadow would make it read as a floating bar in a different palette. */
+.md-header {
+  box-shadow: none;
+  border-bottom: 1px solid var(--dr-rule);
 }
 
 :root {
@@ -150,7 +219,16 @@
 }
 
 /* The section a reader is inside gets the accent, so the caps row doubles as a
- * position indicator rather than only a label. */
+ * position indicator rather than only a label.
+ *
+ * WARNING: THIS RULE IS THE WITNESS FOR THE CHROME BLOCK ABOVE, and it is worth
+ * keeping the story next to the code. Both declarations read the SAME token.
+ * Before the chrome fix, the border rendered the canonical magenta and the
+ * colour rendered Material's blue -- one rule, one variable, two answers,
+ * because Material's compound primary rule reached `color` and had nothing to
+ * say about `border-bottom-color`. A custom property is not a value; it is a
+ * question the cascade answers separately at every property that asks it.
+ * ------------------------------------------------------------------------ */
 .md-nav--primary > .md-nav__list > .md-nav__item--active > .md-nav__link,
 .md-nav--primary > .md-nav__list > .md-nav__item--active > label.md-nav__link {
   color: var(--dr-accent);
@@ -309,6 +387,10 @@
  * index where most entries were simply not written yet, eight of nine lines
  * rendered struck out -- the page read as a catastrophe instead of a work in
  * progress.
+ *
+ * WARNING: `--dr-dead` HAS NO CANONICAL EQUIVALENT and is served by the LOCAL
+ * theme/colors.tsv base rows even on a canonical theme. It is the only reason
+ * that table is still loaded. Raised upstream as maw-themes D11.
  * ------------------------------------------------------------------------ */
 .docrender-dead {
   color: var(--dr-dead);
