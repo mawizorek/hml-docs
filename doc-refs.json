@@ -1,0 +1,50 @@
+{
+  "site": "hml",
+  "base_url": "https://mawizorek.github.io/hml-docs/",
+  "built": "2026-08-06T05:05:21Z",
+  "engine": "0.1.0",
+  "totals": {
+    "pages": 1,
+    "edges": 3,
+    "broken": 0,
+    "no_inbound": 1
+  },
+  "no_inbound": [
+    "home"
+  ],
+  "broken": [],
+  "pages": {
+    "home": {
+      "title": "HML_LLC",
+      "url": "./",
+      "type": "page",
+      "references": [
+        {
+          "token": "template:frontmatter",
+          "kind": "peer",
+          "target": "frontmatter",
+          "resolved": true,
+          "count": 1
+        },
+        {
+          "token": "template:links",
+          "kind": "peer",
+          "target": "links",
+          "resolved": true,
+          "count": 1
+        },
+        {
+          "token": "template:writing",
+          "kind": "peer",
+          "target": "writing",
+          "resolved": true,
+          "count": 1
+        }
+      ],
+      "referenced_by": [],
+      "inbound": 0,
+      "outbound": 3
+    }
+  },
+  "unidentified_sources": {}
+}
