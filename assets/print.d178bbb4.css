@@ -1,0 +1,344 @@
+/* THE PRINT LAYER.
+ *
+ * Until this file existed the engine had NO print rules at all -- `@media
+ * print` returned zero hits across the whole repo. Every doc site in this
+ * family has always printed Material's untouched default, which nobody had
+ * ever looked at, and it is bad in ways that are obvious the moment you look:
+ * the nav drawer and the table of contents print as columns of dead links, the
+ * header prints, the body text stays in its 756px reading column down the left
+ * third of the sheet, and code blocks and table rows are cut in half at page
+ * breaks.
+ *
+ * THIS FILE IS STRUCTURE, NOT COLOUR. What a thing IS coloured stays the
+ * theme's business, resolved from theme/canonical/* exactly as on screen. What
+ * this file decides is what appears on paper at all, how wide it runs, and
+ * where the page is allowed to break. Keep that line: the first colour opinion
+ * that lands here is the beginning of a second theme nobody can see.
+ *
+ * =========================================================================
+ * WHY IT LOADS WHERE IT LOADS, WHICH IS NOT THE OBVIOUS SLOT
+ * =========================================================================
+ * docrender/assets.py publishes this AFTER the three generated sheets and
+ * BEFORE the instance's site.css. Both halves of that are load-bearing.
+ *
+ * AFTER tokens.css, because the paper overrides below re-point custom
+ * properties on `[data-md-color-scheme="slate"]` -- the SAME selector
+ * tokens.css writes, at the SAME specificity. Put this file earlier and the
+ * generated sheet wins on source order, the overrides lose silently, and a
+ * reader in dark mode prints pale grey ink on a background the browser drops.
+ * There is no error. The page just comes out blank-ish.
+ *
+ * BEFORE site.css, because an instance keeps the final word on its own look,
+ * and that rule has no exception for paper.
+ *
+ * =========================================================================
+ * ⚠️ THE ONE THING THIS FILE CANNOT FIX, STATED RATHER THAN PAPERED OVER
+ * =========================================================================
+ * Paper is always a light ground. `good`, `warn`, `bad` and `info` are
+ * BYTE-IDENTICAL between the dark and light rows of 16 of the 19 canonical
+ * palette pairs -- authored once against a dark ground and carried into the
+ * light row unchanged. Only `default`, `eos` and `mclaren` re-author them.
+ *
+ * So print is where that upstream defect becomes maximally visible: on 16 of
+ * 19 palettes a callout border measured for a dark surface is being asked to
+ * hold up on white. `eos` is the only palette measured to clear the 3.0 UI
+ * floor in both schemes (1.46 / 1.70 / 3.48 for soft-utility / sharp-carbon /
+ * eos).
+ *
+ * 🚫 NOT COMPENSATED FOR HERE, deliberately. Darkening semantic tokens at
+ * print time would hide the defect on the one surface that shows it most
+ * clearly, and the fix belongs in the light rows of canonical/colors.tsv.
+ * Structural neutrals are re-pointed below because paper genuinely is a
+ * different surface; semantics are left exactly as the theme authored them.
+ */
+
+@media print {
+  /* -------------------------------------------------------------------------
+   * THE SHEET ITSELF
+   *
+   * ⚠️ 12mm IS A MEASUREMENT, NOT A MARGIN PREFERENCE, AND IT IS THE LEAST
+   * OBVIOUS RULE IN THIS FILE.
+   *
+   * The data table flips to list mode inside `@container dr-table (max-width:
+   * 640px)`, declared in BOTH assets/data.css and assets/data-list.css. A
+   * printed page is a container like any other, and it is narrow:
+   *
+   *     US Letter, browser-default 1in margins -> 6.5in -> 624px  ❌ LIST MODE
+   *     US Letter, 12mm margins               -> 7.56in -> 726px ✅ table
+   *     A4,        12mm margins               -> 7.32in -> 703px ✅ table
+   *
+   * At the default margin every data table on every site would silently print
+   * as a stack of key/value rows -- not broken, not reported, just quietly not
+   * the table the author wrote. 12mm clears the threshold by ~63px on the
+   * tighter of the two paper sizes.
+   *
+   * ⚠️ IF THE 640px THRESHOLD EVER MOVES, THIS NUMBER MOVES WITH IT. Both
+   * container queries already carry a note to keep each other in step; this is
+   * the third place and the only one on a different axis.
+   * --------------------------------------------------------------------- */
+  @page {
+    margin: 12mm;
+  }
+
+  /* -------------------------------------------------------------------------
+   * CHROME OFF
+   *
+   * Everything here is navigation or interaction, and paper has neither. The
+   * test for adding to this list: could a reader ACT on it with a pen? If not,
+   * it is furniture and it costs a column.
+   * --------------------------------------------------------------------- */
+  .md-header,
+  .md-tabs,
+  .md-sidebar,
+  .md-sidebar--primary,
+  .md-sidebar--secondary,
+  .md-nav,
+  .md-search,
+  .md-top,
+  .md-dialog,
+  .md-feedback,
+  .md-footer__inner,
+  .md-footer-meta,
+  .md-clipboard,
+  .md-content__button,
+  .pagefoot,
+  .pagefoot__rule {
+    display: none !important;
+  }
+
+  /* The build stamp SURVIVES, and that is a deliberate exception to the rule
+   * above. A printed page leaves the system entirely -- it gets handed to a
+   * guest artist, filed, carried into a room months later -- and the one
+   * question nobody can answer about a piece of paper is how old it is. It is
+   * the cheapest possible provenance and it costs one line. */
+  .buildstamp {
+    display: block;
+    margin-top: 1.5rem;
+    color: #555;
+  }
+
+  /* -------------------------------------------------------------------------
+   * THE CONTENT COLUMN COMES OFF ITS RAILS
+   *
+   * Material sizes .md-grid for a viewport with two sidebars beside it. On
+   * paper there are no sidebars, so the same rule leaves the text in a narrow
+   * strip with two thirds of the sheet blank. The page IS the measure now.
+   * --------------------------------------------------------------------- */
+  .md-grid,
+  .md-main__inner,
+  .md-content,
+  .md-content__inner {
+    max-width: none !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .md-content__inner > :first-child {
+    margin-top: 0 !important;
+  }
+
+  /* The lede is capped at `--dr-measure` for on-screen line length. That cap is
+   * a reading-comfort number chosen against a screen; on paper the page margin
+   * is already doing that job, and the cap just makes the first paragraph
+   * narrower than the body under it for no reason a reader can see. */
+  .md-typeset h1 + p,
+  .md-typeset .dr-lede {
+    max-width: none;
+  }
+
+  /* -------------------------------------------------------------------------
+   * DARK READER, LIGHT PAPER
+   *
+   * Scoped to `slate` ONLY. A reader already in light mode is untouched, which
+   * is the whole reason this is not a blanket override: the light scheme's
+   * neutrals were authored for a light ground and are already correct.
+   *
+   * The failure being fixed is specific and silent. Browsers drop background
+   * colours at print by default, so a dark-mode page loses its dark surface
+   * and keeps its pale ink: near-white text on white paper. Nothing errors and
+   * the preview looks empty.
+   *
+   * ⚠️ STRUCTURAL NEUTRALS ONLY -- surfaces, ink, rules. No semantic token is
+   * listed and none should be added. See the header.
+   * --------------------------------------------------------------------- */
+  [data-md-color-scheme="slate"] {
+    --dr-surface: #ffffff;
+    --dr-surface-raised: #f4f4f4;
+    --dr-surface-3: #ededed;
+    --dr-ink: #111111;
+    --dr-ink-muted: #555555;
+    --dr-text-faint: #777777;
+    --dr-rule: #cccccc;
+  }
+
+  /* Material caches its own resolved values on these, so the token override
+   * above does not reach them on its own. */
+  [data-md-color-scheme="slate"] {
+    --md-default-bg-color: #ffffff;
+    --md-default-fg-color: #111111;
+    --md-typeset-color: #111111;
+    --md-code-bg-color: #f4f4f4;
+  }
+
+  body,
+  .md-main,
+  .md-content {
+    background: #ffffff !important;
+  }
+
+  /* -------------------------------------------------------------------------
+   * INK THAT ACTUALLY LANDS
+   *
+   * `print-color-adjust: exact` on the elements whose MEANING is carried by a
+   * colour. A callout border is not decoration -- a `!!! danger` box that
+   * prints with no red border is the same box as a `!!! note`, and the reader
+   * has no way to know a distinction was lost.
+   *
+   * Applied narrowly on purpose. Forcing it document-wide would also force
+   * every large background panel through the printer, which wastes toner on
+   * exactly the surfaces that carry no meaning.
+   * --------------------------------------------------------------------- */
+  .md-typeset .admonition,
+  .md-typeset details,
+  .md-typeset .admonition-title,
+  .md-typeset summary,
+  .md-typeset code,
+  .md-typeset pre,
+  .dr-mark,
+  .md-typeset .dr-data__table th,
+  .md-typeset .dr-data__table td {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* -------------------------------------------------------------------------
+   * 🔴 A COLLAPSED BLOCK PRINTS CLOSED, AND ITS CONTENT IS JUST GONE
+   *
+   * `???` renders a shut `<details>`. On paper it prints as a lone title bar
+   * with nothing under it -- no ellipsis, no marker, nothing that tells a
+   * reader a section was withheld. The author wrote it, the PDF does not have
+   * it, and the page does not admit it.
+   *
+   * This is the single strongest argument for a print sheet existing at all:
+   * every other default here is ugly, and this one LOSES CONTENT.
+   *
+   * The disclosure triangle goes with it -- a control that cannot be operated
+   * reads as a bullet that means something.
+   * --------------------------------------------------------------------- */
+  .md-typeset details {
+    display: block !important;
+  }
+  .md-typeset details > *:not(summary) {
+    display: revert !important;
+  }
+  .md-typeset summary {
+    list-style: none;
+  }
+  .md-typeset summary::marker,
+  .md-typeset summary::-webkit-details-marker {
+    display: none;
+  }
+
+  /* -------------------------------------------------------------------------
+   * WHERE THE PAGE IS ALLOWED TO BREAK
+   *
+   * The rule behind every declaration below: a break is acceptable BETWEEN
+   * things and unacceptable INSIDE one. A callout split across two sheets
+   * loses its border on both halves and stops reading as a callout at all.
+   *
+   * `orphans`/`widows` are set to 3 rather than the browser default of 2 --
+   * two lines is still a stub at the foot of a sheet.
+   * --------------------------------------------------------------------- */
+  .md-typeset h1,
+  .md-typeset h2,
+  .md-typeset h3,
+  .md-typeset h4 {
+    break-after: avoid;
+    break-inside: avoid;
+  }
+
+  /* A heading at the very bottom of a sheet with its section overleaf is worse
+   * than a slightly short page. */
+  .md-typeset h2,
+  .md-typeset h3 {
+    orphans: 3;
+    widows: 3;
+  }
+
+  .md-typeset p,
+  .md-typeset li {
+    orphans: 3;
+    widows: 3;
+  }
+
+  .md-typeset pre,
+  .md-typeset .highlight,
+  .md-typeset blockquote,
+  .md-typeset figure,
+  .md-typeset img,
+  .md-typeset .admonition,
+  .md-typeset details,
+  .md-typeset tr,
+  .dr-spec table {
+    break-inside: avoid;
+  }
+
+  /* ⚠️ A LONG TABLE MUST BE ALLOWED TO BREAK. `break-inside: avoid` on `tr`
+   * keeps a single ROW whole; putting it on the table would push a 40-row
+   * sheet onto its own page and leave most of the previous one empty. Rows
+   * are the unit, never the table. */
+  .md-typeset table:not([class]) {
+    break-inside: auto;
+  }
+
+  /* A repeated header row is the only thing that makes page two of a table
+   * readable. */
+  .md-typeset thead {
+    display: table-header-group;
+  }
+
+  /* -------------------------------------------------------------------------
+   * CODE
+   *
+   * A horizontal scrollbar has no paper equivalent, so an over-wide line is
+   * simply cut off at the edge with no indication. Wrapping is the only option
+   * that does not lose characters.
+   * --------------------------------------------------------------------- */
+  .md-typeset pre,
+  .md-typeset pre > code {
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow: visible !important;
+  }
+
+  /* -------------------------------------------------------------------------
+   * LINKS ARE NOT EXPANDED, AND THAT IS A DECISION
+   *
+   * The reflex move is `a[href]::after { content: " (" attr(href) ")" }`. It is
+   * wrong for these documents twice over.
+   *
+   * These pages are dense with INTERNAL cross-references, so expansion would
+   * pepper every paragraph with long same-site URLs and make the prose harder
+   * to read than the thing it was trying to help with. And this family has a
+   * locked rule -- NO ROUTE BACK TO THE SOURCE (assets/base.css) -- that these
+   * are finished reference documents which should not advertise their own
+   * plumbing. Printing raw URLs into the body contradicts it on every page.
+   *
+   * Printing to PDF keeps hrefs live anyway, which covers the real use.
+   *
+   * The cross-site arrow stays: it says "this points somewhere else", which is
+   * true on paper too.
+   * --------------------------------------------------------------------- */
+  .md-typeset a {
+    text-decoration: underline;
+  }
+
+  /* A dead reference still reports itself. `[err]` is generated content and
+   * would survive regardless -- this is here so nobody "tidies" it away later
+   * thinking it is screen furniture. It is the page admitting a gap, which is
+   * MORE important on a sheet nobody can re-check against the live site. */
+  .docrender-dead::after {
+    content: " [err]";
+  }
+}
