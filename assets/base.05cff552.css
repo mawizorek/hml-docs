@@ -163,6 +163,52 @@
 }
 
 /* ---------------------------------------------------------------------------
+ * THE REVISED LINE (2026-08-07, Michael)
+ *
+ *     Revised Aug 2026
+ *
+ * From `revised:`, and the LAST thing the document says. The edit rule and its
+ * link still sit below it -- that rule is the seam between the document and the
+ * scaffolding, and `edit_links: false` takes the whole lower half away.
+ *
+ * ⭐ WHY IT EXISTS AT ALL. The field was declared optional on every page type
+ * from the day the type system shipped, and NOTHING IN THE ENGINE EVER READ IT.
+ * The date a reader actually saw was a line typed by hand at the bottom of the
+ * page. So the field was decoration and the body line was the real one, which is
+ * the exact inverse of what the README and the page template both said.
+ *
+ * ⭐ AND THE INTERESTING PART IS WHAT TWO COPIES DID TO THE VALUE. A field has
+ * one spelling; a typed line has as many as there are authors. Live across nine
+ * pages at the time of writing: `Aug 2026`, `Aug 2026.`, `Aug 26`,
+ * `August 2026.`, `Jun 2026.`, `May 2026.`, a bare `Revised` with no date at
+ * all, and one page shipped public still carrying the template's literal
+ * `Revised Month Year.` placeholder. Nothing broke and nothing reported. The
+ * duplication did not cause a CONTRADICTION, it caused a DRIFT -- and a drift
+ * has no failing build to announce it.
+ *
+ * ⚠️ THE ITALIC IS AN `<em>` IN THE MARKUP AND NOT `font-style` HERE. Italic was
+ * the request rather than a styling choice, so it should survive print.css, a
+ * stylesheet that failed to load, and anything reading the HTML without our CSS.
+ * This rule owns size, colour and spacing, and nothing else. Do not tidy the
+ * `<em>` away into a declaration below.
+ *
+ * ⚠️ TWO MARGINS, WHICH IS ONE MORE THAN IT LOOKS LIKE IT NEEDS. The keywords
+ * line already spends `gap-lg` opening the foot block, so a second big gap under
+ * it leaves the two furniture lines further apart than either is from the prose.
+ * The adjacent-sibling rule is the only case where that happens, and it costs
+ * one selector to get right in both.
+ * ------------------------------------------------------------------------ */
+.md-typeset .dr-revised {
+  margin-top: var(--dr-gap-lg, 2rem);
+  font-size: 0.78rem;
+  color: var(--dr-ink-muted);
+  opacity: 0.85;
+}
+.md-typeset .dr-aka + .dr-revised {
+  margin-top: 0.35rem;
+}
+
+/* ---------------------------------------------------------------------------
  * INLINE CONFIDENCE MARKERS (docrender/markers.py, theme/markers.tsv)
  *
  * [To be confirmed]{.tbc} - [40 ft]{.conf} - [18 ft]{.est} - [48 ft]{.was}
