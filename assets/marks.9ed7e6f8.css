@@ -4,6 +4,8 @@
    Shape lives in assets/base.css; colour and tint are data. */
 .md-typeset .dr-mark--cls-confidence { --dr-mark-color: var(--dr-warn); }
 .md-typeset .dr-mark--cls-highlight { --dr-mark-color: var(--dr-accent); --dr-mark-wash: 25%; }
+.md-typeset .dr-mark--cls-layout { --dr-mark-color: var(--dr-accent); }
+.md-typeset .dr-mark--cls-schema { --dr-mark-color: var(--dr-accent-2); }
 .md-typeset .dr-mark--cls-terminology { --dr-mark-color: var(--dr-accent-2); }
 .md-typeset .dr-mark--box { background: color-mix(in oklch, var(--dr-mark-color) var(--dr-mark-wash, 10%), transparent); }
 .md-typeset a.dr-term { color: var(--dr-mark-color); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.15em; }
