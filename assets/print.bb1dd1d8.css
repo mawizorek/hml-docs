@@ -334,11 +334,27 @@
     text-decoration: underline;
   }
 
-  /* A dead reference still reports itself. `[err]` is generated content and
-   * would survive regardless -- this is here so nobody "tidies" it away later
-   * thinking it is screen furniture. It is the page admitting a gap, which is
-   * MORE important on a sheet nobody can re-check against the live site. */
-  .docrender-dead::after {
-    content: " [err]";
-  }
+  /* -------------------------------------------------------------------------
+   * A DEAD REFERENCE STILL REPORTS ITSELF ON PAPER -- BY A DIFFERENT MECHANISM
+   * SINCE 2026-08-10, AND THERE IS DELIBERATELY NO RULE UNDER THIS COMMENT.
+   *
+   * This block used to re-declare `.docrender-dead::after { content: " [err]" }`
+   * purely as a tripwire, and it said so: the badge was generated content and
+   * would have printed regardless. Michael retired the badge on 2026-08-10 --
+   * it was the engine typing a word into a sentence he wrote -- and the signal
+   * is now a dotted underline declared once in assets/base.css, unscoped to any
+   * medium, so it reaches paper on its own.
+   *
+   * ⭐ THE SWAP IMPROVED THE PAPER CASE, WHICH IS NOT WHERE THE PRESSURE CAME
+   * FROM. On a sheet there is no hover, so the `title` never existed here, and
+   * a photocopier or a mono printer flattens `--dr-dead` into body ink. The old
+   * badge and the new decoration both survive that; the difference is that the
+   * decoration also survives an author's proof-read.
+   *
+   * 🚫 DO NOT RE-DECLARE IT HERE. A second copy of a decoration is a second
+   * claimant on one truth, which is the failure this repo has logged against
+   * three retired manifests -- and it would drift the first time base.css
+   * changed the offset. If a future change scopes the base rule to `screen`,
+   * fix it THERE; do not answer it with a duplicate on this side.
+   * --------------------------------------------------------------------- */
 }

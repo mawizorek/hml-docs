@@ -291,7 +291,8 @@
 /* ---------------------------------------------------------------------------
  * A REFERENCE THAT RESOLVED NOWHERE
  *
- *     Electrics - Lighting Inventory [err]
+ *     Electrics - Lighting Inventory
+ *                 ˙˙˙˙˙˙˙˙˙˙˙˙˙˙˙˙˙
  *
  * Not an anchor: no href, nothing to click, so the link cannot ACT. Still
  * marked, so the failure is not hidden either. It reads as a document that is
@@ -302,6 +303,35 @@
  * where most entries were simply not written yet, eight of nine lines rendered
  * struck out -- the page read as a catastrophe instead of a work in progress.
  *
+ * 🪦 THE `[err]` BADGE IS RETIRED (2026-08-10, Michael): "the red and
+ * unclickableness of the thing tells the story enough and that [err] is
+ * additional text that i didnt input." He is right, and the general form of it
+ * is worth keeping: a `::after` on a reading line is THE ENGINE WRITING WORDS
+ * INTO SOMEBODY ELSE'S DOCUMENT. An author proof-reads a sentence that has a
+ * word in it they did not type and cannot delete. Report text belongs in the
+ * build report, which already carries the full reason under `dead_links`.
+ *
+ * 🔴 BUT COLOUR ALONE WAS NEVER AN OPTION, WHICH IS WHY A DECORATION ARRIVED IN
+ * THE SAME COMMIT. The 08-03 tone-down had already taken the strikethrough
+ * away, so deleting the badge would have left `--dr-dead` as the ONLY visual
+ * signal on the page -- and "unclickable" is not a cue, it is the ABSENCE of
+ * one. Nothing renders to say a span is inert; it reads as prose in a slightly
+ * odd colour. That fails WCAG 1.4.1 (colour as the sole carrier of meaning), it
+ * vanishes on a greyscale printer, and the `title` tooltip does not exist on a
+ * touch screen -- so on a phone the badge was the whole mechanism.
+ *
+ * So: a dotted underline. Not text, not a word, nothing an author has to
+ * explain or work around, and it survives both a black-and-white printer and a
+ * reader who cannot separate the dead colour from body ink.
+ *
+ * ⚠️ SCOPED TO `span`, AND THAT IS LOAD-BEARING RATHER THAN TIDY. datatable.py
+ * emits this SAME class on a block `<p>` -- "Missing data file: x", "Undeclared
+ * data slot: x" -- and a dotted rule under a whole paragraph reads as a broken
+ * table border, not as a mark. Those blocks state their problem in words, so
+ * they need no mark at all and keep colour only. One class, two elements, two
+ * jobs; the element selector is what keeps them from borrowing each other's
+ * styling.
+ *
  * ⚠️ `--dr-dead` HAS NO CANONICAL EQUIVALENT and is served by the LOCAL
  * theme/colors.tsv base rows even on a canonical theme. It is the only reason
  * that table is still loaded. Raised upstream as maw-themes D11.
@@ -310,13 +340,10 @@
   color: var(--dr-dead);
   cursor: help;
 }
-.docrender-dead::after {
-  content: " [err]";
-  font-family: var(--dr-font-mono);
-  font-size: 0.72em;
-  letter-spacing: 0.02em;
-  opacity: 0.75;
-  vertical-align: 0.08em;
+span.docrender-dead {
+  text-decoration: underline dotted;
+  text-decoration-thickness: var(--dr-border-w, 1px);
+  text-underline-offset: 0.18em;
 }
 
 /* A link into a sibling site. Marked because leaving this site is worth knowing
