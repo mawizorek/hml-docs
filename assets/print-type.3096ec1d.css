@@ -1,0 +1,410 @@
+/* THE PRINT TYPE LAYER -- HOW THE PAPER IS SET.
+ *
+ * Born 2026-08-19 from *"general LINE SPACING - that's the big one"* and finished
+ * the same evening from the verdict that mattered more:
+ *
+ * > Michael: *"the print still looks trashy. too fat and childish and not very
+ * > 'info'-forward."*
+ *
+ * ⭐ THREE COMPLAINTS, THREE DIFFERENT CAUSES, AND CONFLATING THEM IS WHY THE
+ * FIRST TWO PASSES DID NOT LAND IT:
+ *
+ *     "too fat"           SIZE. A 0.8rem base with 2em headings is a web
+ *                         reading scale. On paper it is oversized, and §1's
+ *                         leading fix could never touch it.
+ *     "childish"          WEIGHT AND CHROME. Material sets h1/h2 at font-weight
+ *                         300 -- light strokes at large sizes look flabby rather
+ *                         than authoritative -- plus tinted washes, rounded
+ *                         corners and coloured links.
+ *     "not info-forward"  HIERARCHY BY SIZE INSTEAD OF BY POSITION. When every
+ *                         level shouts, nothing ranks. A document ranks with
+ *                         rules, weight and space; a landing page ranks with
+ *                         point size.
+ *
+ * =========================================================================
+ * 🔴 THE ONE PLACE `fs-body` IS SAFE, AND WHY THAT IS NOT A CONTRADICTION
+ * =========================================================================
+ * `type.css` refuses `.md-typeset { font-size: ... }` outright and it is right
+ * to: every size inside `.md-typeset` is em-relative, so one declaration makes
+ * EVERY WORD ON THE SITE bigger -- the blast radius that forced the PR #82
+ * revert Michael reported as *"the font in the TABLE is massive."*
+ *
+ * ⚑ THAT OBJECTION IS ABOUT SITE-WIDE SCOPE, NOT ABOUT THE MECHANISM. Inside
+ * `@media print` the blast radius is exactly one medium, it is invisible to every
+ * reader who never prints, and it is reversible in one line. The refusal in
+ * type.css stands unamended and this does not contradict it.
+ *
+ * ⭐ AND THE EM-RELATIVITY IS THE FEATURE HERE. Because the ramp below is
+ * expressed in `em`, changing the ONE base value rescales the whole document
+ * proportionally. That is what makes this a dial rather than a dozen numbers.
+ *
+ * =========================================================================
+ * ⚠️ `pt`, AND IT IS THE CORRECT UNIT HERE FOR THE SAME REASON `mm` IS
+ * =========================================================================
+ * `px` at print resolution is a fiction; a sheet is a physical object. `@page`
+ * already reasons in `mm` and the spec's letterhead sizing does too. Type on
+ * paper is measured in points and always has been, so the base is stated in the
+ * unit the medium uses.
+ *
+ * 🔴 STILL NEVER `em` OR `pt` ON `line-height`. §1's finding is unchanged and it
+ * is a different property: a length-valued line-height inherits as a LENGTH and
+ * gives cramped headings beside airy small print. Unitless there, physical here.
+ *
+ * =========================================================================
+ * ⚠️ EVERY NUMBER BELOW IS A TYPOGRAPHIC JUDGEMENT, NOT A MEASUREMENT
+ * =========================================================================
+ * They come from document convention -- 10pt body, a ~1.6x display step, 600
+ * weight for headings -- and NOT from a rendered sheet, because the sheet does
+ * not exist until this ships. This repo's rule is that a judgement says so
+ * rather than borrowing the authority of a measurement.
+ *
+ * ✅ THE ACCEPTANCE TEST IS ONE PRINT AT LETTER AND ONE AT A4. If the body reads
+ * small, `--dr-print-base` is the single value to move and everything follows it.
+ */
+
+@media print {
+  /* -------------------------------------------------------------------------
+   * §0 -- THE ONE DIAL
+   *
+   * Declared as a custom property so the whole document has exactly one number
+   * to argue about. 10pt is the conventional floor for a printed policy: below
+   * ~9pt a photocopy starts closing counters (§7), above ~11pt a reference sheet
+   * reads as large print.
+   * --------------------------------------------------------------------- */
+  .md-typeset {
+    --dr-print-base: 10pt;
+
+    font-size: var(--dr-print-base);
+    line-height: 1.45;
+  }
+
+  /* Dense content is scanned rather than read, which is what the house's 1.35
+   * was chosen for. Sizes here are relative to the base above, so a table stays
+   * proportional to the prose when the dial moves. */
+  .md-typeset table:not([class]),
+  .md-typeset figcaption {
+    font-size: 0.92em;
+    line-height: 1.35;
+  }
+
+  /* 🔴 THE LEDE IS THE LOUDEST "WEBPAGE" TELL ON THE SHEET. `base.css` sizes it
+   * from `--dr-lede-size` for a screen, where a bigger opening paragraph earns
+   * attention against surrounding chrome. On paper there is no chrome to compete
+   * with, so an oversized subtitle just reads as a headline that lost its nerve.
+   * It becomes body text carrying a lighter ink. */
+  .md-typeset .dr-lede,
+  .md-typeset h1 + p {
+    font-size: 1em;
+    line-height: 1.4;
+  }
+
+  /* -------------------------------------------------------------------------
+   * 🔴 §1 -- THE RAMP. THIS IS THE "CHILDISH" FIX.
+   *
+   * Material's screen ramp puts h1 at 2em/300 and h2 at 1.5625em/300. Two things
+   * go wrong at once on paper:
+   *
+   *   SIZE   an h2 at 1.56em of a web base is nearly as loud as the h1, so the
+   *          document has no rank order -- exactly "not info-forward."
+   *   WEIGHT font-weight 300 at 20pt is a LIGHT stroke stretched large. On a
+   *          screen the backlight carries it; in ink it reads soft and
+   *          unserious, which is most of "childish."
+   *
+   * ⭐ SO THE RAMP COMPRESSES AND THE WEIGHT GOES UP. Rank comes from weight,
+   * position and the rule under h2 rather than from point size -- which is how a
+   * printed policy has always signalled hierarchy.
+   *
+   * ⚠️ `type.css` DECLINES TO SET HEADING WEIGHT and says why: the canonical
+   * typography vector has no weight column, so there is nothing to read, and
+   * forcing a weight a family does not ship makes the browser synthesise one.
+   * That reasoning is about the DISPLAY FACE on screen. 🔴 On paper the face is
+   * `system-ui` by accident (see §6) -- a system UI stack that ships real 600 and
+   * 700 cuts on every platform this prints from -- so nothing is being
+   * synthesised. **If the font question is ever ruled and a display face starts
+   * loading, RE-TEST these weights against it.**
+   * --------------------------------------------------------------------- */
+  .md-typeset h1 {
+    font-size: 1.65em;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin-top: 0;
+    margin-bottom: 0.5em;
+  }
+
+  .md-typeset h2 {
+    font-size: 1.22em;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+
+    /* ⚠️ THE MOST OPINIONATED LINE IN THIS FILE, and the first one to delete if
+     * the sheet feels busy. A hairline under a section head is the oldest
+     * info-forward device there is: it ranks the heading by POSITION rather than
+     * by size, which is what lets the size come down at all. */
+    padding-bottom: 0.18em;
+    border-bottom: 0.5pt solid var(--dr-rule, #ccc);
+  }
+
+  .md-typeset h3 {
+    font-size: 1.06em;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  /* h4-h6 are run-in labels inside prose by this depth, which `type.css` already
+   * argues. They rank by weight alone -- a size step here would be noise. */
+  .md-typeset h4,
+  .md-typeset h5,
+  .md-typeset h6 {
+    font-size: 1em;
+    font-weight: 700;
+  }
+
+  /* -------------------------------------------------------------------------
+   * §2 -- BLOCK SPACING. THE SPACE *BETWEEN* THINGS.
+   *
+   * 🔴 "LINE SPACING" IS THREE PROPERTIES AND §0's leading fixes only the first:
+   *
+   *   1  line-height        space WITHIN a paragraph   -> §0
+   *   2  p / heading margin space BETWEEN blocks       -> here
+   *   3  li margin          space BETWEEN bullets      -> §3
+   *
+   * `em` IS CORRECT ON A MARGIN -- it resolves against the element's OWN
+   * font-size. Only `line-height` inherits as a length.
+   *
+   * A HEADING KEEPS MORE SPACE ABOVE THAN BELOW, binding it to the section it
+   * introduces rather than floating between two. ⭐ That asymmetry is doing more
+   * work now that §1 took the sizes down: with a compressed ramp, SPACE is the
+   * primary rank signal and it has to be unambiguous.
+   * --------------------------------------------------------------------- */
+  .md-typeset p,
+  .md-typeset ul,
+  .md-typeset ol,
+  .md-typeset blockquote,
+  .md-typeset pre {
+    margin-top: 0.55em;
+    margin-bottom: 0.55em;
+  }
+
+  .md-typeset h2,
+  .md-typeset h3,
+  .md-typeset h4,
+  .md-typeset h5,
+  .md-typeset h6 {
+    margin-top: 1.15em;
+    margin-bottom: 0.35em;
+  }
+
+  /* -------------------------------------------------------------------------
+   * §3 -- LIST SPACING. THE ONE MOST LIKELY TO BE MISDIAGNOSED.
+   *
+   * 🔴 MATERIAL SPACES LIST ITEMS WITH MARGIN, NOT LEADING. Tightening leading
+   * alone leaves a bulleted list EXACTLY as tall, and the fix reads as a failure.
+   *
+   * 🚫 NOT `margin: 0`. Bullets that touch stop reading as separate items, and a
+   * numbered safety policy is read by somebody hunting ONE rule.
+   * --------------------------------------------------------------------- */
+  .md-typeset li {
+    margin-top: 0.2em;
+    margin-bottom: 0.2em;
+  }
+
+  .md-typeset li > p {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  .md-typeset li > ul,
+  .md-typeset li > ol {
+    margin-top: 0.2em;
+    margin-bottom: 0;
+  }
+
+  /* -------------------------------------------------------------------------
+   * 🔴 §4 -- CALLOUT CHROME. THE BOX WAS ALWAYS THE COST, AND THE TINT WAS THE
+   * SECOND HALF OF "CHILDISH."
+   *
+   * ⭐ THE ARITHMETIC: an `!!! note` carrying ONE LINK occupied ~110px of a
+   * 1230px sheet -- **9% of the page for four words.** A box is a fixed cost paid
+   * PER BOX, so a page of small callouts is the worst possible shape on paper --
+   * and it is a shape chosen because on SCREEN a collapsed `???` costs nothing.
+   *
+   * 🔴 SPECIFICITY, READ AT SOURCE (squidfunk/mkdocs-material @ 39c5171). Material
+   * prefixes two rules with a bare `html`:
+   *
+   *     html & > :last-child   -> (0,3,1)  beats  .md-typeset .admonition > :last-child (0,3,0)
+   *
+   * One element selector, one point, and source order is never consulted. PR #142
+   * shipped without it, so the central rule LOST while its neighbours won -- and
+   * because Material's box has `padding: 0 12px` (ZERO vertical), my 6.4px
+   * padding landed ON TOP of the surviving 12px margin. ⚑ **A partially-winning
+   * override is worse than none: it made the box bigger.**
+   *
+   * ⭐ GENERALISABLE: A MIXED RESULT IS A SPECIFICITY SIGNATURE. When some
+   * declarations in one block land and others do not, the cause is never "the
+   * file did not load" -- it is a per-selector fight, and the winners name the
+   * selectors your opponent armoured.
+   *
+   * 🚫 NOT A FONT-SIZE REDUCTION ON THE CALLOUT. Shrinking the text inside a
+   * `!!! danger` box on a SAFETY document to save paper is the one place in this
+   * build where the cheap lever is also the unsafe one. ✅ The box shrinks; the
+   * warning stays the size of the prose around it.
+   * --------------------------------------------------------------------- */
+  .md-typeset .admonition,
+  .md-typeset details {
+    margin-top: 0.7em;
+    margin-bottom: 0.7em;
+
+    /* 🔴 A 4px RADIUS IS A UI AFFORDANCE. Rounded corners say "card you can
+     * tap" -- correct on screen, and on paper it is the single most childish
+     * detail on the sheet. A printed rule box has corners. 1pt keeps it from
+     * looking like a rendering error rather than a decision. */
+    border-radius: 1pt;
+
+    /* Material's own print block already drops the shadow. Stated here because a
+     * shadow is the other UI-affordance tell and nobody should re-add one. */
+    box-shadow: none;
+  }
+
+  /* 🔴 THE TINTED TITLE WASH GOES, AND THE COLOURED BORDER STAYS -- WHICH IS THE
+   * WHOLE DISTINCTION.
+   *
+   * Material paints the title bar with the family colour at 10% alpha. On screen
+   * that is a soft band; in ink it is a pastel panel, and pastel panels are what
+   * make a policy look like a worksheet.
+   *
+   * ⚠️ BUT THE COLOUR IS NOT DECORATION EVERYWHERE. `print.css` argues, and it is
+   * right, that a `!!! danger` box printing with no red is the same box as a
+   * `!!! note` and the reader cannot know a distinction was lost. So: **the
+   * BORDER carries the meaning and keeps its colour; the WASH carried nothing and
+   * goes.** A rule under the title does the separating instead.
+   *
+   * ⭐ AND THAT IS WHY THIS IS NOT A COLOUR OPINION LANDING IN THE PRINT LAYER.
+   * Removing a decorative surface is a DELIVERY decision, of the same family as
+   * `print-color-adjust` being applied narrowly "on the elements whose MEANING is
+   * carried by a colour." No token is re-pointed and no semantic is touched. */
+  .md-typeset .admonition-title,
+  .md-typeset summary {
+    padding-top: 0.28rem;
+    padding-bottom: 0.28rem;
+    background-color: transparent;
+    border-bottom: 0.5pt solid var(--dr-rule, #ccc);
+    font-size: 1em;
+  }
+
+  /* 🔴 THE RULE THAT NEEDS `html`. Material's `html & > :last-child` sets a 12px
+   * bottom margin, and because the box has no vertical padding, that margin IS
+   * the entire gap between the last line and the bottom border. On a one-line
+   * callout it is most of the box.
+   *
+   * ⚠️ 0.3rem rather than 0: a border sitting against a descender reads as a
+   * rendering fault, and this is the box that has to keep looking like a box --
+   * see §7 on why that is a safety property rather than taste. */
+  html .md-typeset .admonition > :last-child,
+  html .md-typeset details > :last-child {
+    margin-bottom: 0.3rem;
+  }
+
+  html .md-typeset .admonition-title:last-child,
+  html .md-typeset summary:last-child {
+    margin-bottom: 0;
+  }
+
+  .md-typeset .admonition-title + *,
+  .md-typeset summary + * {
+    margin-top: 0.3rem;
+  }
+
+  /* -------------------------------------------------------------------------
+   * 🔴 §5 -- LINKS PRINT AS INK, AND THIS IS A DEAD-CONTROL ARGUMENT RATHER THAN
+   * A TASTE ONE.
+   *
+   * Teal underlined text on paper is the loudest "this is a webpage" signal left
+   * on the sheet, and it is louder than any of the type above.
+   *
+   * ⚑ THE HOUSE ALREADY DECIDED THIS, IN A DIFFERENT COSTUME. `uritp-safety/`
+   * `site.yml` turns off edit links because *"a link that looks like an
+   * invitation and delivers a 404 is a DEAD CONTROL"*; `base.css` carries NO
+   * ROUTE BACK TO THE SOURCE; the printed corner stamp dropped its PR number
+   * three PRs ago on exactly this reasoning. **A coloured link on paper is a
+   * control the reader cannot operate, dressed as one they can.** The underline
+   * survives because it still says "named thing, findable elsewhere."
+   *
+   * ⚠️ WHY THIS IS NOT THE COLOUR OPINION print.css FORBIDS: nothing is
+   * re-pointed and no token is overridden. The link is told to take the ink it is
+   * sitting in -- the ABSENCE of a colour decision, on the one medium where the
+   * colour did work nobody can use.
+   *
+   * ✅ AND THE DEAD-REFERENCE MARKER IS UNTOUCHED, CHECKED RATHER THAN ASSUMED.
+   * `links.py` renders a broken reference as a `<span class="docrender-dead">`
+   * with NO href -- it is not an anchor, so no rule here can reach it. Its red
+   * dotted underline from `base.css` printed correctly on 2026-08-19 and still
+   * will. That signal is the reason to check rather than assume.
+   *
+   * ⭐ `.docrender-xref` KEEPS ITS ARROW, which print.css already argues: "this
+   * points somewhere else" is true on paper too.
+   * --------------------------------------------------------------------- */
+  .md-typeset a,
+  .md-typeset a:visited {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: 0.4pt;
+    text-underline-offset: 0.12em;
+  }
+
+  /* -------------------------------------------------------------------------
+   * §6 -- WHAT IS STILL DELIBERATELY ABSENT
+   *
+   * 🚫 THE FONT FACE. `type.css` records that the typography vector's faces have
+   * NEVER rendered on any site: `theme.font` is unset, so Material's loader
+   * fetches Roboto while `base.css` renames the variables to fonts that resolve
+   * against nothing and fall through to `system-ui`.
+   *
+   * ⚠️ SO PART OF "CHILDISH" IS A FACE NOBODY CHOSE, AND §1 CANNOT FIX IT. A
+   * system UI sans is designed for interface labels at small sizes on a screen;
+   * it is not a text face and it never was. The weights and sizes above make it
+   * behave. **A real text face -- ideally a serif for a printed policy -- is the
+   * next real step in this complaint, and it is Michael's ruling between a
+   * third-party font request and committing binaries.** Named rather than
+   * silently attempted, because a print-only `font-family` would put the screen
+   * and the sheet on two different faces, which is a bigger decision than it
+   * looks.
+   * --------------------------------------------------------------------- */
+
+  /* -------------------------------------------------------------------------
+   * ⚠️ §7 -- THERE IS A FLOOR, AND ON THESE DOCUMENTS IT IS NOT AESTHETIC
+   *
+   * A PRINTED POLICY GETS PHOTOCOPIED, and ink spread closes counters and the
+   * gaps between lines. IT GETS READ STANDING UP, in a shop or a dim corridor, by
+   * somebody hunting one rule -- and SCANNING is more size- and
+   * leading-dependent than reading is.
+   *
+   * 🔴 THAT IS WHY §0 STOPS AT 10pt AND §4 TRIMS RATHER THAN ZEROES. Every number
+   * in this file could be smaller and the sheet would look tighter and read
+   * worse.
+   *
+   * ⚠️ `unverified`: WCAG 2.1 SC 1.4.12 (Text Spacing) names a 1.5x line-height
+   * expectation. Applicability to a FIXED print medium is genuinely unclear -- the
+   * criterion is about content SUPPORTING user-applied spacing, which paper
+   * cannot do either way -- and the published text has not been read. Cited so
+   * somebody can check it; not to be quoted as settled until they have.
+   *
+   * 🔴 HAZARD HAWTHORNE OWNS THE LEGIBILITY FLOOR FOR SAFETY-CRITICAL PRINT, and
+   * this pass raises the stakes on that review twice over: a 10pt base and a
+   * de-tinted warning box are both defensible typography and both touch how a
+   * hazard reads at a glance. **A warning box that stops LOOKING like a warning
+   * box is a safety question, not a typographic one.**
+   * --------------------------------------------------------------------- */
+
+  /* -------------------------------------------------------------------------
+   * 🔴 §8 -- THIS FILE HAS NOW INVALIDATED EVERY HAND-PLACED PAGE BREAK FOUR TIMES
+   *
+   * `{.new-page}` *"is correct on the day it is typed and nobody is told when it
+   * stops being correct."* Leading fitted more lines; §4's first attempt made
+   * boxes bigger; §4 working made them smaller; and §0's base size just changed
+   * how much of ANYTHING fits on a sheet.
+   *
+   * ✅ DO NOT AUTHOR `{.new-page}` ACROSS THE TREE until this pass is previewed
+   * and settled. The automatic rules in print-flow.css exist so that work is
+   * mostly unnecessary.
+   * --------------------------------------------------------------------- */
+}
