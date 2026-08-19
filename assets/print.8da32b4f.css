@@ -1,4 +1,4 @@
-/* THE PRINT LAYER.
+/* THE PRINT LAYER -- WHAT THE SHEET IS.
  *
  * Until this file existed the engine had NO print rules at all -- `@media
  * print` returned zero hits across the whole repo. Every doc site in this
@@ -11,15 +11,49 @@
  *
  * THIS FILE IS STRUCTURE, NOT COLOUR. What a thing IS coloured stays the
  * theme's business, resolved from theme/canonical/* exactly as on screen. What
- * this file decides is what appears on paper at all, how wide it runs, and
- * where the page is allowed to break. Keep that line: the first colour opinion
- * that lands here is the beginning of a second theme nobody can see.
+ * this file decides is what appears on paper at all and how wide it runs. Keep
+ * that line: the first colour opinion that lands here is the beginning of a
+ * second theme nobody can see.
+ *
+ * =========================================================================
+ * ⭐ SPLIT 2026-08-19 -- THE BREAK POLICY LIVES IN assets/print-flow.css
+ * =========================================================================
+ * This file was 22,844 B against a ~22 KB ceiling: the point where a file stops
+ * coming back whole from one read and therefore stops being safely editable.
+ * `type.css`, `nav.css`, `data.css` and `chrome.css` all left `base.css` for
+ * exactly that reason.
+ *
+ * THE SEAM WAS ALREADY WRITTEN IN THIS HEADER. It used to describe its subject
+ * as "what appears on paper at all, how wide it runs, and where the page is
+ * allowed to break" -- two jobs, with the `and` doing the work of a chapter
+ * break. So:
+ *
+ *     print.css       WHAT THE SHEET IS   -- this file
+ *     print-flow.css  WHERE IT BREAKS     -- break-*, orphans/widows, h1-h6,
+ *                                            tab labels, forced-open <details>,
+ *                                            thead repetition, {.new-page}
+ *
+ * ⭐ A PURE MOVE. Nothing was rewritten, nothing was shortened, and no rule
+ * changed meaning -- the declarations and their reasoning went across verbatim.
+ * The total bytes across the two files went UP slightly, because each needs its
+ * own header, and that is the correct trade: two readable files beat one nobody
+ * can open.
+ *
+ * ⚠️ ONE JUDGEMENT CALL, NAMED SO IT CAN BE ARGUED WITH: the code-wrapping
+ * rule STAYED here. It looks like flow -- it changes where lines end -- but it
+ * exists because an over-wide line is silently CUT OFF at the paper edge, which
+ * is content loss on the horizontal axis. That is "what appears on paper at all
+ * and how wide it runs," so it stays. Conversely the forced-open `<details>`
+ * rule LEFT, even though it plainly controls what appears, because it is the
+ * rule that creates the pagination problem the flow file solves. Both calls are
+ * argued in full in the file that ended up with the rule.
  *
  * =========================================================================
  * WHY IT LOADS WHERE IT LOADS, WHICH IS NOT THE OBVIOUS SLOT
  * =========================================================================
- * docrender/assets.py publishes this AFTER the three generated sheets and
- * BEFORE the instance's site.css. Both halves of that are load-bearing.
+ * docrender/assets.py publishes `_PRINT_ASSETS` AFTER the three generated
+ * sheets and BEFORE the instance's site.css. Both halves are load-bearing, and
+ * print-flow.css now inherits the same sandwich.
  *
  * AFTER tokens.css, because the paper overrides below re-point custom
  * properties on `[data-md-color-scheme="slate"]` -- the SAME selector
@@ -30,6 +64,12 @@
  *
  * BEFORE site.css, because an instance keeps the final word on its own look,
  * and that rule has no exception for paper.
+ *
+ * ⚠️ ORDER *WITHIN* THE PRINT GROUP IS FREE, and that is said out loud so
+ * nobody defends a position that was never load-bearing: this file and
+ * print-flow.css share no selector-and-property pair, so neither can win or
+ * lose a tie against the other. Same distinction `_FEATURE_ASSETS` already
+ * draws, where its JS order is law and its CSS order is genuinely free.
  *
  * =========================================================================
  * ⚠️ THE ONE THING THIS FILE CANNOT FIX, STATED RATHER THAN PAPERED OVER
@@ -52,31 +92,19 @@
  * different surface; semantics are left exactly as the theme authored them.
  *
  * =========================================================================
- * ⭐ 2026-08-19: THE AUTHOR GETS ONE WORD ABOUT PAGINATION, AND THE
- * AUTOMATIC RULES GOT THE HALF THEY WERE MISSING
+ * 🚩 WHAT IS SCOPED AND NOT BUILT: `specs/print-identity.md`
  * =========================================================================
- * Two changes, and the ORDER OF IMPORTANCE between them is the point.
+ * Print TYPOGRAPHY (leading, block and list spacing, callout density) and a
+ * sheet-one LETTERHEAD are scoped there and deliberately absent here. Two notes
+ * from that spec matter to anybody editing this file:
  *
- * The request was for a page break an author could write in markdown. The
- * evidence that produced it was two PDFs of the same URITP Safety fire policy
- * printed at 100% and 70%, and what they actually showed was an ORPHAN: a tab
- * label alone at the foot of a sheet with its bullets overleaf. So the
- * automatic rules below gained `h5`, `h6` and the tab label, which repairs
- * every site with no authoring at all -- and `{.new-page}` exists for the
- * cases judgement cannot be automated out of.
- *
- * ⭐ THE SOURCE ALREADY CONTAINED THE REQUEST. `20-policies/fire.md` carries
- * runs of five to seven consecutive blank lines before three of its headings.
- * Markdown collapses them, so the intent was expressed and the format threw it
- * away. A feature request written in whitespace is still a feature request.
- *
- * ⚠️ AND `{.new-page}` IS A LAST RESORT, WHICH IS WHY IT IS DOCUMENTED AS ONE.
- * A hand-placed break is a hard-coded answer to a question whose inputs (paper
- * size, base size, how much text sits above it) all move independently of the
- * page it is written on. It is correct on the day it is typed and nobody is
- * told when it stops being correct -- the same shape as every hand-maintained
- * number this repo has retired. Reach for the automatic rules first; use the
- * token when a section genuinely has to START a sheet.
+ *   1. ⚠️ Nothing in this engine has ever set prose leading or callout
+ *      padding -- verified, four `line-height` hits across the repo and not one
+ *      of them body text. So the paper currently inherits Material's screen
+ *      metrics wholesale. That is a default nobody chose, not a decision.
+ *   2. 🔴 The letterhead will need `print-color-adjust: exact` added to the
+ *      narrow list below, and the logo resolves by filename STEM through
+ *      `images.INDEX` -- never by path.
  */
 
 @media print {
@@ -102,6 +130,11 @@
    * ⚠️ IF THE 640px THRESHOLD EVER MOVES, THIS NUMBER MOVES WITH IT. Both
    * container queries already carry a note to keep each other in step; this is
    * the third place and the only one on a different axis.
+   *
+   * 🔴 AND THE LEFT/RIGHT MARGINS ARE THE LOAD-BEARING HALF. A letterhead may
+   * well want more room at the top, and the BLOCK axis is free to change -- use
+   * a two-value form. Widening the INLINE axis converts every data table on
+   * every site into a stack of key/value rows, silently.
    * --------------------------------------------------------------------- */
   @page {
     margin: 12mm;
@@ -137,7 +170,34 @@
    * above. A printed page leaves the system entirely -- it gets handed to a
    * guest artist, filed, carried into a room months later -- and the one
    * question nobody can answer about a piece of paper is how old it is. It is
-   * the cheapest possible provenance and it costs one line. */
+   * the cheapest possible provenance and it costs one line.
+   *
+   * 🔴 SUSPECTED DEAD, AND UNVERIFIED AS OF 2026-08-19. READ THIS BEFORE
+   * TRUSTING THE EXCEPTION ABOVE.
+   *
+   * `buildstamp.py` emits this element as `config.copyright`, which Material
+   * renders inside its footer meta region -- and `.md-footer-meta` is in the
+   * chrome-off list a few lines up, with `!important`.
+   *
+   * `display: none` on an ANCESTOR removes the whole subtree from the box tree.
+   * A descendant cannot opt back in. So if `.buildstamp` is nested inside
+   * `.md-footer-meta`, the rule below has never done anything, and the
+   * provenance line this engine insists on keeping has been absent from every
+   * printed page since the day the argument for it was written.
+   *
+   * ⚠️ WHY THIS IS FLAGGED RATHER THAN FIXED: the nesting is knowledge of
+   * Material's footer structure, NOT read off its compiled template. A proxy
+   * read presented as a verification is a documented failure in this house
+   * (`instances/uritp-safety/site.yml`, the `database` theme claim), and
+   * blind-fixing a rule that might be fine would be the same mistake wearing a
+   * fix as a costume.
+   *
+   * ⚠️ AND THE OBVIOUS TEST DOES NOT WORK: the two URITP Safety fire-policy
+   * PDFs that prompted this cannot settle it, because that page carries
+   * `hide: [footer]` in its own frontmatter -- no footer could print there
+   * regardless. PRINT A PAGE WITHOUT `hide: footer` AND LOOK. If the stamp is
+   * missing, the fix is to hoist it out of the hidden subtree, and it is a live
+   * bug older than this comment. */
   .buildstamp {
     display: block;
     margin-top: 1.5rem;
@@ -194,6 +254,11 @@
    * and keeps its pale ink: near-white text on white paper. Nothing errors and
    * the preview looks empty.
    *
+   * 🔴 AND THIS IS THE RULE THAT MAKES THE LOAD ORDER LOAD-BEARING. It is the
+   * reason `_PRINT_ASSETS` is its own group rather than the eighth entry in
+   * `_DATA_ASSETS`. If a future split ever lands these files in the wrong slot,
+   * THIS is the rule that dies, and it dies silently.
+   *
    * ⚠️ STRUCTURAL NEUTRALS ONLY -- surfaces, ink, rules. No semantic token is
    * listed and none should be added. See the header.
    * --------------------------------------------------------------------- */
@@ -233,6 +298,10 @@
    * Applied narrowly on purpose. Forcing it document-wide would also force
    * every large background panel through the printer, which wastes toner on
    * exactly the surfaces that carry no meaning.
+   *
+   * 🚩 THIS IS THE LIST A LETTERHEAD LOGO JOINS (`specs/print-identity.md`
+   * §4d). A brand mark qualifies on the stated test -- its meaning IS carried
+   * by colour -- and a logo that prints as an empty box is worse than no logo.
    * --------------------------------------------------------------------- */
   .md-typeset .admonition,
   .md-typeset details,
@@ -248,201 +317,16 @@
   }
 
   /* -------------------------------------------------------------------------
-   * 🔴 A COLLAPSED BLOCK PRINTS CLOSED, AND ITS CONTENT IS JUST GONE
-   *
-   * `???` renders a shut `<details>`. On paper it prints as a lone title bar
-   * with nothing under it -- no ellipsis, no marker, nothing that tells a
-   * reader a section was withheld. The author wrote it, the PDF does not have
-   * it, and the page does not admit it.
-   *
-   * This is the single strongest argument for a print sheet existing at all:
-   * every other default here is ugly, and this one LOSES CONTENT.
-   *
-   * The disclosure triangle goes with it -- a control that cannot be operated
-   * reads as a bullet that means something.
-   * --------------------------------------------------------------------- */
-  .md-typeset details {
-    display: block !important;
-  }
-  .md-typeset details > *:not(summary) {
-    display: revert !important;
-  }
-  .md-typeset summary {
-    list-style: none;
-  }
-  .md-typeset summary::marker,
-  .md-typeset summary::-webkit-details-marker {
-    display: none;
-  }
-
-  /* -------------------------------------------------------------------------
-   * WHERE THE PAGE IS ALLOWED TO BREAK
-   *
-   * The rule behind every declaration below: a break is acceptable BETWEEN
-   * things and unacceptable INSIDE one. A callout split across two sheets
-   * loses its border on both halves and stops reading as a callout at all.
-   *
-   * `orphans`/`widows` are set to 3 rather than the browser default of 2 --
-   * two lines is still a stub at the foot of a sheet.
-   * --------------------------------------------------------------------- */
-
-  /* ⚠️ h5 AND h6 WERE MISSING UNTIL 2026-08-19, and the omission was invisible
-   * because it only shows on a sheet that happens to break in the wrong place.
-   * The list stopped at h4 for no reason anybody recorded -- most likely
-   * because the pages being looked at that day did not go deeper. A heading
-   * level is not less of a heading for being small. */
-  .md-typeset h1,
-  .md-typeset h2,
-  .md-typeset h3,
-  .md-typeset h4,
-  .md-typeset h5,
-  .md-typeset h6 {
-    break-after: avoid;
-    break-inside: avoid;
-  }
-
-  /* A heading at the very bottom of a sheet with its section overleaf is worse
-   * than a slightly short page. */
-  .md-typeset h2,
-  .md-typeset h3 {
-    orphans: 3;
-    widows: 3;
-  }
-
-  .md-typeset p,
-  .md-typeset li {
-    orphans: 3;
-    widows: 3;
-  }
-
-  .md-typeset pre,
-  .md-typeset .highlight,
-  .md-typeset blockquote,
-  .md-typeset figure,
-  .md-typeset img,
-  .md-typeset .admonition,
-  .md-typeset details,
-  .md-typeset tr,
-  .dr-spec table {
-    break-inside: avoid;
-  }
-
-  /* ⚠️ A LONG TABLE MUST BE ALLOWED TO BREAK. `break-inside: avoid` on `tr`
-   * keeps a single ROW whole; putting it on the table would push a 40-row
-   * sheet onto its own page and leave most of the previous one empty. Rows
-   * are the unit, never the table. */
-  .md-typeset table:not([class]) {
-    break-inside: auto;
-  }
-
-  /* A repeated header row is the only thing that makes page two of a table
-   * readable. */
-  .md-typeset thead {
-    display: table-header-group;
-  }
-
-  /* -------------------------------------------------------------------------
-   * 🔴 A TAB LABEL IS A HEADING THAT DOES NOT LOOK LIKE ONE (2026-08-19)
-   *
-   * `pymdownx.tabbed` with `alternate_style: true` (mkdocs.yml, verified) puts
-   * every label in one `.tabbed-labels` row and every panel in
-   * `.tabbed-content`. On screen that is a tab strip and only one panel shows.
-   * On paper Material flattens it: label, its bullets, next label, its
-   * bullets. Every panel prints, which is correct and is the only sane
-   * behaviour -- a printed tab strip would otherwise LOSE six of seven panels,
-   * the same defect the collapsed-`<details>` rule above exists to prevent.
-   *
-   * What it does NOT get is any of the protection a real heading gets, and
-   * that is what the h1-h6 rule above cannot reach: `Water Mist` printed alone
-   * at the foot of a sheet with its three bullets overleaf, and `Dry Powder`
-   * split across two. A label with no content under it reads as an empty
-   * section, which is worse than a short page.
-   *
-   * ⚠️ BOTH SPELLINGS ARE WRITTEN ON PURPOSE, and this is the documented
-   * house pattern rather than hedging: blocks.css emits every rule for
-   * `.admonition` AND `details` because "a selector matching nothing costs
-   * bytes; a missing one costs a family that stays blue." Same arithmetic
-   * here. The flattening geometry was verified from OUTPUT (two PDFs) and not
-   * from Material's compiled stylesheet, so the exact label element is the one
-   * thing below not read off a source file. If a live proof shows only one of
-   * these matching, DELETE the other rather than leaving both.
-   *
-   * 🚫 NOT `break-inside: avoid` ON `.tabbed-set`. Seven panels is most of a
-   * sheet, so that would push the whole set onto its own page and leave the
-   * previous one half empty -- the identical mistake the table note above
-   * refuses. The PANEL is the unit, never the set.
-   * --------------------------------------------------------------------- */
-  .md-typeset .tabbed-labels > label,
-  .md-typeset .tabbed-label {
-    break-after: avoid;
-    break-inside: avoid;
-  }
-
-  /* A panel here is two to four bullets. Keeping one whole is cheap; if one
-   * ever grows past a page the browser ignores `avoid` on its own, which is
-   * the correct failure. */
-  .md-typeset .tabbed-block {
-    break-inside: avoid;
-  }
-
-  /* -------------------------------------------------------------------------
-   * ⭐ `{.new-page}` -- THE AUTHOR'S ONE PAGINATION CONTROL (2026-08-19)
-   *
-   * Write it on any block element and that element starts a fresh sheet:
-   *
-   *     ## Standing Policies to Mitigate Fires {.new-page}
-   *
-   * ⭐ IT NEEDED NO PYTHON, NO PREFIX AND NO PARSER CHANGE, and that is why it
-   * is a fold-in rather than a feature. `attr_list` is already enabled and
-   * already in daily use in content (`{.hi}`, `{.gap}` on the same fire policy
-   * page that prompted this), so the whole thing is ONE declaration in a file
-   * that already existed. The cheapest version of a request is worth hunting
-   * for before the expensive one gets built.
-   *
-   * It is invisible on screen because it lives inside this `@media print`
-   * block. Nothing about the page changes for a reader who never prints.
-   *
-   * ⚠️ ONE CLASS, NOT TWO. `.dr-page-break` was considered as an alias and
-   * REFUSED: two tokens for one behaviour is two claimants on one truth, and
-   * this repo has retired three manifests over exactly that. Michael chose
-   * `{.new-page}` (2026-08-19) because it reads like the `{.hi}` and `{.gap}`
-   * already in the content. If it is ever renamed, the old name goes.
-   *
-   * ⚠️ THE NAME IS UNPREFIXED, WHICH IS A REAL IF SMALL RISK worth writing
-   * down rather than discovering. Engine-owned classes are `dr-`-prefixed
-   * (`dr-mark`, `dr-lede`, `dr-data__table`); the unprefixed precedent is the
-   * AUTHORING tokens, which is what this is. The exposure is that `new-page`
-   * is a generic enough string for Material or a future sheet to claim it.
-   * Nothing claims it today (grepped). If something ever does, this is the
-   * first place to look.
-   * --------------------------------------------------------------------- */
-  .md-typeset .new-page {
-    break-before: page;
-  }
-
-  /* 🔴 A BREAK BEFORE THE FIRST THING ON THE SHEET EMITS A BLANK LEADING PAGE.
-   * The author's mistake is invisible in the editor and obvious on paper, so
-   * it is guarded here instead of documented as a gotcha. Two selectors
-   * because the first element may sit directly under either wrapper. */
-  .md-typeset > .new-page:first-child,
-  .md-content__inner > .new-page:first-child {
-    break-before: auto;
-  }
-
-  /* ⚠️ AND IT CANNOT BREAK OUT OF A BOX THAT REFUSES TO BREAK INSIDE ITSELF.
-   * `break-inside: avoid` is set above on admonitions, `<details>`, figures,
-   * `tr` and tab panels; a `{.new-page}` on something nested in one of those
-   * is in a fight it does not win, and the browser resolves it silently.
-   * The token belongs on a TOP-LEVEL block -- a heading, a paragraph, a table
-   * -- and that is a limitation of the box model rather than of this rule.
-   * --------------------------------------------------------------------- */
-
-  /* -------------------------------------------------------------------------
    * CODE
    *
    * A horizontal scrollbar has no paper equivalent, so an over-wide line is
    * simply cut off at the edge with no indication. Wrapping is the only option
    * that does not lose characters.
+   *
+   * ⚠️ AND THAT IS WHY IT STAYED IN THIS FILE RATHER THAN GOING TO
+   * print-flow.css. It changes where lines end, which reads as flow -- but the
+   * defect it prevents is CONTENT LOST AT THE PAPER EDGE, on the horizontal
+   * axis, which is this file's subject. Vertical loss is next door.
    * --------------------------------------------------------------------- */
   .md-typeset pre,
   .md-typeset pre > code {
