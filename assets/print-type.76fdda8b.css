@@ -15,8 +15,7 @@
  * is subtractive, and every millimetre of leading is paid for in sheets. So the
  * print layer being TIGHTER than the screen layer is not a compromise -- it is
  * the same content typeset for a different medium, which is what a print
- * stylesheet is for. This is the first time this engine has had a reason to say
- * that out loud.
+ * stylesheet is for.
  *
  * =========================================================================
  * ✅ NOTHING IN THIS ENGINE HAD EVER SET PROSE LEADING. VERIFIED, NOT ASSUMED.
@@ -26,13 +25,13 @@
  * cell, 1.4 on a wrapped cell), `data-list.css` (1.35), `navtree.css` (1.5).
  *
  * ⚑ So prose, list and heading leading were Material's, unmodified, on screen
- * and therefore on paper. That was a DEFAULT NOBODY CHOSE, not a decision -- and
- * it is the reason a change here is defensible on all six sites at once rather
- * than needing an opt-in.
+ * and therefore on paper. That was a DEFAULT NOBODY CHOSE, not a decision.
  *
- * ⭐ AND THE HOUSE ALREADY HAD A DENSE-CONTENT PRECEDENT: 1.35, picked twice for
- * content whose job is to be SCANNED. The value below is argued against that
- * rather than invented from nothing -- see §1.
+ * ✅ AND §1 IS NOW PROVEN ON PAPER, MEASURED RATHER THAN ASSERTED. Two prints of
+ * one page, before and after: lede baseline 170 -> 140, `Related` 394 -> 355,
+ * `Revised` 700 -> 597. **h1-to-last-line 613px -> 510px, ~17% of the sheet
+ * recovered** on a page that is mostly whitespace. §3a's arithmetic predicted
+ * exactly this and the prediction held.
  *
  * =========================================================================
  * 🔴 WHY LEADING AND NOT FONT SIZE, WHICH IS THE ARITHMETIC THAT DECIDED IT
@@ -42,18 +41,13 @@
  * reference document is almost entirely lines. Reduce leading by n% and the
  * document loses very nearly n% of its height -- every page, every section.
  *
- * ⭐ That argument holds WITHOUT knowing the value you are starting from, which
- * is why the lever order was decidable before anything was measured. Only the
- * final number needed a rendered sheet.
- *
- * 🚫 AND FONT SIZE IS DELIBERATELY NOT TOUCHED HERE. `type.css` refuses
+ * 🚫 AND FONT SIZE IS STILL NOT TOUCHED. `type.css` refuses
  * `.md-typeset { font-size: var(--dr-fs-body) }` outright and records why: every
  * size inside `.md-typeset` is em-relative, so one line makes EVERY WORD ON THE
  * SITE 12.5% bigger -- the blast radius that forced the PR #82 revert Michael
- * reported as *"the font in the TABLE is massive."* That objection is about
- * SITE-WIDE scope, and inside `@media print` the blast radius is one medium --
- * but it is still the crudest lever available and it is held in reserve. If the
- * four rules below are not enough, THEN a print base size, and not before.
+ * reported as *"the font in the TABLE is massive."* Inside `@media print` the
+ * blast radius is one medium, but it is still the crudest lever available and it
+ * stays in reserve.
  */
 
 @media print {
@@ -76,24 +70,12 @@
    * two-axis padding onto a one-axis primitive, and a container query whose
    * `45em` resolved against a font size nobody had checked. A relative unit is
    * only relative to SOMETHING, and the something is rarely what you meant.
-   * `.md-typeset` is the element whose entire documented hazard is that
-   * everything inside it is em-relative, so it is the worst possible place in
-   * this codebase to introduce a length-valued line-height.
    *
-   * WHY 1.45 -- and it is a JUDGEMENT bounded at both ends rather than a
-   * measurement, which is stated plainly because this repo does not dress one
-   * up as the other:
-   *
-   *   - ABOVE the house's 1.35 dense-content precedent, deliberately. That
-   *     value was chosen for a DATA CELL, which is one line long. A policy
-   *     paragraph is six, and leading matters more the longer the run.
-   *   - BELOW screen-typical prose leading, which is the whole ask.
-   *   - AT OR ABOVE the floor §5 argues for, which is the half of this that is
-   *     not about looks.
-   *
-   * ⚠️ THE FIRST PRINT PREVIEW IS THE ACCEPTANCE TEST, NOT THIS COMMENT. If
-   * 1.45 reads tight on a real sheet at Letter AND A4, move it -- and move it
-   * here, in one place, rather than adding a second rule somewhere else.
+   * WHY 1.45 -- a JUDGEMENT bounded at both ends rather than a measurement,
+   * stated plainly because this repo does not dress one up as the other:
+   * ABOVE the house's 1.35 dense-content precedent (chosen for a one-line DATA
+   * CELL, where a policy paragraph is six lines), BELOW screen-typical prose,
+   * and at or above the floor §6 argues for.
    * --------------------------------------------------------------------- */
   .md-typeset {
     line-height: 1.45;
@@ -127,7 +109,7 @@
    * A HEADING KEEPS MORE SPACE ABOVE THAN BELOW, on purpose. That asymmetry is
    * what visually binds a heading to the section it introduces rather than
    * leaving it floating between two. It also compounds the `break-after: avoid`
-   * rule in print-flow.css, which is trying to say the same thing about page
+   * rule in print-flow.css, which is saying the same thing about page
    * boundaries that this says about vertical rhythm.
    * --------------------------------------------------------------------- */
   .md-typeset p,
@@ -155,15 +137,12 @@
    * 🔴 MATERIAL SPACES LIST ITEMS WITH MARGIN, NOT LEADING. So tightening §1
    * alone leaves a bulleted list EXACTLY as tall as it was, and the fix reads as
    * a failure. On the document that prompted this work -- the URITP Safety fire
-   * policy -- the lists are most of the page, so this rule is doing more visible
-   * work there than §1 is.
+   * policy -- the lists are most of the page.
    *
    * ⚠️ AND IT PAYS BACK A COST INTRODUCED THE SAME DAY. The fix for that page's
    * broken numbering nests a callout inside list item 5, which makes the list
    * LOOSE -- markdown then wraps every item in `<p>` and all eight items gain
-   * paragraph spacing. §2's `p` margin and this rule are what keep that fix from
-   * costing a third of a sheet. The two changes must be judged on the SAME
-   * printed sheet, not separately.
+   * paragraph spacing.
    *
    * 🚫 NOT `margin: 0`. Bullets that touch stop reading as separate items, and a
    * numbered safety policy is read by somebody looking for ONE rule -- item
@@ -192,15 +171,96 @@
   }
 
   /* -------------------------------------------------------------------------
-   * §4 -- WHAT IS DELIBERATELY ABSENT, so nobody reads the gaps as oversights
+   * 🔴 §4 -- CALLOUT DENSITY. THE BOX CHROME WAS ALWAYS THE REAL COST.
    *
-   * 🚫 CALLOUT DENSITY. The single largest space cost on the fire policy is box
-   * chrome, not type: four `???+` boxes each carrying ONE sentence consumed
-   * roughly half of sheet one, because a `???+` is a `<details>` -- cheap on
-   * screen precisely because it collapses -- and print-flow.css force-opens all
-   * of them. Verified at HEAD: nothing in this engine sizes or pads a callout,
-   * so those metrics are Material's. It is the next lever and it is a separate,
-   * separately-judged change. Scoped in `specs/print-identity.md` §3e.
+   * Michael, on a printed sheet AFTER §1-§3 landed: *"the callout box gets
+   * clipped and is still massive."* Correct on both counts, and §1 was never
+   * going to help: **a callout's height is padding plus border plus title bar,
+   * and leading only governs the words inside it.**
+   *
+   * ⭐ THE ARITHMETIC, from the page that prompted this: an `!!! note` carrying
+   * ONE LINK occupied ~110px of a 1230px sheet -- 9% of the page for four words.
+   * On the fire policy FOUR `???+` boxes each carrying ONE SENTENCE consumed
+   * roughly half of sheet one. ⚑ A box is a fixed cost paid per box, so a page
+   * of small callouts is the worst possible shape on paper, and it is a shape
+   * chosen because on SCREEN a collapsed `???` costs almost nothing.
+   *
+   * ✅ VERIFIED AT HEAD BEFORE WRITING: nothing in this engine sizes or pads a
+   * callout. `admonition` appears in `assets/` only in `chrome.css` (a shadow
+   * token and `--md-admonition-bg-color`) and in `print.css`
+   * (`print-color-adjust`). So these metrics are Material's, unmodified, and
+   * every value below is a NEW declaration rather than an adjustment to one --
+   * which is why no Material number is quoted anywhere in this block. This file
+   * does not need to know what it is overriding; it only needs to be later and
+   * as specific.
+   *
+   * 🚫 NOT A FONT-SIZE REDUCTION ON THE CALLOUT. Shrinking the text inside a
+   * `!!! danger` box on a SAFETY document to save paper is the wrong trade, and
+   * it is the one place in this build where the cheap lever is also the unsafe
+   * one. The box gets smaller; the warning stays the same size as the prose
+   * around it.
+   * --------------------------------------------------------------------- */
+  .md-typeset .admonition,
+  .md-typeset details {
+    margin-top: 0.7em;
+    margin-bottom: 0.7em;
+    padding-top: 0;
+    padding-bottom: 0.4rem;
+  }
+
+  /* The title bar is a band, not a panel. Its vertical padding is the single
+   * biggest per-box cost after the body's. */
+  .md-typeset .admonition-title,
+  .md-typeset summary {
+    margin-bottom: 0.4rem;
+    padding-top: 0.3rem;
+    padding-bottom: 0.3rem;
+  }
+
+  /* 🔴 THE LAST CHILD'S MARGIN IS WHAT MAKES A ONE-LINE CALLOUT LOOK MASSIVE,
+   * and it is invisible until you look for it. §2 above gives every `p` a
+   * 0.6em bottom margin; inside a box that margin sits BETWEEN the text and the
+   * box's own bottom padding, so a single-sentence callout pays for both. The
+   * box owns its bottom edge. */
+  .md-typeset .admonition > :last-child,
+  .md-typeset details > :last-child {
+    margin-bottom: 0;
+  }
+
+  /* And the first child after the title should not add a second gap on top of
+   * the title's own bottom margin. */
+  .md-typeset .admonition-title + *,
+  .md-typeset summary + * {
+    margin-top: 0;
+  }
+
+  /* ⚠️ `overflow: visible` IS REASONED FROM A PRECEDENT, NOT FROM A DIAGNOSIS,
+   * AND THAT DISTINCTION IS STATED SO NOBODY LATER READS IT AS A CONFIRMED FIX.
+   *
+   * Michael reports the box "gets clipped." I have not been able to reproduce or
+   * locate the clip -- a PDF shows the outcome, not the rule that caused it, and
+   * Material's compiled admonition rules were not read this session. So this is
+   * NOT presented as the cause.
+   *
+   * What justifies the line anyway is the argument `print.css` already makes
+   * about `pre`: *"a horizontal scrollbar has no paper equivalent, so an
+   * over-wide line is simply cut off at the edge with no indication."* ANY
+   * element that manages overflow for a scrolling viewport clips silently on
+   * paper, and a callout is a box with a background and a border -- exactly the
+   * shape where a clip is invisible until content is missing.
+   *
+   * 🔴 IF A PREVIEW SHOWS THE CLIP PERSISTING, THIS LINE DID NOT FIX IT AND
+   * SHOULD BE DELETED RATHER THAN KEPT AS A CHARM. The next suspect is the
+   * `break-inside: avoid` in print-flow.css interacting with a box taller than
+   * the space left on the sheet, which is a pagination problem wearing a
+   * clipping costume and belongs in that file, not this one. */
+  .md-typeset .admonition,
+  .md-typeset details {
+    overflow: visible;
+  }
+
+  /* -------------------------------------------------------------------------
+   * §5 -- WHAT IS STILL DELIBERATELY ABSENT
    *
    * 🚫 THE HEADING TYPE RAMP. Screen heading sizes are set to compete with
    * chrome, a sidebar and a scroll position; on paper the page boundary does
@@ -210,14 +270,15 @@
    * is unset, so the variables name fonts that resolve against nothing and fall
    * through to `system-ui`. ⚠️ Part of the "rendered webpage" feel is that every
    * heading is large system-ui sans, and designing a print ramp on top of a face
-   * nobody chose is building on sand. That question is Michael's ruling between
-   * a third-party font request and committing binaries.
+   * nobody chose is building on sand. Michael's ruling, between a third-party
+   * font request and committing binaries.
    *
-   * 🚫 A PRINT BASE FONT SIZE. See the header. Crudest lever, held in reserve.
+   * 🚫 A PRINT BASE FONT SIZE. See the header. Crudest lever, held in reserve --
+   * and after §4 there is a real chance it is never needed.
    * --------------------------------------------------------------------- */
 
   /* -------------------------------------------------------------------------
-   * ⚠️ §5 -- THERE IS A FLOOR, AND ON THESE DOCUMENTS IT IS NOT AESTHETIC
+   * ⚠️ §6 -- THERE IS A FLOOR, AND ON THESE DOCUMENTS IT IS NOT AESTHETIC
    *
    * Tighter is not monotonically better, and the stopping point is a safety
    * question before it is a taste one. Two concrete costs, neither hypothetical
@@ -227,8 +288,7 @@
    *     separate lines. A sheet that is crisp from the printer can be a grey
    *     block two generations later.
    *   - IT GETS READ STANDING UP, in a shop or a dim corridor, by somebody
-   *     hunting one rule. SCANNING is more leading-dependent than reading is,
-   *     and that is the actual use of these documents.
+   *     hunting one rule. SCANNING is more leading-dependent than reading is.
    *
    * ⚠️ `unverified`: WCAG 2.1 SC 1.4.12 (Text Spacing) names a 1.5x line-height
    * expectation. Its applicability to a FIXED print medium is genuinely unclear
@@ -240,25 +300,25 @@
    * 🔴 HAZARD HAWTHORNE OWNS THE LEGIBILITY FLOOR FOR SAFETY-CRITICAL PRINT.
    * That is his lane and not the engine's, and it is named here rather than
    * assumed because a craft head is easiest to omit exactly when the
-   * generalists are doing well.
+   * generalists are doing well. ⚠️ §4 raises the stakes on that review: box
+   * padding is not legibility, but a warning box that stops LOOKING like a
+   * warning box is a safety question and not a typographic one.
    * --------------------------------------------------------------------- */
 
   /* -------------------------------------------------------------------------
-   * 🔴 §6 -- THIS FILE INVALIDATES EVERY HAND-PLACED PAGE BREAK. TODAY.
+   * 🔴 §7 -- THIS FILE INVALIDATES EVERY HAND-PLACED PAGE BREAK. TWICE NOW.
    *
    * `print-flow.css` warns that `{.new-page}` *"is correct on the day it is
-   * typed and nobody is told when it stops being correct."* This is the change
-   * that makes that come true: tighter leading means MORE LINES PER SHEET, so
-   * every hand-placed break in the doc tree moves the moment this merges.
+   * typed and nobody is told when it stops being correct."* §1-§3 made that come
+   * true once by fitting more lines on a sheet; §4 does it again by fitting more
+   * BOXES. Anything authored between the two is now wrong twice.
    *
-   * ✅ Which is why the token shipped hours before this and the advice went with
-   * it: DO NOT AUTHOR `{.new-page}` MARKERS ACROSS THE TREE until this has been
-   * previewed and settled. Anything placed before then gets re-judged.
+   * ✅ DO NOT AUTHOR `{.new-page}` MARKERS ACROSS THE TREE until the whole
+   * typography pass has been previewed and settled.
    *
-   * ⚠️ AND IT RE-EXERCISES THE WHOLE BREAK POLICY. More lines per sheet moves
-   * every break, so `orphans: 3`, the h1-h6 rule and the tab-label protection
-   * all get a different workout than the one they were verified against. A
-   * pagination oddity after this merges could belong to either change --
-   * PREVIEW THEM ON THE SAME SHEET.
+   * ⚠️ AND IT RE-EXERCISES THE WHOLE BREAK POLICY AGAIN. `orphans: 3`, the
+   * h1-h6 rule and the tab-label protection were verified against neither of
+   * these layouts. A pagination oddity now could belong to any of three changes
+   * -- PREVIEW THEM ON THE SAME SHEET.
    * --------------------------------------------------------------------- */
 }
