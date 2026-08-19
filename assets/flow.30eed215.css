@@ -1,0 +1,276 @@
+/* flow.css -- the flow strip and the embedded completion form.
+ *
+ * WHY THIS FILE EXISTS AT ALL, said first because it was deliberately absent:
+ * the strip shipped 2026-08-19 with semantic markup and NO stylesheet, on the
+ * argument that a sheet is a follow-up. Michael read the result and the verdict
+ * was exact -- "all this other foot matter," and "is that what I'm supposed to
+ * click next?"
+ *
+ * He was right, and the reason is a change of JOB rather than a matter of taste.
+ * The strip was designed as a SECOND footer beside Material's prev/next, where
+ * looking quiet was correct. It is now the ONLY footer on a program page
+ * (`hide: footer` in frontmatter, Michael's call), and the only navigation on a
+ * page must look like navigation. An unstyled <nav> at the bottom of a document
+ * reads as more document.
+ *
+ * TOKENS ARE ALWAYS USED WITH A FALLBACK, and the fallback is a Material
+ * variable rather than a literal. This engine generates `--dr-*` from
+ * theme/canonical/*.tsv per site, so a token that exists on `eos` may not exist
+ * on a nine-token local skin -- the exact failure that left eleven callout
+ * families painting `currentColor` on 2026-08-05. Falling back to Material's own
+ * variable means the worst case is Material's look, never an invisible control.
+ *
+ * NO COLOUR IS HARDCODED except the one border in the form frame, which is
+ * inherited from ClickUp's own embed snippet and is theirs.
+ */
+
+/* ------------------------------------------------------------------ strips */
+
+.dr-flows {
+  margin: 2.5rem 0 0;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--dr-border, var(--md-default-fg-color--lightest));
+}
+
+.dr-flow {
+  display: block;
+}
+
+.dr-flow + .dr-flow {
+  margin-top: 1.1rem;
+  padding-top: 1.1rem;
+  border-top: 1px dashed var(--dr-border, var(--md-default-fg-color--lightest));
+}
+
+/* The orientation line. Deliberately SMALLER than the moves below it: the
+ * program name answers "where am I," the buttons answer "what now," and the
+ * second question is the one a reader at the foot of a page is asking. */
+.dr-flow__where {
+  margin: 0 0 0.6rem;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  color: var(--md-default-fg-color--light);
+}
+
+.dr-flow__program {
+  font-weight: 700;
+  color: var(--md-default-fg-color--light);
+}
+
+a.dr-flow__program:hover {
+  color: var(--dr-accent, var(--md-typeset-a-color));
+}
+
+/* A chip, not a sentence. It is a progress READOUT and wants to be glanceable
+ * beside the program name rather than read as prose. */
+.dr-flow__step {
+  display: inline-block;
+  margin-left: 0.45rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 0.6rem;
+  background: var(--dr-surface-3, var(--md-code-bg-color));
+  font-size: 0.66rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Prev left, next right, and they do not collapse into each other on a phone:
+ * `wrap` with a gap, so a long policy title stacks instead of truncating. A
+ * truncated destination is a button you cannot trust. */
+.dr-flow__move {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: stretch;
+  justify-content: space-between;
+  margin: 0;
+}
+
+.dr-flow__prev,
+.dr-flow__next,
+.dr-flow__end {
+  display: inline-block;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--dr-border, var(--md-default-fg-color--lighter));
+  border-radius: 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-decoration: none;
+}
+
+/* NEXT IS THE PRIMARY ACTION AND IS THE ONLY FILLED CONTROL IN THE STRIP.
+ * This is the fix for "is that what I'm supposed to click next?" -- when two
+ * arrows carry identical weight, neither reads as the instruction. */
+.dr-flow__next {
+  margin-left: auto;
+  border-color: var(--dr-accent, var(--md-typeset-a-color));
+  background: var(--dr-accent, var(--md-typeset-a-color));
+  color: var(--dr-on-accent, var(--md-primary-bg-color));
+}
+
+.dr-flow__next:hover {
+  filter: brightness(1.12);
+}
+
+.dr-flow__prev {
+  color: var(--md-default-fg-color--light);
+  background: transparent;
+}
+
+.dr-flow__prev:hover {
+  border-color: var(--dr-accent, var(--md-typeset-a-color));
+  color: var(--dr-accent, var(--md-typeset-a-color));
+}
+
+/* THE START STRIP. On a program's own page this is the only pointer into the
+ * flow, so its Next runs full width -- there is no Previous to balance against
+ * and nothing else on the page competes with it. */
+.dr-flow--start .dr-flow__next {
+  width: 100%;
+  margin-left: 0;
+  text-align: center;
+}
+
+/* THE END OF A FLOW IS A LINK, NOT A FULL STOP. It shipped as dead text
+ * ("end of this program"), which is worst exactly where it matters most: with
+ * the footer hidden, the last step of a program is the one page with nowhere
+ * to go, and it is where somebody needs the completion form. */
+.dr-flow__end {
+  margin-left: auto;
+  border-color: var(--dr-good, var(--md-typeset-a-color));
+  color: var(--dr-good, var(--md-typeset-a-color));
+  background: transparent;
+}
+
+a.dr-flow__end:hover {
+  background: var(--dr-good, var(--md-typeset-a-color));
+  color: var(--dr-on-accent, var(--md-primary-bg-color));
+}
+
+/* THE CAP. Secondary flows live behind one disclosure -- quiet, and obviously
+ * a control. `<details>` needs no script and prints open for free. */
+.dr-flows__others {
+  margin-top: 0.9rem;
+}
+
+.dr-flows__others > summary {
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--md-default-fg-color--light);
+}
+
+.dr-flows__others > summary:hover {
+  color: var(--dr-accent, var(--md-typeset-a-color));
+}
+
+.dr-flows__others .dr-flow:first-of-type {
+  margin-top: 0.8rem;
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* -------------------------------------------------------------------- form */
+
+.dr-form {
+  margin: 1.5rem 0 0;
+}
+
+/* THE COLLAPSED FORM, WHICH IS THE ANSWER TO A REAL SEQUENCING PROBLEM. A
+ * program page is BOTH the entrance and the exit: a reader lands there before
+ * reading anything, and returns there to submit. An open form on arrival tells
+ * somebody to submit a form for material they have not read yet.
+ *
+ * So `collapsed: true` renders it shut, and the last step's Next links to the
+ * summary's own id. Per the HTML spec a fragment pointing INSIDE a closed
+ * <details> expands it, so arriving from the end of the flow opens the form
+ * with no script and no state.
+ *
+ * DEGRADES HONESTLY where that behaviour is missing: the reader lands on a
+ * visible, obvious "Complete this program" control and clicks once. One extra
+ * click, never a dead end -- which is why this is safe to ship without
+ * browser-support arithmetic nobody can verify from here. */
+.dr-form__open > summary {
+  cursor: pointer;
+  display: block;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--dr-good, var(--md-typeset-a-color));
+  border-radius: 0.25rem;
+  color: var(--dr-good, var(--md-typeset-a-color));
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.dr-form__open > summary:hover {
+  background: var(--dr-good, var(--md-typeset-a-color));
+  color: var(--dr-on-accent, var(--md-primary-bg-color));
+}
+
+.dr-form__open[open] > summary {
+  margin-bottom: 0.8rem;
+}
+
+.dr-form iframe {
+  display: block;
+  width: 100%;
+}
+
+/* The fallback link is ALWAYS rendered, never a print-only afterthought: it is
+ * also the answer to "the form did not load." Quiet on screen, essential on
+ * paper. */
+.dr-form__fallback {
+  margin: 0.6rem 0 0;
+  font-size: 0.75rem;
+  color: var(--md-default-fg-color--light);
+}
+
+/* ------------------------------------------------------------------- print */
+
+@media print {
+  /* A BUTTON ON PAPER IS A LIE. The information survives -- which program,
+   * which step, what comes next -- and the affordance goes, because nobody
+   * taps a sheet of paper. print-flow.css already forces every <details> open,
+   * so a printed packet lists every program a page belongs to. */
+  .dr-flow__prev,
+  .dr-flow__next,
+  .dr-flow__end {
+    padding: 0;
+    border: 0;
+    background: transparent !important;
+    color: inherit !important;
+    font-weight: 600;
+  }
+
+  .dr-flow__move {
+    display: block;
+    font-size: 0.8rem;
+  }
+
+  .dr-flow__next::before {
+    content: "Next: ";
+    font-weight: 400;
+  }
+
+  .dr-flow__prev::before {
+    content: "Previous: ";
+    font-weight: 400;
+  }
+
+  /* An iframe prints as a blank rectangle, so it is removed outright and the
+   * fallback link carries the address. A hole where a compliance form should be
+   * is worse than a printed URL. */
+  .dr-form iframe {
+    display: none;
+  }
+
+  .dr-form__fallback {
+    font-size: 0.85rem;
+  }
+
+  .dr-form__open > summary {
+    border: 0;
+    padding: 0;
+  }
+}
