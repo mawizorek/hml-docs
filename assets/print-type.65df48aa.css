@@ -117,11 +117,16 @@
    * ⚠️ `type.css` DECLINES TO SET HEADING WEIGHT and says why: the canonical
    * typography vector has no weight column, so there is nothing to read, and
    * forcing a weight a family does not ship makes the browser synthesise one.
-   * That reasoning is about the DISPLAY FACE on screen. 🔴 On paper the face is
-   * `system-ui` by accident (see §6) -- a system UI stack that ships real 600 and
-   * 700 cuts on every platform this prints from -- so nothing is being
-   * synthesised. **If the font question is ever ruled and a display face starts
-   * loading, RE-TEST these weights against it.**
+   * That reasoning is sound and this overrides it deliberately, on one medium.
+   *
+   * 🔴 AND THE SYNTHESIS RISK IS REAL RATHER THAN THEORETICAL, WHICH IS WHY THE
+   * CORRECTED §6 MATTERS TO THIS RULE. The vector's declared families -- Inter,
+   * Archivo, Manrope, Gabarito, Chakra Petch -- all ship 600 and 700 cuts, so if
+   * they ever LOAD these weights are honest. The fallback the stacks name,
+   * `system-ui`, also ships real 600/700 on every platform this prints from. So
+   * nothing is synthesised either way. **That is a property of these particular
+   * rows, not a general licence: a new typography row naming a family with only
+   * a 400 cut would make this rule start faking bold.**
    * --------------------------------------------------------------------- */
   .md-typeset h1 {
     font-size: 1.65em;
@@ -352,22 +357,54 @@
   }
 
   /* -------------------------------------------------------------------------
-   * §6 -- WHAT IS STILL DELIBERATELY ABSENT
+   * ✅ §6 -- THE FACE. CORRECTED 2026-08-19, SAME EVENING, ON MICHAEL'S CHALLENGE:
+   * *"wait - we don't dictate font via the theme vectors that we have....."*
    *
-   * 🚫 THE FONT FACE. `type.css` records that the typography vector's faces have
-   * NEVER rendered on any site: `theme.font` is unset, so Material's loader
-   * fetches Roboto while `base.css` renames the variables to fonts that resolve
-   * against nothing and fall through to `system-ui`.
+   * 🔴 HE IS RIGHT AND THE FIRST VERSION OF THIS SECTION WAS WRONG. It said the
+   * printed face was *"a face nobody chose."* That is false, and it is the exact
+   * defect this repo keeps logging: a claim written from a REMEMBERED reading
+   * instead of the table. Read at HEAD, `theme/canonical/typography.tsv` carries
+   * THREE font columns as its first three fields -- `font-display`, `font-body`,
+   * `font-mono` -- fully populated across all six rows:
    *
-   * ⚠️ SO PART OF "CHILDISH" IS A FACE NOBODY CHOSE, AND §1 CANNOT FIX IT. A
-   * system UI sans is designed for interface labels at small sizes on a screen;
-   * it is not a text face and it never was. The weights and sizes above make it
-   * behave. **A real text face -- ideally a serif for a printed policy -- is the
-   * next real step in this complaint, and it is Michael's ruling between a
-   * third-party font request and committing binaries.** Named rather than
-   * silently attempted, because a print-only `font-family` would put the screen
-   * and the sheet on two different faces, which is a bigger decision than it
-   * looks.
+   *     sharp-racing     Chakra Petch / Inter    / JetBrains Mono
+   *     mobile-legible   Manrope     / Manrope   / JetBrains Mono
+   *     grounded         Inter       / Inter     / JetBrains Mono
+   *     eos              Archivo     / Inter     / IBM Plex Mono
+   *     racing-archivo   Archivo     / Inter     / JetBrains Mono
+   *     papyrus          Gabarito    / Gabarito  / IBM Plex Mono
+   *
+   * And the wiring is complete: those emit as `--dr-font-body`/`-display`/`-mono`,
+   * `base.css` maps `--md-text-font: var(--dr-font-body)`, `type.css` puts
+   * `--dr-font-display` on h1-h3, and navtree, router, data and the token audit
+   * all consume one of them. **The vector dictates the face and every consumer
+   * reads it. Nothing about that is accidental or missing.**
+   *
+   * ⭐ SO THE REAL DEFECT IS ONE STEP FURTHER OUT, AND IT IS NARROWER THAN WHAT I
+   * WROTE: the NAME is declared, applied and inherited correctly -- and the FONT
+   * FILE IS NEVER FETCHED. `mkdocs.yml` sets no `theme.font` key (verified at
+   * HEAD), so Material ships its own loader for ROBOTO, which `base.css` then
+   * overrides away -- a webfont requested on every page and used by nothing.
+   * Meanwhile 'Inter' resolves against locally installed families, usually finds
+   * nothing, and falls through the stack. `type.css` documents this precisely and
+   * has been right the whole time.
+   *
+   * ⚑ AND `system-ui` IS THE DECLARED FALLBACK, NOT AN ACCIDENT. Every one of
+   * those eighteen stacks names it in third position, deliberately authored. So
+   * the printed sheet is wearing the vector's OWN chosen fallback. "Nobody chose
+   * it" was the wrong sentence about the right symptom, and the difference
+   * matters: this is a LOADER gap, not a governance gap, and it is fixed in
+   * `mkdocs.yml` or an `@font-face`, never here.
+   *
+   * ⚠️ THE ONE THING GENUINELY ABSENT FROM THE VECTOR IS A SERIF. All six rows
+   * are sans-serif in all three columns. A printed policy conventionally wants a
+   * text serif, so that is not a print-layer override -- **it is a new canonical
+   * typography row, which is a theme decision and Michael's call.**
+   *
+   * 🚫 NO `font-family` IS SET IN THIS FILE, and that is now a stronger position
+   * than it was an hour ago. Declaring one here would override a vector that is
+   * working correctly, and put screen and paper on two different faces while the
+   * table says they should match.
    * --------------------------------------------------------------------- */
 
   /* -------------------------------------------------------------------------
