@@ -1,0 +1,188 @@
+/* THE PRINT CALLOUT LAYER -- WHAT THE BOX IS ON PAPER.
+ *
+ * §4 of `print-type.css` until 2026-08-19, split out the same evening. Fourth
+ * member of the print group; the seam and the load-order argument are in
+ * `docrender/assets.py` under `_PRINT_ASSETS`.
+ *
+ * =========================================================================
+ * ⚠️ WHY IT SPLIT, AND IT WAS MEASURED TWICE RATHER THAN ESTIMATED
+ * =========================================================================
+ * `print-type.css` was 21,925 B against a 22,528 B hard read limit -- 603 B of
+ * headroom, on the same day it was created. Adding the anchor rule below took it
+ * to 24,466 B; trimming §6's four-paragraph post-mortem to a pointer only got it
+ * to 23,447 B. **Both numbers came from the write response rather than a guess,
+ * and both were over.** At that point the remaining candidates for deletion were
+ * the PR #142 specificity post-mortem and the WCAG floor note, which are the two
+ * things in that file most worth keeping.
+ *
+ * ⭐ SO THE FILE WAS NOT TOO WORDY, IT WAS CARRYING TWO SUBJECTS. Exactly the
+ * shape that split `print.css` into `print.css` + `print-flow.css` hours earlier,
+ * where an `and` in the header was doing the work of a chapter break. The seam
+ * here was likewise already written down: §4 was titled CALLOUT CHROME and every
+ * other section was about type. **A file at its size limit is usually a file with
+ * a seam in it, and trimming prose is what you do instead of finding the seam.**
+ *
+ * =========================================================================
+ * WHAT THIS FILE IS FOR, AND THE ONE LINE NOT TO CROSS
+ * =========================================================================
+ * The callout is the most expensive object on a printed sheet and the one whose
+ * chrome is most obviously built for a screen: a tap-target radius, a shadow, a
+ * pastel wash, and a disclosure arrow. Every rule here removes an affordance a
+ * reader cannot use, or re-anchors a size that was never in the dial.
+ *
+ * 🚫 WHAT DOES NOT BELONG HERE IS COLOUR POLICY. `print.css` owns the argument
+ * that a `!!! danger` box printing with no red is indistinguishable from a
+ * `!!! note`, and nothing in this file re-points a token. The border keeps its
+ * colour; only decoration is removed.
+ *
+ * 🔴 AND ONE SAFETY LINE, INHERITED FROM print-type.css §7: A WARNING BOX THAT
+ * STOPS LOOKING LIKE A WARNING BOX IS A SAFETY QUESTION, NOT A TYPOGRAPHIC ONE.
+ * Hazard Hawthorne owns the legibility floor for safety-critical print, and every
+ * rule in this file is in scope for that review.
+ */
+
+@media print {
+  /* -------------------------------------------------------------------------
+   * 🔴 THE BOX WAS ALWAYS THE COST, AND THE TINT WAS THE SECOND HALF OF
+   * "CHILDISH."
+   *
+   * ⭐ THE ARITHMETIC: an `!!! note` carrying ONE LINK occupied ~110px of a
+   * 1230px sheet -- **9% of the page for four words.** A box is a fixed cost paid
+   * PER BOX, so a page of small callouts is the worst possible shape on paper --
+   * and it is a shape chosen because on SCREEN a collapsed `???` costs nothing.
+   *
+   * 🔴 SPECIFICITY, READ AT SOURCE (squidfunk/mkdocs-material @ 39c5171). Material
+   * prefixes two of its callout rules with a bare `html`:
+   *
+   *     html & > :last-child   -> (0,3,1)  beats  .md-typeset .admonition > :last-child (0,3,0)
+   *
+   * One element selector, one point, and source order is never consulted. PR #142
+   * shipped without it, so the central rule LOST while its neighbours won -- and
+   * because Material's box has `padding: 0 12px` (ZERO vertical), the 6.4px
+   * padding landed ON TOP of the surviving 12px margin. ⚑ **A partially-winning
+   * override is worse than none: it made the box bigger.**
+   *
+   * ⭐ GENERALISABLE: A MIXED RESULT IS A SPECIFICITY SIGNATURE. When some
+   * declarations in one block land and others do not, the cause is never "the
+   * file did not load" -- it is a per-selector fight, and the winners name the
+   * selectors your opponent armoured.
+   *
+   * 🚫 NOT A FONT-SIZE REDUCTION ON THE CALLOUT. Shrinking the text inside a
+   * `!!! danger` box on a SAFETY document to save paper is the one place in this
+   * build where the cheap lever is also the unsafe one. ✅ The box shrinks; the
+   * warning stays the size of the prose around it -- **and the anchor rule below
+   * is what finally makes the second half of that sentence TRUE. It is this
+   * refusal being ENFORCED, not relaxed.**
+   * --------------------------------------------------------------------- */
+
+  /* 🔴 THE BOX AND THE PROSE WERE MEASURED AGAINST DIFFERENT RULERS.
+   *
+   * Michael, 2026-08-19, on the first sheet printed with real webfonts: *"shrink
+   * the callout text to the same size as the body ... they just look ENORMOUS."*
+   *
+   * Material sets `.md-typeset .admonition { font-size: 0.8rem }`. `rem` anchors
+   * to the ROOT; print-type.css §0's base is `pt`, anchored to the PAPER. So the
+   * box was never a participant in the dial -- turning `--dr-print-base` moved
+   * every word on the sheet EXCEPT the ones inside a callout, and the gap between
+   * them is a value neither file controls.
+   *
+   * ⭐ AND THE TITLE RULE BELOW WAS ALREADY CORRECT -- ITS PARENT WAS NOT.
+   * `.admonition-title { font-size: 1em }` resolves against `.admonition`, so it
+   * faithfully inherited the wrong anchor. Fixing the box fixes the title for free
+   * and that rule is untouched. *A correct rule on a mis-anchored parent looks
+   * exactly like a wrong rule.*
+   *
+   * ⚠️ CAUSE NOT FULLY DETERMINED, AND SAID SO RATHER THAN IMPLIED. Measured off
+   * Michael's PDF the callout ran ~18% LARGER than the list beside it; the cascade
+   * as read predicts ~4% SMALLER. Likeliest suspect: the COMPILED stylesheet the
+   * site serves differs from the master SCSS that was read -- the proxy-read
+   * failure this repo already has a scar about. ✅ The fix holds under either
+   * hypothesis, which is the J27 move rather than luck: `1em` is a RELATIVE
+   * anchor, so it lands the box on the prose size whatever the root, the compiled
+   * value or the browser turns out to be. Outstanding read: the computed
+   * `font-size` on `.admonition` in devtools. */
+  html .md-typeset .admonition,
+  html .md-typeset details {
+    font-size: 1em;
+  }
+
+  .md-typeset .admonition,
+  .md-typeset details {
+    margin-top: 0.7em;
+    margin-bottom: 0.7em;
+
+    /* 🔴 A 4px RADIUS IS A UI AFFORDANCE. Rounded corners say "card you can
+     * tap" -- correct on screen, and on paper it is the single most childish
+     * detail on the sheet. A printed rule box has corners. 1pt keeps it from
+     * looking like a rendering error rather than a decision. */
+    border-radius: 1pt;
+
+    /* Material's own print block already drops the shadow. Stated here because a
+     * shadow is the other UI-affordance tell and nobody should re-add one. */
+    box-shadow: none;
+  }
+
+  /* 🔴 THE TINTED TITLE WASH GOES, AND THE COLOURED BORDER STAYS -- WHICH IS THE
+   * WHOLE DISTINCTION.
+   *
+   * Material paints the title bar with the family colour at 10% alpha. On screen
+   * that is a soft band; in ink it is a pastel panel, and pastel panels are what
+   * make a policy look like a worksheet.
+   *
+   * ⚠️ BUT THE COLOUR IS NOT DECORATION EVERYWHERE. `print.css` argues, and it is
+   * right, that a `!!! danger` box printing with no red is the same box as a
+   * `!!! note` and the reader cannot know a distinction was lost. So: **the
+   * BORDER carries the meaning and keeps its colour; the WASH carried nothing and
+   * goes.** A rule under the title does the separating instead.
+   *
+   * ⭐ AND THAT IS WHY THIS IS NOT A COLOUR OPINION LANDING IN THE PRINT LAYER.
+   * Removing a decorative surface is a DELIVERY decision, of the same family as
+   * `print-color-adjust` being applied narrowly "on the elements whose MEANING is
+   * carried by a colour." No token is re-pointed and no semantic is touched. */
+  .md-typeset .admonition-title,
+  .md-typeset summary {
+    padding-top: 0.28rem;
+    padding-bottom: 0.28rem;
+    background-color: transparent;
+    border-bottom: 0.5pt solid var(--dr-rule, #ccc);
+    font-size: 1em;
+  }
+
+  /* 🔴 THE DISCLOSURE CHEVRON IS A CONTROL, AND PAPER HAS NO CONTROLS. Four of
+   * them printed on one Fire Prevention sheet, on `???` blocks that
+   * print-flow.css correctly forces OPEN -- so the arrow says "expand this" on a
+   * box that is already expanded and cannot be collapsed. `print.css`'s own test
+   * for its chrome-off list is *"could a reader ACT on it with a pen?"*, and a
+   * mask-image arrow that rotates on open is the purest No available.
+   *
+   * ⚠️ THE FAMILY ICON STAYS, AND THE DISTINCTION IS THE POINT. `summary` picks up
+   * `.admonition-title::before` through Material's `@extend`, and that glyph is
+   * the difference between a note and a danger -- the same reason the coloured
+   * border survives. `::after` only: the CONTROL goes, the MEANING stays. */
+  html .md-typeset summary::after {
+    display: none;
+  }
+
+  /* 🔴 THE RULE THAT NEEDS `html`. Material's `html & > :last-child` sets a 12px
+   * bottom margin, and because the box has no vertical padding, that margin IS
+   * the entire gap between the last line and the bottom border. On a one-line
+   * callout it is most of the box.
+   *
+   * ⚠️ 0.3rem rather than 0: a border sitting against a descender reads as a
+   * rendering fault, and this is the box that has to keep looking like a box --
+   * see the safety line in this file's header. */
+  html .md-typeset .admonition > :last-child,
+  html .md-typeset details > :last-child {
+    margin-bottom: 0.3rem;
+  }
+
+  html .md-typeset .admonition-title:last-child,
+  html .md-typeset summary:last-child {
+    margin-bottom: 0;
+  }
+
+  .md-typeset .admonition-title + *,
+  .md-typeset summary + * {
+    margin-top: 0.3rem;
+  }
+}
