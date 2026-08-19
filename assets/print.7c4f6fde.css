@@ -26,18 +26,13 @@
  * THE SEAM WAS ALREADY WRITTEN IN THIS HEADER. It used to describe its subject
  * as "what appears on paper at all, how wide it runs, and where the page is
  * allowed to break" -- two jobs, with the `and` doing the work of a chapter
- * break. So:
+ * break. Now three files, each answering one question:
  *
  *     print.css       WHAT THE SHEET IS   -- this file
  *     print-flow.css  WHERE IT BREAKS     -- break-*, orphans/widows, h1-h6,
  *                                            tab labels, forced-open <details>,
  *                                            thead repetition, {.new-page}
- *
- * ⭐ A PURE MOVE. Nothing was rewritten, nothing was shortened, and no rule
- * changed meaning -- the declarations and their reasoning went across verbatim.
- * The total bytes across the two files went UP slightly, because each needs its
- * own header, and that is the correct trade: two readable files beat one nobody
- * can open.
+ *     print-type.css  HOW IT IS SET       -- leading, block and list spacing
  *
  * ⚠️ ONE JUDGEMENT CALL, NAMED SO IT CAN BE ARGUED WITH: the code-wrapping
  * rule STAYED here. It looks like flow -- it changes where lines end -- but it
@@ -53,7 +48,7 @@
  * =========================================================================
  * docrender/assets.py publishes `_PRINT_ASSETS` AFTER the three generated
  * sheets and BEFORE the instance's site.css. Both halves are load-bearing, and
- * print-flow.css now inherits the same sandwich.
+ * the other two print sheets inherit the same sandwich.
  *
  * AFTER tokens.css, because the paper overrides below re-point custom
  * properties on `[data-md-color-scheme="slate"]` -- the SAME selector
@@ -66,10 +61,10 @@
  * and that rule has no exception for paper.
  *
  * ⚠️ ORDER *WITHIN* THE PRINT GROUP IS FREE, and that is said out loud so
- * nobody defends a position that was never load-bearing: this file and
- * print-flow.css share no selector-and-property pair, so neither can win or
- * lose a tie against the other. Same distinction `_FEATURE_ASSETS` already
- * draws, where its JS order is law and its CSS order is genuinely free.
+ * nobody defends a position that was never load-bearing: no two of the three
+ * print sheets share a selector-and-property pair, so none can win or lose a tie
+ * against another. Same distinction `_FEATURE_ASSETS` already draws, where its
+ * JS order is law and its CSS order is genuinely free.
  *
  * =========================================================================
  * ⚠️ THE ONE THING THIS FILE CANNOT FIX, STATED RATHER THAN PAPERED OVER
@@ -90,19 +85,6 @@
  * clearly, and the fix belongs in the light rows of canonical/colors.tsv.
  * Structural neutrals are re-pointed below because paper genuinely is a
  * different surface; semantics are left exactly as the theme authored them.
- *
- * =========================================================================
- * 🚩 WHAT IS SCOPED AND NOT BUILT: `specs/print-identity.md`
- * =========================================================================
- * A sheet-one LETTERHEAD is scoped there and deliberately absent here.
- * 🔴 It will need `print-color-adjust: exact` added to the narrow list below,
- * and the logo resolves by filename STEM through `images.INDEX` -- never by
- * path.
- *
- * ✅ PRINT TYPOGRAPHY LANDED SEPARATELY in `assets/print-type.css` (leading,
- * block and list spacing). Before that file existed the paper inherited
- * Material's screen metrics wholesale, which was a default nobody chose rather
- * than a decision.
  */
 
 @media print {
@@ -129,10 +111,9 @@
    * container queries already carry a note to keep each other in step; this is
    * the third place and the only one on a different axis.
    *
-   * 🔴 AND THE LEFT/RIGHT MARGINS ARE THE LOAD-BEARING HALF. A letterhead may
-   * well want more room at the top, and the BLOCK axis is free to change -- use
-   * a two-value form. Widening the INLINE axis converts every data table on
-   * every site into a stack of key/value rows, silently.
+   * 🔴 AND THE LEFT/RIGHT MARGINS ARE THE LOAD-BEARING HALF. The BLOCK axis is
+   * free to change -- use a two-value form. Widening the INLINE axis converts
+   * every data table on every site into a stack of key/value rows, silently.
    * --------------------------------------------------------------------- */
   @page {
     margin: 12mm;
@@ -144,6 +125,12 @@
    * Everything here is navigation or interaction, and paper has neither. The
    * test for adding to this list: could a reader ACT on it with a pen? If not,
    * it is furniture and it costs a column.
+   *
+   * ⚠️ `.md-header` IS IN THIS LIST, WHICH MEANS THE SITE LOGO NEVER PRINTS.
+   * Worth knowing before anybody tries to make a printed mark by changing
+   * `theme.logo`: the header, its icon and the site title are all gone by the
+   * time the sheet exists. The printed mark is the corner stamp below, and it
+   * is a different element with a different job.
    * --------------------------------------------------------------------- */
   .md-header,
   .md-tabs,
@@ -165,7 +152,7 @@
   }
 
   /* -------------------------------------------------------------------------
-   * ✅ THE BUILD STAMP -- AND IT IS NO LONGER AN EXCEPTION TO ANYTHING
+   * ✅ THE BUILD STAMP -- THE CORNER MARK IS THE PRINTED ONE
    *
    * A printed page leaves the system entirely: handed to a guest artist, filed,
    * carried into a room months later. The one question nobody can answer about
@@ -174,35 +161,60 @@
    *
    * 🔴 IT NEVER PRINTED, FOR MONTHS, AND THIS FILE IS WHERE THE BUG LIVED.
    * `buildstamp.py` used to hand its markup to `config.copyright`, which
-   * Material renders inside `.md-footer-meta` -- which is in the chrome-off
-   * list directly above, with `!important`. `display: none` on an ANCESTOR
-   * removes the whole subtree from the box tree, and a descendant cannot opt
-   * back in: it is not a specificity contest, there is no box left to style.
-   * So the rule below sat here looking like a working exception and had never
-   * once fired.
+   * Material renders inside `.md-footer-meta` -- which is in the chrome-off list
+   * directly above, with `!important`. `display: none` on an ANCESTOR removes
+   * the whole subtree from the box tree, and a descendant cannot opt back in:
+   * not a specificity contest, there is no box left to style. So a rule sat
+   * here looking like a working exception and had never once fired.
    *
-   * ⭐ AND THE OBVIOUS FIX -- HOISTING `.buildstamp` OUT OF THE HIDDEN SUBTREE
-   * IN CSS -- WAS THE WRONG ONE. `hide: footer` is a CONTENT decision and pages
-   * already use it (`uritp-safety/20-policies/11-fire.md` today), so a
-   * stylesheet fix would have repaired one class of page and left that one
-   * printing undated forever, silently. ⚑ A rule that can be switched off by a
-   * frontmatter key it does not know about is not a guarantee.
+   * ✅ TWO PLACEMENTS SINCE 2026-08-19, EACH VISIBLE IN EXACTLY ONE MEDIUM.
+   * `buildstamp.py` now wraps the page body: a `--corner` copy FIRST in the
+   * flow and a `--foot` copy LAST. Michael's ruling: *"on print you get a small
+   * icon in the top right header with the date... corner mark print only."*
    *
-   * ✅ SO THE STAMP MOVED INSTEAD. `buildstamp.py` now appends it to the page
-   * BODY at `on_page_content`, the pattern `pagefoot.py` already used one hook
-   * earlier. Nothing in the chrome-off list is an ancestor of the content
-   * column, so the rule below is now ordinary styling rather than a fight.
+   *     paper   corner shows, foot hidden
+   *     screen  foot shows, corner hidden by its own `hidden` attribute
    *
-   * ⚠️ KEEP THIS SELECTOR EVEN THOUGH THE `display` IS NO LONGER NEEDED. The
-   * margin and the ink colour are real paper decisions -- a provenance line
-   * wants to sit quietly under the content, not shout at the same weight as it.
-   * `display: block` is retained because the element is a `<p>` either way and
-   * a future change of tag should not silently change the layout.
+   * ⭐ ONE COMPUTED STRING, TWO NODES -- NOT TWO CLAIMANTS. The defect that
+   * retired three manifests here is two SOURCES of one fact, which can disagree.
+   * Both placements interpolate the same label and the same detail from one
+   * `on_config` pass, so they cannot drift, and the mutually exclusive media
+   * scoping means a reader always sees exactly ONE stamp.
+   *
+   * ⭐ AND THE CORNER COPY IS FIRST IN THE FLOW FOR A MECHANICAL REASON. An
+   * element appended at the END of the content cannot be moved to the TOP of
+   * sheet one by CSS -- that needs to know where the page boundary falls, which
+   * is what `@page` margin boxes do and no major browser implements. First in
+   * flow IS the top of sheet one, for free. Same finding that closed the
+   * letterhead ruling: top of sheet one is cheap, bottom of sheet one is not.
+   *
+   * ⚠️ `display: block` ON THE CORNER IS LOAD-BEARING, NOT TIDINESS. It is what
+   * overrides the `hidden` attribute -- an author declaration beats the UA
+   * stylesheet's `[hidden] { display: none }`. Delete it and the mark vanishes
+   * from paper with nothing reporting it.
+   *
+   * 🚩 THE ICON GOES HERE, as a print-scoped `background-image` on this rule,
+   * once a line-art SVG exists. 🚫 NEVER an `<img>`: a `display: none` image is
+   * still FETCHED, which is ~168KB on every page load of a site whose readers
+   * mostly never print. It will also need `print-color-adjust: exact` on the
+   * narrow list further down -- a brand mark's meaning IS carried by colour, and
+   * a logo that prints as an empty box is worse than no logo.
    * --------------------------------------------------------------------- */
-  .buildstamp {
+  .buildstamp--corner {
     display: block;
-    margin-top: 1.5rem;
+    margin: 0 0 1.2rem;
+    text-align: right;
+    font-size: 0.7rem;
+    line-height: 1.2;
     color: #555;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 0.35rem;
+  }
+
+  /* The foot copy is the SCREEN one. On paper it would be the second stamp on
+   * one sheet, which is the thing the split placement exists to avoid. */
+  .buildstamp--foot {
+    display: none !important;
   }
 
   /* -------------------------------------------------------------------------
@@ -230,6 +242,10 @@
     padding: 0 !important;
   }
 
+  /* ⚠️ THIS NOW HITS THE CORNER STAMP RATHER THAN THE `h1`, because the stamp is
+   * prepended and is therefore the first child. That is correct and it is worth
+   * naming: the rule exists to kill a leading margin at the top of the sheet,
+   * and whichever element is first is the one that should not have one. */
   .md-content__inner > :first-child {
     margin-top: 0 !important;
   }
@@ -305,9 +321,9 @@
    * every large background panel through the printer, which wastes toner on
    * exactly the surfaces that carry no meaning.
    *
-   * 🚩 THIS IS THE LIST A LETTERHEAD LOGO JOINS (`specs/print-identity.md`
-   * §4d). A brand mark qualifies on the stated test -- its meaning IS carried
-   * by colour -- and a logo that prints as an empty box is worse than no logo.
+   * 🚩 THIS IS THE LIST THE CORNER STAMP'S ICON JOINS when one exists. A brand
+   * mark qualifies on the stated test, and a logo that prints as an empty box is
+   * worse than no logo.
    * --------------------------------------------------------------------- */
   .md-typeset .admonition,
   .md-typeset details,
