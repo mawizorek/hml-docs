@@ -1,0 +1,264 @@
+/* THE PRINT TYPE LAYER -- HOW THE PAPER IS SET.
+ *
+ * The third print sheet, born 2026-08-19 out of one sentence from Michael:
+ * *"general LINE SPACING - that's the big one. we should make the print feel a
+ * little more like printed markdown text scale and less like rendered webpage."*
+ *
+ * =========================================================================
+ * ⭐ THIS IS NOT A DEGRADED SCREEN DESIGN. IT IS A DIFFERENT MEDIUM.
+ * =========================================================================
+ * Generous leading exists on screen for reasons that are all about the screen:
+ * ~96dpi rendering with soft stem edges, a backlit emissive ground, and an
+ * unbounded scroll where vertical space is free.
+ *
+ * Paper is ~300+dpi, reflective, and BOUNDED. The stems are crisp, the contrast
+ * is subtractive, and every millimetre of leading is paid for in sheets. So the
+ * print layer being TIGHTER than the screen layer is not a compromise -- it is
+ * the same content typeset for a different medium, which is what a print
+ * stylesheet is for. This is the first time this engine has had a reason to say
+ * that out loud.
+ *
+ * =========================================================================
+ * ✅ NOTHING IN THIS ENGINE HAD EVER SET PROSE LEADING. VERIFIED, NOT ASSUMED.
+ * =========================================================================
+ * Grepping `line-height` across the whole repo before writing this returned
+ * FOUR hits, and not one of them was body text: `data.css` (1.35 on a table
+ * cell, 1.4 on a wrapped cell), `data-list.css` (1.35), `navtree.css` (1.5).
+ *
+ * ⚑ So prose, list and heading leading were Material's, unmodified, on screen
+ * and therefore on paper. That was a DEFAULT NOBODY CHOSE, not a decision -- and
+ * it is the reason a change here is defensible on all six sites at once rather
+ * than needing an opt-in.
+ *
+ * ⭐ AND THE HOUSE ALREADY HAD A DENSE-CONTENT PRECEDENT: 1.35, picked twice for
+ * content whose job is to be SCANNED. The value below is argued against that
+ * rather than invented from nothing -- see §1.
+ *
+ * =========================================================================
+ * 🔴 WHY LEADING AND NOT FONT SIZE, WHICH IS THE ARITHMETIC THAT DECIDED IT
+ * =========================================================================
+ * Box padding is paid ONCE PER BOX, so its total cost is bounded by how many
+ * boxes a page happens to contain. Leading is paid ONCE PER LINE, and a
+ * reference document is almost entirely lines. Reduce leading by n% and the
+ * document loses very nearly n% of its height -- every page, every section.
+ *
+ * ⭐ That argument holds WITHOUT knowing the value you are starting from, which
+ * is why the lever order was decidable before anything was measured. Only the
+ * final number needed a rendered sheet.
+ *
+ * 🚫 AND FONT SIZE IS DELIBERATELY NOT TOUCHED HERE. `type.css` refuses
+ * `.md-typeset { font-size: var(--dr-fs-body) }` outright and records why: every
+ * size inside `.md-typeset` is em-relative, so one line makes EVERY WORD ON THE
+ * SITE 12.5% bigger -- the blast radius that forced the PR #82 revert Michael
+ * reported as *"the font in the TABLE is massive."* That objection is about
+ * SITE-WIDE scope, and inside `@media print` the blast radius is one medium --
+ * but it is still the crudest lever available and it is held in reserve. If the
+ * four rules below are not enough, THEN a print base size, and not before.
+ */
+
+@media print {
+  /* -------------------------------------------------------------------------
+   * §1 -- LEADING. THE ONE RULE THAT DOES MOST OF THE WORK.
+   *
+   * 🔴 UNITLESS, AND THAT IS NOT A STYLE PREFERENCE -- IT IS INHERITANCE
+   * MECHANICS, AND THE WRONG CHOICE FAILS UGLY:
+   *
+   *   unitless (1.45)   inherits as a RATIO, recomputed against each
+   *                     descendant's own font-size. A code block, a table cell
+   *                     and an h2 each get leading proportional to themselves.
+   *   em / rem          inherits as a computed LENGTH. Every descendant gets
+   *                     that same absolute leading regardless of its own size,
+   *                     so headings come out cramped and small print comes out
+   *                     airy, on the same sheet.
+   *
+   * ⚠️ AND THIS IS THE `em` TRAP FROM PR #82 AND PR #80 IN A THIRD COSTUME.
+   * That family has already cost this repo two reverts: a bridge row mapping a
+   * two-axis padding onto a one-axis primitive, and a container query whose
+   * `45em` resolved against a font size nobody had checked. A relative unit is
+   * only relative to SOMETHING, and the something is rarely what you meant.
+   * `.md-typeset` is the element whose entire documented hazard is that
+   * everything inside it is em-relative, so it is the worst possible place in
+   * this codebase to introduce a length-valued line-height.
+   *
+   * WHY 1.45 -- and it is a JUDGEMENT bounded at both ends rather than a
+   * measurement, which is stated plainly because this repo does not dress one
+   * up as the other:
+   *
+   *   - ABOVE the house's 1.35 dense-content precedent, deliberately. That
+   *     value was chosen for a DATA CELL, which is one line long. A policy
+   *     paragraph is six, and leading matters more the longer the run.
+   *   - BELOW screen-typical prose leading, which is the whole ask.
+   *   - AT OR ABOVE the floor §5 argues for, which is the half of this that is
+   *     not about looks.
+   *
+   * ⚠️ THE FIRST PRINT PREVIEW IS THE ACCEPTANCE TEST, NOT THIS COMMENT. If
+   * 1.45 reads tight on a real sheet at Letter AND A4, move it -- and move it
+   * here, in one place, rather than adding a second rule somewhere else.
+   * --------------------------------------------------------------------- */
+  .md-typeset {
+    line-height: 1.45;
+  }
+
+  /* Tighter still where the text is already small or already dense. A caption
+   * and a table cell are scanned rather than read, which is exactly the case
+   * the house's 1.35 was chosen for. */
+  .md-typeset table:not([class]),
+  .md-typeset figcaption,
+  .md-typeset .dr-lede {
+    line-height: 1.35;
+  }
+
+  /* -------------------------------------------------------------------------
+   * §2 -- BLOCK SPACING. THE SPACE *BETWEEN* THINGS.
+   *
+   * 🔴 "LINE SPACING" IS AT LEAST THREE PROPERTIES AND A GLOBAL `line-height`
+   * FIXES ONLY THE FIRST. This is the second, §3 is the third, and shipping any
+   * one of them alone makes the change look half-broken:
+   *
+   *   1  line-height        space WITHIN a paragraph   -> §1
+   *   2  p / heading margin space BETWEEN blocks       -> here
+   *   3  li margin          space BETWEEN bullets      -> §3
+   *
+   * `em` IS CORRECT ON A MARGIN, and the distinction matters given §1's warning:
+   * a margin in `em` resolves against the element's OWN font-size, which is the
+   * behaviour you want. Only `line-height` inherits as a length. Same unit, two
+   * properties, opposite consequences.
+   *
+   * A HEADING KEEPS MORE SPACE ABOVE THAN BELOW, on purpose. That asymmetry is
+   * what visually binds a heading to the section it introduces rather than
+   * leaving it floating between two. It also compounds the `break-after: avoid`
+   * rule in print-flow.css, which is trying to say the same thing about page
+   * boundaries that this says about vertical rhythm.
+   * --------------------------------------------------------------------- */
+  .md-typeset p,
+  .md-typeset ul,
+  .md-typeset ol,
+  .md-typeset blockquote,
+  .md-typeset pre {
+    margin-top: 0.6em;
+    margin-bottom: 0.6em;
+  }
+
+  .md-typeset h1,
+  .md-typeset h2,
+  .md-typeset h3,
+  .md-typeset h4,
+  .md-typeset h5,
+  .md-typeset h6 {
+    margin-top: 1.1em;
+    margin-bottom: 0.4em;
+  }
+
+  /* -------------------------------------------------------------------------
+   * §3 -- LIST SPACING. THE ONE MOST LIKELY TO BE MISDIAGNOSED.
+   *
+   * 🔴 MATERIAL SPACES LIST ITEMS WITH MARGIN, NOT LEADING. So tightening §1
+   * alone leaves a bulleted list EXACTLY as tall as it was, and the fix reads as
+   * a failure. On the document that prompted this work -- the URITP Safety fire
+   * policy -- the lists are most of the page, so this rule is doing more visible
+   * work there than §1 is.
+   *
+   * ⚠️ AND IT PAYS BACK A COST INTRODUCED THE SAME DAY. The fix for that page's
+   * broken numbering nests a callout inside list item 5, which makes the list
+   * LOOSE -- markdown then wraps every item in `<p>` and all eight items gain
+   * paragraph spacing. §2's `p` margin and this rule are what keep that fix from
+   * costing a third of a sheet. The two changes must be judged on the SAME
+   * printed sheet, not separately.
+   *
+   * 🚫 NOT `margin: 0`. Bullets that touch stop reading as separate items, and a
+   * numbered safety policy is read by somebody looking for ONE rule -- item
+   * boundaries are load-bearing there in a way they are not in prose.
+   * --------------------------------------------------------------------- */
+  .md-typeset li {
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+  }
+
+  /* A loose list wraps each item in a paragraph, and §2 already gave every `p`
+   * a margin. Inside a list item that margin is doubling the gap the rule above
+   * just set, so it is removed -- the item owns its own spacing. */
+  .md-typeset li > p {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  /* A nested list belongs to its parent item and should not be separated from
+   * it. §2 gave `ul`/`ol` a margin for the standalone case; this takes it back
+   * for the nested one. */
+  .md-typeset li > ul,
+  .md-typeset li > ol {
+    margin-top: 0.25em;
+    margin-bottom: 0;
+  }
+
+  /* -------------------------------------------------------------------------
+   * §4 -- WHAT IS DELIBERATELY ABSENT, so nobody reads the gaps as oversights
+   *
+   * 🚫 CALLOUT DENSITY. The single largest space cost on the fire policy is box
+   * chrome, not type: four `???+` boxes each carrying ONE sentence consumed
+   * roughly half of sheet one, because a `???+` is a `<details>` -- cheap on
+   * screen precisely because it collapses -- and print-flow.css force-opens all
+   * of them. Verified at HEAD: nothing in this engine sizes or pads a callout,
+   * so those metrics are Material's. It is the next lever and it is a separate,
+   * separately-judged change. Scoped in `specs/print-identity.md` §3e.
+   *
+   * 🚫 THE HEADING TYPE RAMP. Screen heading sizes are set to compete with
+   * chrome, a sidebar and a scroll position; on paper the page boundary does
+   * that work, so a compressed ramp would read more like a document. Held back
+   * for a reason that is not scope discipline: `type.css` records that the
+   * typography vector's font FACES have never rendered on any site -- `theme.font`
+   * is unset, so the variables name fonts that resolve against nothing and fall
+   * through to `system-ui`. ⚠️ Part of the "rendered webpage" feel is that every
+   * heading is large system-ui sans, and designing a print ramp on top of a face
+   * nobody chose is building on sand. That question is Michael's ruling between
+   * a third-party font request and committing binaries.
+   *
+   * 🚫 A PRINT BASE FONT SIZE. See the header. Crudest lever, held in reserve.
+   * --------------------------------------------------------------------- */
+
+  /* -------------------------------------------------------------------------
+   * ⚠️ §5 -- THERE IS A FLOOR, AND ON THESE DOCUMENTS IT IS NOT AESTHETIC
+   *
+   * Tighter is not monotonically better, and the stopping point is a safety
+   * question before it is a taste one. Two concrete costs, neither hypothetical
+   * for a URITP safety policy:
+   *
+   *   - A PRINTED POLICY GETS PHOTOCOPIED, and ink spread closes the gaps that
+   *     separate lines. A sheet that is crisp from the printer can be a grey
+   *     block two generations later.
+   *   - IT GETS READ STANDING UP, in a shop or a dim corridor, by somebody
+   *     hunting one rule. SCANNING is more leading-dependent than reading is,
+   *     and that is the actual use of these documents.
+   *
+   * ⚠️ `unverified`: WCAG 2.1 SC 1.4.12 (Text Spacing) names a 1.5x line-height
+   * expectation. Its applicability to a FIXED print medium is genuinely unclear
+   * -- the criterion is about content SUPPORTING user-applied spacing, which
+   * paper cannot do either way -- and the published text was not read when this
+   * file was written. Body, designation and clause are cited so somebody can
+   * check it; it must not be quoted as settled until they have.
+   *
+   * 🔴 HAZARD HAWTHORNE OWNS THE LEGIBILITY FLOOR FOR SAFETY-CRITICAL PRINT.
+   * That is his lane and not the engine's, and it is named here rather than
+   * assumed because a craft head is easiest to omit exactly when the
+   * generalists are doing well.
+   * --------------------------------------------------------------------- */
+
+  /* -------------------------------------------------------------------------
+   * 🔴 §6 -- THIS FILE INVALIDATES EVERY HAND-PLACED PAGE BREAK. TODAY.
+   *
+   * `print-flow.css` warns that `{.new-page}` *"is correct on the day it is
+   * typed and nobody is told when it stops being correct."* This is the change
+   * that makes that come true: tighter leading means MORE LINES PER SHEET, so
+   * every hand-placed break in the doc tree moves the moment this merges.
+   *
+   * ✅ Which is why the token shipped hours before this and the advice went with
+   * it: DO NOT AUTHOR `{.new-page}` MARKERS ACROSS THE TREE until this has been
+   * previewed and settled. Anything placed before then gets re-judged.
+   *
+   * ⚠️ AND IT RE-EXERCISES THE WHOLE BREAK POLICY. More lines per sheet moves
+   * every break, so `orphans: 3`, the h1-h6 rule and the tab-label protection
+   * all get a different workout than the one they were verified against. A
+   * pagination oddity after this merges could belong to either change --
+   * PREVIEW THEM ON THE SAME SHEET.
+   * --------------------------------------------------------------------- */
+}

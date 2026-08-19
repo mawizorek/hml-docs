@@ -94,17 +94,15 @@
  * =========================================================================
  * 🚩 WHAT IS SCOPED AND NOT BUILT: `specs/print-identity.md`
  * =========================================================================
- * Print TYPOGRAPHY (leading, block and list spacing, callout density) and a
- * sheet-one LETTERHEAD are scoped there and deliberately absent here. Two notes
- * from that spec matter to anybody editing this file:
+ * A sheet-one LETTERHEAD is scoped there and deliberately absent here.
+ * 🔴 It will need `print-color-adjust: exact` added to the narrow list below,
+ * and the logo resolves by filename STEM through `images.INDEX` -- never by
+ * path.
  *
- *   1. ⚠️ Nothing in this engine has ever set prose leading or callout
- *      padding -- verified, four `line-height` hits across the repo and not one
- *      of them body text. So the paper currently inherits Material's screen
- *      metrics wholesale. That is a default nobody chose, not a decision.
- *   2. 🔴 The letterhead will need `print-color-adjust: exact` added to the
- *      narrow list below, and the logo resolves by filename STEM through
- *      `images.INDEX` -- never by path.
+ * ✅ PRINT TYPOGRAPHY LANDED SEPARATELY in `assets/print-type.css` (leading,
+ * block and list spacing). Before that file existed the paper inherited
+ * Material's screen metrics wholesale, which was a default nobody chose rather
+ * than a decision.
  */
 
 @media print {
@@ -166,38 +164,41 @@
     display: none !important;
   }
 
-  /* The build stamp SURVIVES, and that is a deliberate exception to the rule
-   * above. A printed page leaves the system entirely -- it gets handed to a
-   * guest artist, filed, carried into a room months later -- and the one
-   * question nobody can answer about a piece of paper is how old it is. It is
-   * the cheapest possible provenance and it costs one line.
+  /* -------------------------------------------------------------------------
+   * ✅ THE BUILD STAMP -- AND IT IS NO LONGER AN EXCEPTION TO ANYTHING
    *
-   * 🔴 SUSPECTED DEAD, AND UNVERIFIED AS OF 2026-08-19. READ THIS BEFORE
-   * TRUSTING THE EXCEPTION ABOVE.
+   * A printed page leaves the system entirely: handed to a guest artist, filed,
+   * carried into a room months later. The one question nobody can answer about
+   * a piece of paper is how old it is, so the stamp is the cheapest possible
+   * provenance and it costs one line.
    *
-   * `buildstamp.py` emits this element as `config.copyright`, which Material
-   * renders inside its footer meta region -- and `.md-footer-meta` is in the
-   * chrome-off list a few lines up, with `!important`.
+   * 🔴 IT NEVER PRINTED, FOR MONTHS, AND THIS FILE IS WHERE THE BUG LIVED.
+   * `buildstamp.py` used to hand its markup to `config.copyright`, which
+   * Material renders inside `.md-footer-meta` -- which is in the chrome-off
+   * list directly above, with `!important`. `display: none` on an ANCESTOR
+   * removes the whole subtree from the box tree, and a descendant cannot opt
+   * back in: it is not a specificity contest, there is no box left to style.
+   * So the rule below sat here looking like a working exception and had never
+   * once fired.
    *
-   * `display: none` on an ANCESTOR removes the whole subtree from the box tree.
-   * A descendant cannot opt back in. So if `.buildstamp` is nested inside
-   * `.md-footer-meta`, the rule below has never done anything, and the
-   * provenance line this engine insists on keeping has been absent from every
-   * printed page since the day the argument for it was written.
+   * ⭐ AND THE OBVIOUS FIX -- HOISTING `.buildstamp` OUT OF THE HIDDEN SUBTREE
+   * IN CSS -- WAS THE WRONG ONE. `hide: footer` is a CONTENT decision and pages
+   * already use it (`uritp-safety/20-policies/11-fire.md` today), so a
+   * stylesheet fix would have repaired one class of page and left that one
+   * printing undated forever, silently. ⚑ A rule that can be switched off by a
+   * frontmatter key it does not know about is not a guarantee.
    *
-   * ⚠️ WHY THIS IS FLAGGED RATHER THAN FIXED: the nesting is knowledge of
-   * Material's footer structure, NOT read off its compiled template. A proxy
-   * read presented as a verification is a documented failure in this house
-   * (`instances/uritp-safety/site.yml`, the `database` theme claim), and
-   * blind-fixing a rule that might be fine would be the same mistake wearing a
-   * fix as a costume.
+   * ✅ SO THE STAMP MOVED INSTEAD. `buildstamp.py` now appends it to the page
+   * BODY at `on_page_content`, the pattern `pagefoot.py` already used one hook
+   * earlier. Nothing in the chrome-off list is an ancestor of the content
+   * column, so the rule below is now ordinary styling rather than a fight.
    *
-   * ⚠️ AND THE OBVIOUS TEST DOES NOT WORK: the two URITP Safety fire-policy
-   * PDFs that prompted this cannot settle it, because that page carries
-   * `hide: [footer]` in its own frontmatter -- no footer could print there
-   * regardless. PRINT A PAGE WITHOUT `hide: footer` AND LOOK. If the stamp is
-   * missing, the fix is to hoist it out of the hidden subtree, and it is a live
-   * bug older than this comment. */
+   * ⚠️ KEEP THIS SELECTOR EVEN THOUGH THE `display` IS NO LONGER NEEDED. The
+   * margin and the ink colour are real paper decisions -- a provenance line
+   * wants to sit quietly under the content, not shout at the same weight as it.
+   * `display: block` is retained because the element is a `<p>` either way and
+   * a future change of tag should not silently change the layout.
+   * --------------------------------------------------------------------- */
   .buildstamp {
     display: block;
     margin-top: 1.5rem;
@@ -258,6 +259,11 @@
    * reason `_PRINT_ASSETS` is its own group rather than the eighth entry in
    * `_DATA_ASSETS`. If a future split ever lands these files in the wrong slot,
    * THIS is the rule that dies, and it dies silently.
+   *
+   * ⚠️ STILL UNVERIFIED ON PAPER as of 2026-08-19. Three print previews have
+   * confirmed the column unrailing and the dead-reference decoration, and none
+   * of them could confirm this: a PDF does not record which scheme the reader
+   * was in. It needs one print FROM DARK MODE.
    *
    * ⚠️ STRUCTURAL NEUTRALS ONLY -- surfaces, ink, rules. No semantic token is
    * listed and none should be added. See the header.
@@ -367,6 +373,12 @@
    * it was the engine typing a word into a sentence he wrote -- and the signal
    * is now a dotted underline declared once in assets/base.css, unscoped to any
    * medium, so it reaches paper on its own.
+   *
+   * ✅ CONFIRMED ON PAPER 2026-08-19, which is worth recording because this
+   * block is an argument for NOT writing a rule. A print of General Safety
+   * Responsibilities showed two dead references in `--dr-dead` red against the
+   * live links' teal, with no rule in this file. The base declaration reaches
+   * paper exactly as claimed.
    *
    * ⭐ THE SWAP IMPROVED THE PAPER CASE, WHICH IS NOT WHERE THE PRESSURE CAME
    * FROM. On a sheet there is no hover, so the `title` never existed here, and
