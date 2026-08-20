@@ -37,6 +37,14 @@
  * away. Scoping is a real answer; `!important` is a bigger hammer with a
  * hostage.
  *
+ * 🔴 AND THE SAME CLASS OF DEFECT WAS HIDING ONE SECTION LOWER, FOUND FROM AN
+ * IPAD SCREENSHOT ON 2026-08-19: the "also part of" disclosure is a `<details>`,
+ * and Material `@extend`s `.admonition` onto EVERY `<details>` in typeset
+ * content. It was wearing a full callout -- blue border, tinted title bar, note
+ * pencil -- on a page whose every other box is parchment brown. See THE CAP.
+ * ⚑ *This sheet's original sin was assuming an unstyled element is a plain one.
+ * Twice, on two different elements, from the same wrong premise.*
+ *
  * =========================================================================
  * ⭐ WHERE A READER LANDS, AND WHY THERE ARE TWO IDS PER FLOW
  * =========================================================================
@@ -249,28 +257,128 @@
   color: var(--dr-on-accent, var(--md-primary-bg-color));
 }
 
-/* THE CAP. Secondary flows live behind one disclosure -- quiet, and obviously
- * a control. `<details>` needs no script and prints open for free.
+/* =========================================================================
+ * 🔴 THE CAP -- AND IT WAS THE LOUDEST THING ON THE PAGE, NOT THE QUIETEST
+ * =========================================================================
+ * > Michael, 2026-08-19, from an iPad screenshot: *"i wondered why that had to
+ * > stand out so much. i'd love 'also part of' to recede...."*
  *
- * ⚠️ A GENERATED RULE MAY SET THIS TO `display: contents` when the reader
- * arrived from a flow parked in here. Its `<summary>` then reads as a loose
- * label rather than a control, which is correct: the disclosure is moot once its
- * contents are shown. */
+ * Secondary flows live behind one disclosure. `<details>` was chosen because it
+ * needs no script and prints open for free, and the comment here used to claim
+ * the result was "quiet." **It was a full blue callout.**
+ *
+ * 🔴 THE CAUSE, READ AT SOURCE (squidfunk/mkdocs-material `_details.scss`):
+ *
+ *     .md-typeset details { @extend .admonition; }
+ *     .md-typeset summary { @extend .admonition-title; }
+ *
+ * **Material styles EVERY `<details>` in typeset content as an admonition** --
+ * 1.5px border, `--md-admonition-bg-color` fill, a tinted title bar, a 4px left
+ * band, 40px reserved for an icon, and the base `::before` rule paints
+ * `--md-admonition-icon--note`: the PENCIL. With no family class there is no row
+ * in the generated `blocks.css` to recolour any of it, so it renders in
+ * Material's hardcoded `$clr-blue-a200` -- **the one element on a papyrus page
+ * not wearing the theme.**
+ *
+ * ⚑ AND `blocks.py` HAD ALREADY WRITTEN THE DIAGNOSIS FOR A DIFFERENT CASE:
+ * *"Material's base rule sets the note pencil unconditionally, so a family it
+ * has never heard of wears the WRONG glyph rather than none."* That was aimed at
+ * an undeclared `!!! word`. A bare `<details>` is the same defect arriving
+ * through markup nobody thought of as a callout at all.
+ *
+ * ✅ SO THE CHROME IS STRIPPED RATHER THAN RECOLOURED. Giving it a family colour
+ * would make it a *correctly themed* callout, and a callout is exactly what it
+ * must not be: this is a disclosure for material the reader has probably already
+ * seen. What is left is a line of small text with a caret. **Recede means stop
+ * being a box, not be a quieter box.**
+ *
+ * ⚠️ SPECIFICITY, COUNTED RATHER THAN ASSUMED. Material's extended rules land at
+ * `.md-typeset details` and `.md-typeset summary`, both (0,1,1). The rules below
+ * are (0,2,0) and (0,2,1), so they win OUTRIGHT -- not on load order, which
+ * matters because `blocks.css` is generated and its selector shapes are owned by
+ * `blocks.py` rather than by this file.
+ * ---------------------------------------------------------------------- */
+.md-typeset .dr-flows__others,
 .dr-flows__others {
-  margin-top: 0.9rem;
+  display: block;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: inherit;
 }
 
+.md-typeset .dr-flows__others > summary,
 .dr-flows__others > summary {
+  display: block;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   cursor: pointer;
   font-size: 0.72rem;
   font-weight: 600;
+  letter-spacing: 0.02em;
   color: var(--md-default-fg-color--light);
+  list-style: none;
 }
 
+/* 🔴 THE PENCIL IS NOT HIDDEN, IT IS REPLACED -- AND THAT IS THE SECOND VERSION
+ * OF THIS RULE. The first hid `::before` and drew the caret on a
+ * `<span class="dr-flows__caret">` inside the summary. **That span does not
+ * exist.** `program.py` emits `<summary>Also part of N other programs</summary>`
+ * and nothing else, so the rule styled an element that is never rendered and the
+ * disclosure would have shipped with no caret at all.
+ *
+ * ⚑ CAUGHT BEFORE MERGE BY RE-READING THE EMITTER RATHER THAN THE STYLESHEET,
+ * which is the only way this class of bug is ever caught: *a rule is only as real
+ * as the markup it is allowed to match*, and this repo has logged four other
+ * instances of a guard written against state that never occurs. The cheap tell is
+ * that the selector names a class no `.py` file in the tree writes.
+ *
+ * ✅ SO ONE PSEUDO-ELEMENT DOES BOTH JOBS. Overriding `content` and clearing the
+ * mask turns Material's absolutely-positioned 20px icon box into an in-flow text
+ * caret: the pencil is gone BY CONSTRUCTION rather than by a second rule, and
+ * there is nothing left to reserve 40px for. `position: static` is what makes
+ * Material's `top` and `inset-inline-start` inert -- without it the caret would
+ * sit in the gutter this section just removed. */
+.md-typeset .dr-flows__others > summary::before {
+  position: static;
+  display: inline-block;
+  width: auto;
+  height: auto;
+  margin-right: 0.35rem;
+  background-color: transparent;
+  -webkit-mask-image: none;
+  mask-image: none;
+  content: "\25B8";
+  transition: transform 125ms;
+}
+
+.md-typeset .dr-flows__others[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+/* Material's `summary::after` is the chevron, absolutely positioned 8px from the
+ * inline end and sized for the box that is now gone. The caret above replaces
+ * it, so this one has no job left. */
+.md-typeset .dr-flows__others > summary::after {
+  display: none;
+}
+
+.md-typeset .dr-flows__others > summary:hover,
 .dr-flows__others > summary:hover {
   color: var(--dr-accent, var(--md-typeset-a-color));
 }
 
+/* ⚠️ A GENERATED RULE MAY SET THIS TO `display: contents` when the reader arrived
+ * from a flow parked in here. Its `<summary>` then reads as a loose label rather
+ * than a control, which is correct: the disclosure is moot once its contents are
+ * shown. */
 .dr-flows__others .dr-flow:first-of-type {
   margin-top: 0.8rem;
   padding-top: 0;
@@ -298,7 +406,12 @@
  * reading and the only thing left is to submit, so the form IS the destination.
  *
  * DEGRADES HONESTLY where that behaviour is missing: the reader lands on a
- * visible, obvious "Complete this program" control and clicks once. */
+ * visible, obvious "Complete this program" control and clicks once.
+ *
+ * ⚠️ THIS ONE KEEPS ITS BOX ON PURPOSE, and the contrast with THE CAP above is
+ * the whole point: a completion form is the primary action on the last page of a
+ * program, and the disclosure above it is a list of places the reader has
+ * already been. Same element, opposite jobs. */
 .dr-form__open > summary {
   cursor: pointer;
   display: block;
@@ -373,6 +486,38 @@
   .dr-flow:target .dr-flow__step {
     background: transparent !important;
     color: inherit !important;
+  }
+
+  /* 🔴 THE CAP IS NOT A CALLOUT ON PAPER EITHER, AND THIS RULE IS WHY IT NEEDS
+   * SAYING. `print-callout.css` turns every `.md-typeset details` into a
+   * rule-and-indent -- a 2pt coloured left band and an 0.85em indent -- which is
+   * correct for a real callout and wrong for this disclosure, whose whole job is
+   * to recede. Without this it would print with a BLUE band, because no family
+   * rule ever gave it a colour.
+   *
+   * ⚠️ flow.css loads AFTER the print group (assets.py `_FLOW_ASSETS`), so this
+   * would win on source order alone -- but the selectors are (0,2,0)/(0,2,1)
+   * against print-callout's armoured forms, so it wins outright. That matters:
+   * the group's internal order is documented as FREE, and a rule relying on it
+   * would quietly make that false. */
+  .md-typeset .dr-flows__others,
+  .dr-flows__others {
+    border: 0 !important;
+    padding: 0;
+    background: transparent;
+  }
+
+  .md-typeset .dr-flows__others > summary,
+  .dr-flows__others > summary {
+    border: 0;
+    padding: 0;
+    font-weight: 600;
+  }
+
+  /* The caret is a control affordance and paper has no controls -- same test
+   * print.css applies to its whole chrome-off list. */
+  .md-typeset .dr-flows__others > summary::before {
+    display: none;
   }
 
   /* An iframe prints as a blank rectangle, so it is removed outright and the
