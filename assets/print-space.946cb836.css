@@ -73,19 +73,6 @@
  * `font-size` to §2's. `h2`'s `padding-bottom` in §1 is the near miss to know
  * about -- it is a spacing property living in the type file on purpose, because it
  * holds off a border that is inseparable from the size argument that chose it.
- *
- * =========================================================================
- * ✅ THIS SPLIT CHANGES NO COMPUTED VALUE, SO IT NEEDS NO PRINT TEST
- * =========================================================================
- * Every rule below is byte-identical to what it was inside print-type.css, and
- * both files load in the same group. The printed sheet is unchanged.
- *
- * ⚠️ WHICH IS ALSO WHY print-type.css §8's COUNT DID NOT MOVE. That section tracks
- * how many times hand-placed page breaks have been invalidated, and a pure move
- * invalidates nothing. **Incrementing it here would have been an honest-looking
- * lie** -- the kind of undocumented arithmetic the Doc-Rot Sweep hunts. Changes to
- * THIS file do invalidate breaks; the count for that lives in print-type.css §8
- * and is deliberately not restated here.
  */
 
 @media print {
@@ -164,13 +151,13 @@
    * gap between bullets stayed 0.5em + 0.2em = 0.7em, most of a line at this
    * leading. Exactly "ENORMOUS."
    *
-   * ⭐ THIRD OCCURRENCE OF ONE SIGNATURE IN ONE EVENING, AND IT IS NOW A CHECK
-   * RATHER THAN A LESSON: **a mixed result is a specificity signature.** PR #142
-   * lost `:last-child` while its neighbours won. The callout font-size lost while
-   * the title inherited a wrong anchor. This lost `margin-bottom` while keeping
-   * `margin-top`. Every one looked like "the file did not load" and every one was
-   * a per-selector fight. ⚑ *The tell is available before any source is opened:
-   * SOME of a block landed.*
+   * ⭐ A MIXED RESULT IS A SPECIFICITY SIGNATURE, and by 2026-08-19 this was the
+   * FOURTH instance in one evening: PR #142 lost `:last-child` while its
+   * neighbours won; the callout font-size lost while the title inherited a wrong
+   * anchor; this lost `margin-bottom` while keeping `margin-top`; and §9 below
+   * beat a rule in `print.css` nobody was thinking about. Every one looked like
+   * "the file did not load" and every one was a per-selector fight. ⚑ *The tell is
+   * available before any source is opened: SOME of a block landed.*
    *
    * ✅ ARMOURED WITH `html`, WHICH IS MATERIAL'S OWN WEAPON. Its callout rules use
    * a bare `html` prefix for precisely this, so the pattern is borrowed rather
@@ -233,10 +220,38 @@
    * language with no hyphenation dictionary, justification degrades to rivers and
    * nothing reports it.
    *
+   * =====================================================================
+   * 🔴 THE `:not()` IS A BUG FIX, AND THE PROSE BELOW IT WAS ALREADY LYING
+   * =====================================================================
+   * > Michael, 2026-08-19, with a PDF: *"move the header stuff back to the RIGHT
+   * > side of the header."*
+   *
+   * `buildstamp.py` emits the corner mark as `<p class="buildstamp
+   * buildstamp--corner">`, and Material puts `.md-typeset` on the SAME div as
+   * `.md-content__inner` -- so `.md-typeset p` matches it. `print.css` aligns it
+   * with `.buildstamp--corner { text-align: right }` at (0,1,0); the rule below
+   * was (0,1,1). **One element selector, one point, and the stamp went
+   * left-aligned.** A justified single line renders flush-left, so the symptom was
+   * not "justified stamp", it was "stamp moved", which points at the wrong file.
+   *
+   * ⚑ FIFTH INSTANCE OF THE SPECIFICITY SIGNATURE IN ONE EVENING, and the first
+   * one where OUR rule beat ANOTHER OF OUR OWN rather than Material's. ⭐ The
+   * exclusion list in the paragraph below ALREADY SAID *"the buildstamp is
+   * furniture"* -- written in the same commit that shipped the selector which hits
+   * it. **A stated exclusion that the selector does not implement is worse than no
+   * exclusion: it reads as verified.** Same defect class as the callout wash note
+   * and the `sizecheck` hole.
+   *
+   * ✅ FIXED HERE RATHER THAN BY ARMOURING print.css, because this file introduced
+   * the collision and because `.buildstamp` is genuinely not prose. Narrowing the
+   * selector also keeps print.css's alignment rule the SINGLE claimant on where
+   * the stamp sits.
+   *
    * 🚫 PROSE ONLY, and each exclusion is a real case rather than caution:
    * headings are not justified because a hyphenated heading reads as a mistake
    * and a two-word h2 would stretch across the measure; table cells are not,
-   * because a narrow column cannot absorb slack; the buildstamp is furniture.
+   * because a narrow column cannot absorb slack; **the buildstamp is furniture
+   * and is now actually excluded rather than merely described as excluded.**
    *
    * ⚠️ THE HONEST LIMIT, AND IT IS A MEASURE PROBLEM RATHER THAN A JUSTIFICATION
    * ONE. `print.css` unrails the content column so the page IS the measure --
@@ -248,7 +263,7 @@
    * decision made to stop two thirds of the sheet printing blank, so it is named
    * here and NOT taken.
    * --------------------------------------------------------------------- */
-  .md-typeset p,
+  .md-typeset p:not(.buildstamp),
   .md-typeset li {
     text-align: justify;
     -webkit-hyphens: auto;

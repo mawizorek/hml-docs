@@ -11,12 +11,17 @@
  *
  * THIS FILE IS STRUCTURE, NOT COLOUR. What a thing IS coloured stays the
  * theme's business, resolved from theme/canonical/* exactly as on screen. What
- * this file decides is what appears on paper at all and how wide it runs. Keep
- * that line: the first colour opinion that lands here is the beginning of a
- * second theme nobody can see.
+ * this file decides is what appears on paper at all and how wide it runs.
+ *
+ * ✅ AND AS OF 2026-08-19 THAT IS FINALLY TRUE. The line above was written on day
+ * one and this file carried the print group's ONLY colour block -- sixteen hex
+ * literals -- for its whole life, while the header was quoted approvingly a dozen
+ * commits later. 🪦 Moved to `print-scheme.css`. **Not rot: it was never true.**
+ * Keep the line: the first colour opinion that lands here again is the beginning
+ * of a second theme nobody can see.
  *
  * =========================================================================
- * ⭐ SPLIT 2026-08-19 -- THE BREAK POLICY LIVES IN assets/print-flow.css
+ * ⭐ THE PRINT GROUP IS SIX FILES AS OF 2026-08-19
  * =========================================================================
  * This file was 22,844 B against a ~22 KB ceiling: the point where a file stops
  * coming back whole from one read and therefore stops being safely editable.
@@ -26,13 +31,17 @@
  * THE SEAM WAS ALREADY WRITTEN IN THIS HEADER. It used to describe its subject
  * as "what appears on paper at all, how wide it runs, and where the page is
  * allowed to break" -- two jobs, with the `and` doing the work of a chapter
- * break. Now three files, each answering one question:
+ * break. Now six files, each answering one question:
  *
- *     print.css       WHAT THE SHEET IS   -- this file
- *     print-flow.css  WHERE IT BREAKS     -- break-*, orphans/widows, h1-h6,
- *                                            tab labels, forced-open <details>,
- *                                            thead repetition, {.new-page}
- *     print-type.css  HOW IT IS SET       -- leading, block and list spacing
+ *     print.css          WHAT THE SHEET IS   -- this file
+ *     print-flow.css     WHERE IT BREAKS     -- break-*, orphans/widows,
+ *                                              forced-open <details>, thead
+ *                                              repetition, {.new-page}
+ *     print-type.css     HOW BIG THE TYPE IS -- the dial, the ramp, weight
+ *     print-space.css    HOW MUCH AIR        -- block and list margins,
+ *                                              justification
+ *     print-callout.css  WHAT THE BOX IS     -- the rule-and-indent, the icon
+ *     print-scheme.css   WHOSE INK IT IS     -- the dark-reader override
  *
  * ⚠️ ONE JUDGEMENT CALL, NAMED SO IT CAN BE ARGUED WITH: the code-wrapping
  * rule STAYED here. It looks like flow -- it changes where lines end -- but it
@@ -48,26 +57,30 @@
  * =========================================================================
  * docrender/assets.py publishes `_PRINT_ASSETS` AFTER the three generated
  * sheets and BEFORE the instance's site.css. Both halves are load-bearing, and
- * the other two print sheets inherit the same sandwich.
+ * the other print sheets inherit the same sandwich.
  *
- * AFTER tokens.css, because the paper overrides below re-point custom
- * properties on `[data-md-color-scheme="slate"]` -- the SAME selector
- * tokens.css writes, at the SAME specificity. Put this file earlier and the
- * generated sheet wins on source order, the overrides lose silently, and a
- * reader in dark mode prints pale grey ink on a background the browser drops.
- * There is no error. The page just comes out blank-ish.
+ * AFTER tokens.css, because `print-scheme.css` re-points custom properties on
+ * `[data-md-color-scheme="slate"]` -- the SAME selector tokens.css writes, at the
+ * SAME specificity. Put the group earlier and the generated sheet wins on source
+ * order, the overrides lose silently, and a reader in dark mode prints pale grey
+ * ink on a background the browser drops. There is no error. The page just comes
+ * out blank-ish. 🔴 That happened anyway on 2026-08-19 WITH the order correct,
+ * which is why those declarations now carry `!important` -- see that file.
  *
  * BEFORE site.css, because an instance keeps the final word on its own look,
  * and that rule has no exception for paper.
  *
- * ⚠️ ORDER *WITHIN* THE PRINT GROUP IS FREE, and that is said out loud so
- * nobody defends a position that was never load-bearing: no two of the three
- * print sheets share a selector-and-property pair, so none can win or lose a tie
- * against another. Same distinction `_FEATURE_ASSETS` already draws, where its
- * JS order is law and its CSS order is genuinely free.
+ * ⚠️ ORDER *WITHIN* THE PRINT GROUP IS FREE: no two of the six print sheets
+ * share a selector-and-property PAIR, so none can win or lose a tie against
+ * another. Same distinction `_FEATURE_ASSETS` draws, where its JS order is law
+ * and its CSS order is genuinely free. 🔴 WITH ONE PROVEN EXCEPTION, added the day
+ * it bit: `print-space.css` §9 justifies `.md-typeset p`, which MATCHES the
+ * corner buildstamp and beat this file's alignment rule on SPECIFICITY, not
+ * order. **The group's order is still free; what is not free is assuming two of
+ * our own files cannot collide.**
  *
  * =========================================================================
- * ⚠️ THE ONE THING THIS FILE CANNOT FIX, STATED RATHER THAN PAPERED OVER
+ * ⚠️ THE ONE THING THE PRINT GROUP CANNOT FIX, STATED RATHER THAN PAPERED OVER
  * =========================================================================
  * Paper is always a light ground. `good`, `warn`, `bad` and `info` are
  * BYTE-IDENTICAL between the dark and light rows of 16 of the 19 canonical
@@ -80,11 +93,11 @@
  * floor in both schemes (1.46 / 1.70 / 3.48 for soft-utility / sharp-carbon /
  * eos).
  *
- * 🚫 NOT COMPENSATED FOR HERE, deliberately. Darkening semantic tokens at
- * print time would hide the defect on the one surface that shows it most
- * clearly, and the fix belongs in the light rows of canonical/colors.tsv.
- * Structural neutrals are re-pointed below because paper genuinely is a
- * different surface; semantics are left exactly as the theme authored them.
+ * 🚫 NOT COMPENSATED FOR ANYWHERE IN THE GROUP, deliberately. Darkening semantic
+ * tokens at print time would hide the defect on the one surface that shows it
+ * most clearly, and the fix belongs in the light rows of canonical/colors.tsv.
+ * `print-scheme.css` re-points STRUCTURAL neutrals only, for the stated reason
+ * that paper genuinely is a different surface.
  */
 
 @media print {
@@ -193,6 +206,14 @@
    * stylesheet's `[hidden] { display: none }`. Delete it and the mark vanishes
    * from paper with nothing reporting it.
    *
+   * 🔴 AND `text-align: right` LOST ON 2026-08-19 WITHOUT THIS FILE BEING EDITED.
+   * `print-space.css` §9 shipped `text-align: justify` on `.md-typeset p`; the
+   * corner mark IS a `<p>` inside `.md-typeset`, and (0,1,1) beats the (0,1,0)
+   * below -- source order never consulted. A justified single line renders
+   * flush-left, so the symptom read as "the stamp moved" and pointed at the wrong
+   * file. ✅ Fixed by narrowing §9 to exclude `.buildstamp`, so this stays the
+   * SINGLE claimant on where the stamp sits rather than the second armoured one.
+   *
    * 🚩 THE ICON GOES HERE, as a print-scoped `background-image` on this rule,
    * once a line-art SVG exists. 🚫 NEVER an `<img>`: a `display: none` image is
    * still FETCHED, which is ~168KB on every page load of a site whose readers
@@ -260,54 +281,18 @@
   }
 
   /* -------------------------------------------------------------------------
-   * DARK READER, LIGHT PAPER
+   * 🪦 DARK READER, LIGHT PAPER -- MOVED TO `assets/print-scheme.css` 2026-08-19.
    *
-   * Scoped to `slate` ONLY. A reader already in light mode is untouched, which
-   * is the whole reason this is not a blanket override: the light scheme's
-   * neutrals were authored for a light ground and are already correct.
+   * Sixteen hex literals and the whole scheme argument left, because this file's
+   * first paragraph says it holds no colour and it held the group's only colour
+   * block. That file also carries the finding that made the move worth doing:
+   * **Material wraps its entire slate scheme in `@media screen`, so the pale ink
+   * on a dark-mode print was never Material's -- it was ours.**
    *
-   * The failure being fixed is specific and silent. Browsers drop background
-   * colours at print by default, so a dark-mode page loses its dark surface
-   * and keeps its pale ink: near-white text on white paper. Nothing errors and
-   * the preview looks empty.
-   *
-   * 🔴 AND THIS IS THE RULE THAT MAKES THE LOAD ORDER LOAD-BEARING. It is the
-   * reason `_PRINT_ASSETS` is its own group rather than the eighth entry in
-   * `_DATA_ASSETS`. If a future split ever lands these files in the wrong slot,
-   * THIS is the rule that dies, and it dies silently.
-   *
-   * ⚠️ STILL UNVERIFIED ON PAPER as of 2026-08-19. Three print previews have
-   * confirmed the column unrailing and the dead-reference decoration, and none
-   * of them could confirm this: a PDF does not record which scheme the reader
-   * was in. It needs one print FROM DARK MODE.
-   *
-   * ⚠️ STRUCTURAL NEUTRALS ONLY -- surfaces, ink, rules. No semantic token is
-   * listed and none should be added. See the header.
+   * ⚠️ THE ONE THING TO KNOW FROM HERE: those declarations now carry `!important`
+   * because a tie won on source order is the weakest guarantee in this engine, and
+   * this block lost one on 2026-08-19 with the load order provably correct.
    * --------------------------------------------------------------------- */
-  [data-md-color-scheme="slate"] {
-    --dr-surface: #ffffff;
-    --dr-surface-raised: #f4f4f4;
-    --dr-surface-3: #ededed;
-    --dr-ink: #111111;
-    --dr-ink-muted: #555555;
-    --dr-text-faint: #777777;
-    --dr-rule: #cccccc;
-  }
-
-  /* Material caches its own resolved values on these, so the token override
-   * above does not reach them on its own. */
-  [data-md-color-scheme="slate"] {
-    --md-default-bg-color: #ffffff;
-    --md-default-fg-color: #111111;
-    --md-typeset-color: #111111;
-    --md-code-bg-color: #f4f4f4;
-  }
-
-  body,
-  .md-main,
-  .md-content {
-    background: #ffffff !important;
-  }
 
   /* -------------------------------------------------------------------------
    * INK THAT ACTUALLY LANDS
@@ -320,6 +305,13 @@
    * Applied narrowly on purpose. Forcing it document-wide would also force
    * every large background panel through the printer, which wastes toner on
    * exactly the surfaces that carry no meaning.
+   *
+   * ⚠️ AND IT IS WHY print-callout.css TURNS THE CALLOUT PANEL OFF BY HAND.
+   * Browsers drop backgrounds at print for free, but this list covers
+   * `.md-typeset .admonition` -- correct for the BORDER, and it drags the grey
+   * panel along with it. **A rule that forces one colour to print forces all of
+   * them on that element.** Narrowing this list was the alternative and it would
+   * cost the border guarantee above.
    *
    * 🚩 THIS IS THE LIST THE CORNER STAMP'S ICON JOINS when one exists. A brand
    * mark qualifies on the stated test, and a logo that prints as an empty box is
@@ -395,12 +387,6 @@
    * Responsibilities showed two dead references in `--dr-dead` red against the
    * live links' teal, with no rule in this file. The base declaration reaches
    * paper exactly as claimed.
-   *
-   * ⭐ THE SWAP IMPROVED THE PAPER CASE, WHICH IS NOT WHERE THE PRESSURE CAME
-   * FROM. On a sheet there is no hover, so the `title` never existed here, and
-   * a photocopier or a mono printer flattens `--dr-dead` into body ink. The old
-   * badge and the new decoration both survive that; the difference is that the
-   * decoration also survives an author's proof-read.
    *
    * 🚫 DO NOT RE-DECLARE IT HERE. A second copy of a decoration is a second
    * claimant on one truth, which is the failure this repo has logged against
