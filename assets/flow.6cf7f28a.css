@@ -38,39 +38,21 @@
  * hostage.
  *
  * =========================================================================
- * ⭐ THE ARRIVED-AT FLOW IS PROMOTED BY `:target`, WITH NO JAVASCRIPT
+ * ⭐ WHERE A READER LANDS, AND WHY THERE ARE TWO IDS PER FLOW
  * =========================================================================
- * Michael: *"when entering the same page from different workflows, the app isn't
- * 'aware' and puts the second (now active) program inside the 'also part of'
- * section instead."* Correct, and it was the last real gap in the feature: the
- * strip order is baked at build time and "which flow am I in" is a per-request
- * fact.
+ * Michael: *"each time you hit next in for the workflow, you're at the bottom of
+ * the next page - can you put us back to the top of each nexted page?"*
  *
- * 🔴 THE FIX IS THE SAME MECHANISM THE COLLAPSED FORM ALREADY USES. Every strip
- * link carries `#flow-<program id>`, so arriving from a program targets THAT
- * program's strip. Two things then happen for free, both from the HTML spec:
+ * The strip links used to point at the STRIP's own id, which sits at the foot of
+ * the page -- so every Next dropped the reader past the whole policy. ⚑ A
+ * fragment does TWO jobs: it carries STATE (which flow am I in) and it is the
+ * SCROLL TARGET. Only the first was designed for.
  *
- *   1. A fragment pointing INSIDE a closed `<details>` opens it. So a flow
- *      parked in "Also part of" is expanded on arrival rather than buried.
- *   2. `:target` matches it, so it can be marked as the active one.
- *
- * ⭐ AND `order: -1` HOISTS IT ABOVE ITS SIBLINGS, which is why `.dr-flows` is a
- * flex column. A strip promoted out of the disclosure cannot be reordered
- * (different parent), so instead the whole disclosure is what moves down.
- *
- * 🚫 A `?flow=` QUERY PARAM WAS BUILT FIRST AND HAS BEEN REMOVED. Nothing read
- * it. A URL parameter no code consumes is exactly the dead-key defect this
- * engine keeps paying for -- `sort:`, the inert `palette:`, `revised:`,
- * `aliases:` for two days. The fragment does the work, so the param was the
- * decoration.
- *
- * ⚠️ NO SCRIPT, DELIBERATELY, AND NOT ONLY FOR PURITY. `docrender/assets.py`
- * crossed the engine's 22KB hard read ceiling on 2026-08-19 (22,436 B), so
- * registering a new asset means rewriting a file that can no longer be read
- * whole -- which is how a parallel session's work gets clobbered. The JS version
- * of this feature would also have flapped the footer on every page load. Being
- * unable to take the bad option is not the same as choosing the good one, so:
- * this is the good one, and the ceiling is reported separately.
+ * So `program.py` now emits a zero-height `.dr-at` marker at the TOP of each
+ * page in a flow and links point THERE. The state survives, the scroll lands
+ * where a reader expects, and the promotion is done by two short generated rules
+ * per page -- because a selector cannot compare a targeted element's id to
+ * another element's id.
  *
  * TOKENS ARE ALWAYS USED WITH A FALLBACK, and the fallback is a Material
  * variable rather than a literal. This engine generates `--dr-*` from
@@ -79,6 +61,27 @@
  * families painting `currentColor` on 2026-08-05. Falling back to Material's own
  * variable means the worst case is Material's look, never an invisible control.
  */
+
+/* ---------------------------------------------------------- arrival marker */
+
+/* WHERE A FLOW LINK LANDS. Zero-height, no text, no box -- it exists only to be
+ * a fragment target and to name the flow for the generated promotion rules.
+ *
+ * 🔴 `scroll-margin-top` IS THE LOAD-BEARING PROPERTY AND IT IS NOT COSMETIC.
+ * Material's header is `position: sticky`, so an element scrolled to the top of
+ * the viewport sits UNDERNEATH it -- the reader lands on the right page with the
+ * page title hidden behind the chrome, which reads as a broken jump. The value
+ * is Material's own header height plus a little air.
+ *
+ * ⚠️ IT IS INSIDE THE TYPESET COLUMN, so it must not introduce a line box. A
+ * bare `<span>` with no styling would inherit the paragraph line-height and add
+ * blank space above the H1 on every page in a flow. */
+.dr-at {
+  display: block;
+  height: 0;
+  overflow: hidden;
+  scroll-margin-top: 4.5rem;
+}
 
 /* ------------------------------------------------------------------ strips */
 
@@ -92,6 +95,7 @@
 
 .dr-flow {
   display: block;
+  scroll-margin-top: 4.5rem;
 }
 
 .dr-flow + .dr-flow {
@@ -100,8 +104,12 @@
   border-top: 1px dashed var(--dr-border, var(--md-default-fg-color--lightest));
 }
 
-/* THE PROMOTION. See the docstring: the reader arrived from this program, so
- * this strip goes first and the disclosure holding the others drops below it. */
+/* ⚠️ THESE TWO `:target` RULES ARE NO LONGER HOW PROMOTION HAPPENS, and they are
+ * kept rather than deleted because they are still REACHABLE: a hand-written or
+ * bookmarked link to `#flow-<id>` still targets a strip directly, and it should
+ * still read as the active one. The promotion a reader actually meets comes from
+ * the per-page rules in `program.py`, keyed to the `.dr-at` marker above. Said
+ * out loud so nobody edits these expecting the footer to change. */
 .dr-flows > .dr-flow:target {
   order: -1;
   margin-top: 0;
@@ -147,9 +155,11 @@
   white-space: nowrap;
 }
 
-/* The targeted strip says so in words as well as position -- a reader who
- * arrived mid-flow should not have to infer which of three programs is the one
- * they are walking. */
+/* ⚠️ ALSO ONLY FIRES ON A DIRECT STRIP LINK now, same as the two rules above.
+ * Marking the promoted strip's chip from a `.dr-at` target would need a third
+ * generated rule per flow, and the position in the list plus the open
+ * disclosure already say which flow is active. Not worth the bytes on every
+ * page. */
 .dr-flow:target .dr-flow__step {
   background: var(--dr-accent, var(--md-typeset-a-color));
   color: var(--dr-on-accent, var(--md-primary-bg-color));
@@ -240,7 +250,12 @@
 }
 
 /* THE CAP. Secondary flows live behind one disclosure -- quiet, and obviously
- * a control. `<details>` needs no script and prints open for free. */
+ * a control. `<details>` needs no script and prints open for free.
+ *
+ * ⚠️ A GENERATED RULE MAY SET THIS TO `display: contents` when the reader
+ * arrived from a flow parked in here. Its `<summary>` then reads as a loose
+ * label rather than a control, which is correct: the disclosure is moot once its
+ * contents are shown. */
 .dr-flows__others {
   margin-top: 0.9rem;
 }
@@ -278,10 +293,12 @@
  * <details> expands it, so arriving from the end of the flow opens the form
  * with no script and no state.
  *
+ * ⚠️ THIS IS THE ONE FLOW LINK THAT DELIBERATELY DOES NOT GO TO THE TOP OF THE
+ * PAGE, and that is the point rather than an oversight: the reader has finished
+ * reading and the only thing left is to submit, so the form IS the destination.
+ *
  * DEGRADES HONESTLY where that behaviour is missing: the reader lands on a
- * visible, obvious "Complete this program" control and clicks once. One extra
- * click, never a dead end -- which is why this is safe to ship without
- * browser-support arithmetic nobody can verify from here. */
+ * visible, obvious "Complete this program" control and clicks once. */
 .dr-form__open > summary {
   cursor: pointer;
   display: block;
@@ -291,6 +308,7 @@
   color: var(--dr-good, var(--md-typeset-a-color));
   font-weight: 700;
   font-size: 0.85rem;
+  scroll-margin-top: 4.5rem;
 }
 
 .dr-form__open > summary:hover {
