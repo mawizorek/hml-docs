@@ -287,7 +287,7 @@
   }
 
   /* -------------------------------------------------------------------------
-   * ✅ §6 -- THE FACE. THE VECTOR DICTATES IT, AND SINCE 2026-08-19 IT ARRIVES.
+   * ✅ §6 -- THE FACE. THE VECTOR DICTATES IT, AND THAT IS NOW A RULING.
    *
    * 🪦 FOUR PARAGRAPHS RETIRED TO THIS POINTER. They argued at length that the font
    * NAME was declared, applied and inherited correctly while the font FILE was
@@ -302,14 +302,17 @@
    * vector owns -- right for whichever instance somebody was looking at, silently
    * wrong for the other five.
    *
-   * ⚠️ THE ONE THING GENUINELY ABSENT FROM THE VECTOR IS A SERIF. All six rows are
-   * sans in all three columns. A printed policy conventionally wants a text serif,
-   * so that is not a print-layer override -- **it is a new canonical typography
-   * row, which is a theme decision and Michael's call.**
+   * 🔴 AND THE SERIF QUESTION IS NOW CLOSED (Michael, 2026-08-19): *"no font
+   * override. let it be like my page has chosen."* This section previously named a
+   * text serif as the conventional book face and parked it as a theme decision.
+   * **It was offered and it was REFUSED, which is a stronger state than pending.**
+   * The paper wears whatever `theme/canonical/typography.tsv` resolves for the
+   * site -- Chakra Petch over Inter on `uritp-safety` today -- and a future pass
+   * proposing a print-only face should read this line first and stop.
    *
-   * 🚫 NO `font-family` IS SET IN THIS FILE, and that is a stronger position than it
-   * was this morning: declaring one would override a vector that now works end to
-   * end, and split screen and paper onto two faces while the table says they match.
+   * 🚫 NO `font-family` IS SET IN THIS FILE, and there are now two reasons rather
+   * than one: declaring one would override a vector that works end to end, and it
+   * would contradict an explicit ruling.
    * --------------------------------------------------------------------- */
 
   /* -------------------------------------------------------------------------
@@ -343,16 +346,60 @@
    * --------------------------------------------------------------------- */
 
   /* -------------------------------------------------------------------------
-   * 🔴 §8 -- THIS FILE HAS NOW INVALIDATED EVERY HAND-PLACED PAGE BREAK FIVE TIMES
+   * 🔴 §8 -- THIS FILE HAS NOW INVALIDATED EVERY HAND-PLACED PAGE BREAK SIX TIMES
    *
    * `{.new-page}` *"is correct on the day it is typed and nobody is told when it
    * stops being correct."* Leading fitted more lines; the callout padding attempt
    * made boxes bigger; the armoured version made them smaller; §0's base size
-   * changed how much of ANYTHING fits; and the callout anchor just resized every
-   * callout on every page again.
+   * changed how much of ANYTHING fits; the callout anchor resized every callout;
+   * and §9's justification changes where every line in every paragraph ends.
    *
    * ✅ DO NOT AUTHOR `{.new-page}` ACROSS THE TREE until this pass is previewed
    * and settled. The automatic rules in print-flow.css exist so that work is
    * mostly unnecessary.
    * --------------------------------------------------------------------- */
+
+  /* -------------------------------------------------------------------------
+   * ✅ §9 -- JUSTIFIED PROSE (Michael, 2026-08-19: *"YES to justyified"*)
+   *
+   * The cheapest "printed book" signal available. A ragged right edge is the
+   * web's default and a flush one is the codex's, and no other declaration in
+   * this file moves the impression as far per byte.
+   *
+   * 🔴 `hyphens: auto` IS NOT A COMPANION NICETY, IT IS THE HALF THAT MAKES
+   * JUSTIFICATION WORK. A justified line distributes its slack into word spaces,
+   * so without hyphenation one long word pushed to the next line leaves the line
+   * above it stretched -- the "rivers" of white that make bad justified type
+   * worse to read than ragged type. Hyphenation lets the breaker split the word
+   * instead of the spaces. **Ship both or neither.**
+   *
+   * ⚠️ AND IT DEPENDS ON A `lang` ATTRIBUTE THIS REPO DOES NOT DECLARE. A browser
+   * cannot hyphenate a language nobody named; `hyphens: auto` on an unlabelled
+   * document silently does nothing at all. MkDocs writes `<html lang>` from
+   * `theme.language`, which defaults to `en` -- so this works today BY
+   * INHERITANCE rather than by anything stated here. If a site ever selects a
+   * language with no hyphenation dictionary, justification degrades to rivers and
+   * nothing reports it.
+   *
+   * 🚫 PROSE ONLY, and each exclusion is a real case rather than caution:
+   * headings are not justified because a hyphenated heading reads as a mistake
+   * and a two-word h2 would stretch across the measure; table cells are not,
+   * because a narrow column cannot absorb slack; the buildstamp is furniture.
+   *
+   * ⚠️ THE HONEST LIMIT, AND IT IS A MEASURE PROBLEM RATHER THAN A JUSTIFICATION
+   * ONE. `print.css` unrails the content column so the page IS the measure --
+   * ~726px at Letter with 12mm margins, which at 10pt is roughly 100 characters
+   * per line against a book's 45-75. Justifying neither causes that nor fixes it;
+   * it makes it more VISIBLE, because a straight right edge invites the eye to
+   * measure the line. 🚫 The book answer is a real measure, which means re-railing
+   * the column and accepting a wide outer margin -- a reversal of a deliberate
+   * decision made to stop two thirds of the sheet printing blank, so it is named
+   * here and NOT taken.
+   * --------------------------------------------------------------------- */
+  .md-typeset p,
+  .md-typeset li {
+    text-align: justify;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+  }
 }
