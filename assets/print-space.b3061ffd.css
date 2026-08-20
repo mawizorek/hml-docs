@@ -1,0 +1,257 @@
+/* THE PRINT SPACE LAYER -- HOW MUCH AIR IS BETWEEN THINGS.
+ *
+ * §2, §3 and §9 of `print-type.css` until 2026-08-19, split out the same evening.
+ * Fifth member of the print group; the load-order argument is in
+ * `docrender/assets.py` under `_PRINT_ASSETS`.
+ *
+ * =========================================================================
+ * ⚠️ WHY IT SPLIT, AND FOR ONCE IT WAS BEFORE THE WRITE BOUNCED
+ * =========================================================================
+ * `print-type.css` was 21,703 B against a 22,528 B hard read limit -- 825 B of
+ * headroom, reported to Michael as a budget warning rather than discovered when a
+ * write failed. He asked for the split immediately.
+ *
+ * ⭐ EVERY PREVIOUS SPLIT IN THIS GROUP WAS FORCED BY A FAILED WRITE. print.css
+ * hit 22,844 B; print-type.css hit 24,466 B carrying the callout anchor and was
+ * still 23,447 B after a post-mortem was cut to a pointer. **This is the first one
+ * taken on a forecast instead of a collision** -- which is what the size budget in
+ * `hooks/08_sizecheck.py` exists to buy and had never once been spent on.
+ *
+ * =========================================================================
+ * ⭐ THE SEAM WAS ALREADY WRITTEN DOWN, IN THE FILE THAT REGISTERS THESE
+ * =========================================================================
+ * `assets.py` described print-type.css's subject as *"leading, block spacing,
+ * list spacing"* -- three things joined by commas -- and justification was added
+ * to it later without the sentence changing. Same tell as print.css →
+ * print-flow.css, where an `and` was doing the work of a chapter break.
+ *
+ * SO THE TWO FILES NOW ANSWER ONE QUESTION EACH:
+ *
+ *     print-type.css   HOW BIG IS THE TYPE   -- the dial, the ramp, weight,
+ *                                               tracking, decoration
+ *     print-space.css  HOW MUCH AIR IS       -- block margins, list margins,
+ *                      BETWEEN THINGS           word spaces
+ *
+ * ⭐ AND JUSTIFICATION BELONGS HERE RATHER THAN WITH THE TYPE, WHICH IS THE ONE
+ * PLACEMENT WORTH ARGUING. `text-align: justify` does not change a letterform; it
+ * distributes a line's slack into the WORD SPACES. That is a spacing decision on
+ * the HORIZONTAL axis, and every other rule in this file is a spacing decision on
+ * the vertical one. One subject, two axes. `hyphens: auto` rides with it because
+ * it is the mechanism that keeps that distribution from producing rivers.
+ *
+ * =========================================================================
+ * 🔴 THE SECTION NUMBERS TRAVELLED WITH THE SECTIONS. DO NOT RENUMBER THEM.
+ * =========================================================================
+ * This file opens at §2 and its last section is §9. That looks wrong and it is
+ * correct: **the section numbers are a namespace shared across the whole print
+ * group, not a per-file sequence.** print.css, print-callout.css and the
+ * doc-render-engine Decision Log all cite these by number.
+ *
+ * ⭐ §4's TOMBSTONE ALREADY PROVED THIS AND NOBODY NOTICED. When callout chrome
+ * left for print-callout.css, its number was kept in print-type.css as a stub
+ * pointing across a file boundary -- so the namespace has spanned files since the
+ * first split. Renumbering to §0-§2 here would silently invalidate every citation
+ * pointing at these three sections. **A gap costs nothing; a shifted number is a
+ * citation that resolves to the wrong argument.**
+ *
+ * =========================================================================
+ * ⚠️ ONE SELECTOR NOW APPEARS IN BOTH FILES, AND THAT IS SAFE UNTIL IT ISN'T
+ * =========================================================================
+ * `h1`'s margins moved here so that ALL heading margins live together; its size,
+ * weight and tracking stayed in print-type.css §1. So `.md-typeset h1` is written
+ * in two files.
+ *
+ * ✅ THAT DOES NOT CREATE A TIE, because the PROPERTY SETS ARE DISJOINT: type owns
+ * `font-size`/`font-weight`/`letter-spacing`, space owns `margin-*`. A cascade
+ * fight needs the same selector AND the same property, so the group's internal
+ * load order stays genuinely free -- exactly as `_PRINT_ASSETS` claims.
+ *
+ * 🔴 THE ROT CONDITION, NAMED SO IT CAN BE CHECKED: the moment either file sets a
+ * property the other already sets on the same selector, this group's order stops
+ * being free and starts being law. The likeliest instance is somebody adding a
+ * `margin` to §1's h1 rule to "keep the heading together", or adding a
+ * `font-size` to §2's. `h2`'s `padding-bottom` in §1 is the near miss to know
+ * about -- it is a spacing property living in the type file on purpose, because it
+ * holds off a border that is inseparable from the size argument that chose it.
+ *
+ * =========================================================================
+ * ✅ THIS SPLIT CHANGES NO COMPUTED VALUE, SO IT NEEDS NO PRINT TEST
+ * =========================================================================
+ * Every rule below is byte-identical to what it was inside print-type.css, and
+ * both files load in the same group. The printed sheet is unchanged.
+ *
+ * ⚠️ WHICH IS ALSO WHY print-type.css §8's COUNT DID NOT MOVE. That section tracks
+ * how many times hand-placed page breaks have been invalidated, and a pure move
+ * invalidates nothing. **Incrementing it here would have been an honest-looking
+ * lie** -- the kind of undocumented arithmetic the Doc-Rot Sweep hunts. Changes to
+ * THIS file do invalidate breaks; the count for that lives in print-type.css §8
+ * and is deliberately not restated here.
+ */
+
+@media print {
+  /* -------------------------------------------------------------------------
+   * §2 -- BLOCK SPACING. THE SPACE *BETWEEN* THINGS.
+   *
+   * 🔴 "LINE SPACING" IS THREE PROPERTIES AND THE LEADING FIX ONLY REACHES THE
+   * FIRST. This is the distinction that made the first two passes miss:
+   *
+   *   1  line-height        space WITHIN a paragraph   -> print-type.css §0
+   *   2  p / heading margin space BETWEEN blocks       -> here
+   *   3  li margin          space BETWEEN bullets      -> §3
+   *
+   * `em` IS CORRECT ON A MARGIN -- it resolves against the element's OWN
+   * font-size, so these track print-type.css's `--dr-print-base` dial without
+   * naming it. Only `line-height` inherits as a length, which is why that one
+   * property is unitless and lives in the other file.
+   *
+   * A HEADING KEEPS MORE SPACE ABOVE THAN BELOW, binding it to the section it
+   * introduces rather than floating between two. ⭐ That asymmetry is doing more
+   * work now that §1 took the sizes down: with a compressed ramp, SPACE is the
+   * primary rank signal and it has to be unambiguous.
+   *
+   * ⚠️ THESE TIE WITH MATERIAL AND WIN ON SOURCE ORDER. `.md-typeset ul` is
+   * (0,1,1) on both sides and our sheets load later. That is a TIE, which is the
+   * only honest name for it -- and §3 below is what happens when the same
+   * assumption is made about a selector that is NOT tied.
+   * --------------------------------------------------------------------- */
+  .md-typeset p,
+  .md-typeset ul,
+  .md-typeset ol,
+  .md-typeset blockquote,
+  .md-typeset pre {
+    margin-top: 0.55em;
+    margin-bottom: 0.55em;
+  }
+
+  /* ⚠️ h1 IS SEPARATE BECAUSE IT IS THE FIRST THING ON THE SHEET, not because it
+   * ranks differently. `margin-top: 0` is what keeps the page from opening with a
+   * gap -- and print.css ALSO zeroes the top margin of whatever is first in the
+   * content, which since the corner stamp was prepended is the stamp rather than
+   * the h1. Two rules, two elements, and neither one is now redundant: the stamp
+   * is first in flow, the h1 is first only on a page without one. */
+  .md-typeset h1 {
+    margin-top: 0;
+    margin-bottom: 0.5em;
+  }
+
+  .md-typeset h2,
+  .md-typeset h3,
+  .md-typeset h4,
+  .md-typeset h5,
+  .md-typeset h6 {
+    margin-top: 1.15em;
+    margin-bottom: 0.35em;
+  }
+
+  /* -------------------------------------------------------------------------
+   * 🔴 §3 -- LIST SPACING. IT WAS WRITTEN, IT WAS WRONG, AND IT LOST SILENTLY.
+   *
+   * > Michael, 2026-08-19: *"spacing on our ... lis ... sections is also ENORMOUS
+   * > in print."*
+   *
+   * This section already claimed to fix that, and its own warning named the right
+   * mechanism: **Material spaces list items with MARGIN, not leading.** Correct,
+   * and it wrote the margin at a specificity that could not land.
+   *
+   * 🔴 THE ARITHMETIC, READ AT SOURCE (squidfunk/mkdocs-material `_typeset.scss`).
+   * Material nests `li` inside `ul, ol` inside `.md-typeset`, so it compiles to:
+   *
+   *     .md-typeset ul li, .md-typeset ol li  { margin-bottom: 0.5em }   (0,1,2)
+   *     .md-typeset li                        { margin-bottom: 0.2em }   (0,1,1)
+   *
+   * One extra element selector, one point, and source order is never consulted.
+   * **So `margin-top: 0.2em` landed and `margin-bottom: 0.2em` did not** -- the
+   * gap between bullets stayed 0.5em + 0.2em = 0.7em, most of a line at this
+   * leading. Exactly "ENORMOUS."
+   *
+   * ⭐ THIRD OCCURRENCE OF ONE SIGNATURE IN ONE EVENING, AND IT IS NOW A CHECK
+   * RATHER THAN A LESSON: **a mixed result is a specificity signature.** PR #142
+   * lost `:last-child` while its neighbours won. The callout font-size lost while
+   * the title inherited a wrong anchor. This lost `margin-bottom` while keeping
+   * `margin-top`. Every one looked like "the file did not load" and every one was
+   * a per-selector fight. ⚑ *The tell is available before any source is opened:
+   * SOME of a block landed.*
+   *
+   * ✅ ARMOURED WITH `html`, WHICH IS MATERIAL'S OWN WEAPON. Its callout rules use
+   * a bare `html` prefix for precisely this, so the pattern is borrowed rather
+   * than invented, and the selectors below MIRROR Material's shape -- `ul li` and
+   * `ol li`, not a bare `li` -- because matching its shape is what makes the
+   * comparison legible to whoever reads this next.
+   *
+   * 🔴 THE NESTED CASE NEEDS ONE MORE POINT AND IS EASY TO MISS. Material's
+   * `.md-typeset ul li :is(ul, ol)` is (0,1,3) -- `:is()` takes the specificity of
+   * its most specific argument -- so the child-combinator form below is (0,1,4).
+   * A sub-list under a numbered rule is the shape a safety policy uses most.
+   *
+   * 🚫 NOT `margin: 0`. Bullets that touch stop reading as separate items, and a
+   * numbered safety policy is read by somebody hunting ONE rule. 0.2em is a
+   * word-space of air: half the old gap, still visibly a gap.
+   * --------------------------------------------------------------------- */
+  html .md-typeset ul li,
+  html .md-typeset ol li {
+    margin-top: 0.2em;
+    margin-bottom: 0.2em;
+  }
+
+  html .md-typeset ul li > ul,
+  html .md-typeset ul li > ol,
+  html .md-typeset ol li > ul,
+  html .md-typeset ol li > ol {
+    margin-top: 0.2em;
+    margin-bottom: 0;
+  }
+
+  /* A paragraph inside a list item is the author writing a second sentence, not a
+   * new block. ⚠️ This one genuinely IS a tie -- Material's `.md-typeset li p` is
+   * (0,1,2) and so is this -- so it wins on source order. Left unarmoured on
+   * purpose: adding `html` here would hide the distinction §3 exists to teach. */
+  .md-typeset li > p,
+  .md-typeset li > blockquote {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  /* -------------------------------------------------------------------------
+   * ✅ §9 -- JUSTIFIED PROSE (Michael, 2026-08-19: *"YES to justyified"*)
+   *
+   * The cheapest "printed book" signal available. A ragged right edge is the web's
+   * default and a flush one is the codex's, and no other declaration in the print
+   * group moves the impression as far per byte.
+   *
+   * 🔴 `hyphens: auto` IS NOT A COMPANION NICETY, IT IS THE HALF THAT MAKES
+   * JUSTIFICATION WORK. A justified line distributes its slack into word spaces,
+   * so without hyphenation one long word pushed to the next line leaves the line
+   * above it stretched -- the "rivers" of white that make bad justified type worse
+   * to read than ragged type. Hyphenation lets the breaker split the word instead
+   * of the spaces. **Ship both or neither.**
+   *
+   * ⚠️ AND IT DEPENDS ON A `lang` ATTRIBUTE THIS REPO DOES NOT DECLARE. A browser
+   * cannot hyphenate a language nobody named; `hyphens: auto` on an unlabelled
+   * document silently does nothing at all. MkDocs writes `<html lang>` from
+   * `theme.language`, which defaults to `en` -- so this works today BY
+   * INHERITANCE rather than by anything stated here. If a site ever selects a
+   * language with no hyphenation dictionary, justification degrades to rivers and
+   * nothing reports it.
+   *
+   * 🚫 PROSE ONLY, and each exclusion is a real case rather than caution:
+   * headings are not justified because a hyphenated heading reads as a mistake
+   * and a two-word h2 would stretch across the measure; table cells are not,
+   * because a narrow column cannot absorb slack; the buildstamp is furniture.
+   *
+   * ⚠️ THE HONEST LIMIT, AND IT IS A MEASURE PROBLEM RATHER THAN A JUSTIFICATION
+   * ONE. `print.css` unrails the content column so the page IS the measure --
+   * ~726px at Letter with 12mm margins, which at 10pt is roughly 100 characters
+   * per line against a book's 45-75. Justifying neither causes that nor fixes it;
+   * it makes it more VISIBLE, because a straight right edge invites the eye to
+   * measure the line. 🚫 The book answer is a real measure, which means re-railing
+   * the column and accepting a wide outer margin -- a reversal of a deliberate
+   * decision made to stop two thirds of the sheet printing blank, so it is named
+   * here and NOT taken.
+   * --------------------------------------------------------------------- */
+  .md-typeset p,
+  .md-typeset li {
+    text-align: justify;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+  }
+}
