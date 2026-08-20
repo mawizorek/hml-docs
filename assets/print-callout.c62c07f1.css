@@ -1,0 +1,272 @@
+/* THE PRINT CALLOUT LAYER -- WHAT THE BOX IS ON PAPER.
+ *
+ * §4 of `print-type.css` until 2026-08-19, split out the same evening. Fourth
+ * member of the print group; the seam and the load-order argument are in
+ * `docrender/assets.py` under `_PRINT_ASSETS`.
+ *
+ * =========================================================================
+ * 🔴 THE DEVICE: THE BOX IS A RULE AND AN INDENT, NOT A CARD
+ * =========================================================================
+ * > Michael: *"the CALLOUTS are still absurd and need to fall in line a LOT
+ * > more. their block svg appearances are annoying enough and they ALWAYS render
+ * > cut off on the right side of the page."*
+ *
+ * Three passes had trimmed the box -- padding, radius, shadow, the tinted wash,
+ * the chevron, the font size -- and it was still the loudest object on the sheet.
+ * ⭐ **AT SOME POINT TRIMMING A THING IS EVIDENCE THAT THE THING IS WRONG.** A
+ * bordered card is a SCREEN device: it exists because a reader can scroll past it,
+ * tap it, collapse it. A printed policy has used a different device for a century
+ * -- a RULE IN THE MARGIN with the text indented off it.
+ *
+ * So three of four borders go, the background goes, and what remains is a coloured
+ * vertical rule with an indent. The FAMILY COLOUR IS PRESERVED on the one edge
+ * still drawn, which is what `print.css` requires: *"a `!!! danger` box that
+ * prints with no red border is the same box as a `!!! note`."*
+ *
+ * =========================================================================
+ * ⚠️ THE "CUT OFF ON THE RIGHT" CAUSE WAS NOT DETERMINED
+ * =========================================================================
+ * The obvious suspect was checked and CLEARED: `.admonition-title` carries
+ * `margin-inline: px2rem(-12px)`, which looks like a 12px overhang, but the box
+ * has `padding: 0 px2rem(12px)`, so the negative margin pulls the title bar out to
+ * exactly the border box and no further. Read at source, not assumed.
+ *
+ * What is TRUE and probably sufficient: `print.css` sets `padding: 0 !important`
+ * on `.md-content__inner`, so the content column is flush with the printable edge.
+ * Prose reaching that edge is invisible; a BORDERED PANEL reaching it reads as a
+ * box running off the sheet. ⚠️ **A hypothesis about perception, not a
+ * measurement.** ✅ The fix is correct under either answer, which is the J27 move
+ * rather than luck: there is no right border, right background edge or right
+ * corner left to be clipped or to look clipped.
+ *
+ * =========================================================================
+ * 🔴 THE SAFETY LINE, AND IT IS THE REASON THIS FILE HAS A REVIEWER
+ * =========================================================================
+ * Inherited from print-type.css §7: **A WARNING BOX THAT STOPS LOOKING LIKE A
+ * WARNING BOX IS A SAFETY QUESTION, NOT A TYPOGRAPHIC ONE.** Hazard Hawthorne owns
+ * the legibility floor for safety-critical print and every rule here is in scope.
+ *
+ * ✅ WHAT DISTINGUISHES A DANGER FROM A NOTE AFTER THIS PASS: the coloured rule,
+ * the ICON (restored below), the bold title, and the title TEXT. That is four
+ * cues, one of which survives a greyscale photocopy in shape rather than colour --
+ * which is exactly why the icon coming back matters more than it looks like it
+ * does. The 2026-08-19 pass that removed it left only colour and words, and
+ * `!!! danger "When to fight a fire"` does not contain the word danger.
+ */
+
+@media print {
+  /* -------------------------------------------------------------------------
+   * 🔴 THE BOX AND THE PROSE WERE MEASURED AGAINST DIFFERENT RULERS.
+   *
+   * Michael, 2026-08-19: *"shrink the callout text to the same size as the body
+   * ... they just look ENORMOUS."*
+   *
+   * Material sets `.md-typeset .admonition { font-size: 0.8rem }`. `rem` anchors
+   * to the ROOT; print-type.css §0's base is `pt`, anchored to the PAPER. So the
+   * box was never a participant in the dial -- turning `--dr-print-base` moved
+   * every word on the sheet EXCEPT the ones inside a callout.
+   *
+   * ⭐ AND THE TITLE RULE BELOW WAS ALREADY CORRECT -- ITS PARENT WAS NOT.
+   * `.admonition-title { font-size: 1em }` resolves against `.admonition`, so it
+   * faithfully inherited the wrong anchor. *A correct rule on a mis-anchored
+   * parent looks exactly like a wrong rule.*
+   *
+   * ⚠️ Cause not fully determined: measured off Michael's PDF the callout ran ~18%
+   * LARGER than the list beside it; the cascade as read predicts ~4% SMALLER.
+   * Likeliest suspect is the COMPILED stylesheet differing from the master SCSS
+   * that was read. ✅ `1em` is a RELATIVE anchor, so it holds either way. */
+  html .md-typeset .admonition,
+  html .md-typeset details {
+    font-size: 1em;
+  }
+
+  /* -------------------------------------------------------------------------
+   * 🔴 THE CARD BECOMES A RULE AND AN INDENT.
+   *
+   * 🚫 NEVER WRITE `border: 0` HERE, AND THIS IS THE MOST DANGEROUS LINE IN THE
+   * FILE. The shorthand resets `border-color` to `currentColor` along with width
+   * and style -- and the family colour is the ONE thing print.css requires this
+   * file to preserve. The per-family rules in the GENERATED `blocks.css` do
+   * outrank this selector and would probably win the colour back, **but relying on
+   * that is a specificity bet, and PR #142 is what a specificity bet looks like
+   * when it loses.** Width and style are set per side; colour is never mentioned,
+   * so it cascades in from the family rule untouched.
+   *
+   * ⚠️ `background-color: transparent` IS LOAD-BEARING AND IT IS WHY THE GREY
+   * PANEL WAS PRINTING AT ALL. Browsers drop background colours at print, so
+   * Material's `--md-admonition-bg-color` would normally vanish for free -- except
+   * `print.css` lists `.md-typeset .admonition` under `print-color-adjust: exact`,
+   * which is correct FOR THE BORDER and drags the panel along with it. **A rule
+   * that forces one colour to print forces all of them on that element.**
+   * --------------------------------------------------------------------- */
+  .md-typeset .admonition,
+  .md-typeset details {
+    margin-top: 0.7em;
+    margin-bottom: 0.7em;
+
+    border-width: 0;
+    border-inline-start-width: 2pt;
+    border-style: solid;
+    border-radius: 0;
+
+    background-color: transparent;
+    padding-inline: 0.85em 0;
+
+    box-shadow: none;
+  }
+
+  /* 🔴 THE TITLE STOPS BEING A BAR AND BECOMES A LABEL, AND THE HEADER IS HALVED.
+   *
+   * > Michael, 2026-08-19: *"can you take that same exact header. shrink it in
+   * > HALF. literally. and we're getting somewhere."*
+   *
+   * Material builds the title as a full-width band: `margin-inline: -12px` pulls
+   * it out over the box padding to the border edges, `padding-inline: 40px 12px`
+   * leaves 40px for the icon, and a 10%-alpha wash fills it. Every one of those
+   * exists to make a band, and there is no band any more.
+   *
+   * ✅ THE NEGATIVE MARGIN WAS CHECKED AND CLEARED AS THE RIGHT-EDGE CAUSE before
+   * it was removed -- it pulled the title to exactly the border box, never past
+   * it. It is zeroed because a band is gone, not because it overflowed. *A rule
+   * removed for the wrong reason is a rule that comes back.*
+   *
+   * 🔴 AND `padding-inline: 0` WAS A BUG I SHIPPED IN THE PREVIOUS PASS, HIDDEN BY
+   * ANOTHER CHANGE IN THE SAME COMMIT. Material's icon is `position: absolute` at
+   * `inset-inline-start: 12px`; zeroing the title's 40px inline-start padding put
+   * the text underneath it. It was invisible only because that same commit hid the
+   * icon. ⭐ **HIDING AN ELEMENT CONCEALED A LAYOUT BUG THAT WOULD HAVE APPEARED
+   * THE MOMENT IT CAME BACK** -- and it came back one message later. The
+   * inline-start padding below is sized to the halved icon plus a word space.
+   *
+   * ⚠️ WHAT "HALF" IS APPLIED TO, STATED BECAUSE IT IS A JUDGEMENT. The letterform
+   * is already `1em` -- body size -- and halving THAT gives a 5pt hazard label,
+   * below the ~9pt photocopy floor print-type.css §7 names. So half is spent on the
+   * header's FOOTPRINT: the icon goes 20px -> 0.75em (~10pt, half), and the band's
+   * vertical padding goes to zero. If the letterform was the intent it is one line
+   * here, and §7 is the argument against it.
+   *
+   * 🚫 THE BOTTOM HAIRLINE FROM THE PREVIOUS PASS IS DELETED. It separated title
+   * from body once the wash was gone -- a job the vertical rule and the bold weight
+   * now do together. Keeping it would be a second separator on one seam. Its own
+   * commit said the wash "carried nothing"; the same test applied to my own
+   * replacement says the same thing. */
+  .md-typeset .admonition-title,
+  .md-typeset summary {
+    margin-inline: 0;
+    padding-inline: 1.15em 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    background-color: transparent;
+    border-bottom: 0;
+    font-size: 1em;
+  }
+
+  /* -------------------------------------------------------------------------
+   * 🔴 THE ICON RETURNS AS DARK INK, AND THE COLOURED CHIP GOES.
+   *
+   * > Michael, 2026-08-19: *"The icon should stay, but it should just render as
+   * > its dark icon. The colored box that is in yellow could go away, so we just
+   * > see the icon itself and the overall box."*
+   *
+   * 🪦 REVERSES MY OWN `display: none` FROM THE PREVIOUS PASS, which removed the
+   * icon outright on the argument that a filled glyph reads as UI. Wrong call: the
+   * complaint was the CHIP, not the glyph, and that pass also cost a hazard cue
+   * that survives a greyscale photocopy. Recorded rather than quietly amended.
+   *
+   * ⭐ THE MECHANISM, AND IT IS WHY THIS IS ONE DECLARATION RATHER THAN A REWRITE.
+   * Material draws the glyph as a 20x20 `background-color` with a `mask-image` cut
+   * out of it, and the GENERATED `blocks.css` overrides that colour per family:
+   * `background-color: var(--dr-warn, currentColor)`. So the yellow chip is not
+   * decoration somebody added -- **it is the glyph's own paint, showing as a full
+   * square because the mask is not clipping it.**
+   *
+   * 🔴 THE EVIDENCE, FROM TWO INDEPENDENT ELEMENTS IN MICHAEL'S OWN OUTPUT. The
+   * warning icon prints as a GOLD square with a black triangle on it; the
+   * disclosure chevron -- a different pseudo-element, a different mask, a
+   * different colour source (`currentcolor` via blocks.css's marker rule) --
+   * prints as a GREY square with a black chevron on it. Same signature twice:
+   * **the box paints AND the glyph paints.** One instance is an anecdote; two
+   * unrelated ones sharing a signature is a mechanism.
+   *
+   * ⚠️ THE CAUSE IS STILL NOT DETERMINED AND IS NOT CLAIMED. Both spellings of
+   * `mask-image` are emitted (blocks.py `_MASK`, prefix first, for exactly this
+   * failure), so the CSS is right and something downstream is not applying it. I
+   * have not read the compiled sheet the site serves, and an icon claim made from
+   * a screenshot was RETRACTED earlier today -- which is why this says
+   * "undetermined" instead of naming a cause.
+   *
+   * ✅ SO THE FIX IS CHOSEN AGAINST THE EVIDENCE RATHER THAN THE THEORY, AND ITS
+   * FAILURE MODE IS LOUD. `transparent` removes the paint. Under the observed
+   * behaviour that leaves the black glyph and no chip -- exactly the ask. If the
+   * mask IS in fact clipping, the glyph was the paint and the icon disappears
+   * instead: **visibly wrong, instantly reported, one line to revert.** That
+   * direction is deliberate -- a silent wrong is the failure this repo keeps
+   * logging, and a missing icon cannot be silent.
+   *
+   * 🔴 `!important` IS THE HONEST TOOL HERE AND NOT LAZINESS. This fights a
+   * GENERATED per-family rule whose selector shape is owned by `blocks.py` --
+   * `.md-typeset .warning > .admonition-title::before` is (0,3,1) today and
+   * becomes something else the day that emitter changes. Counting classes against
+   * a file that generates its own selectors is a bet with a moving line; PR #142
+   * lost that bet. print.css already uses `!important` for the same reason on its
+   * chrome-off list. Scoped to `@media print`, so screen is untouched.
+   *
+   * ⚠️ THE GEOMETRY IS RE-STATED IN `em` because Material's is `rem` and `px2em`
+   * against its own 12.8px base -- both anchored outside §0's dial, the same defect
+   * the font-size rule at the top of this file exists to fix. `0.75em` at a 10pt
+   * base is ~10pt: half of Material's 20px, which is the halving asked for.
+   * --------------------------------------------------------------------- */
+  html .md-typeset .admonition-title::before,
+  html .md-typeset summary::before {
+    background-color: transparent !important;
+    width: 0.75em;
+    height: 0.75em;
+    inset-inline-start: 0;
+    top: 0.28em;
+  }
+
+  /* 🔴 THE DISCLOSURE CHEVRON IS A CONTROL, AND PAPER HAS NO CONTROLS. Four of them
+   * printed on one Fire Prevention sheet, on `???` blocks that print-flow.css
+   * correctly forces OPEN -- so the arrow said "expand this" on a box that was
+   * already expanded and could not be collapsed. `print.css`'s own test for its
+   * chrome-off list is *"could a reader ACT on it with a pen?"*, and a mask-image
+   * arrow that rotates on open is the purest No available.
+   *
+   * ⚠️ `!important` BECAUSE IT WAS ASKED FOR TWICE. The plain rule shipped in the
+   * previous pass and Michael reported the arrow again with a screenshot, which
+   * could be Pages lag on a sheet printed minutes earlier OR a rule that lost a
+   * fight. `blocks.css` writes `color` on this same `::after` at (0,3,1) and sets
+   * no `display`, so there should be nothing to lose to -- but "should" is what
+   * the previous sentence already spent, and the cost of being certain is nine
+   * characters. */
+  html .md-typeset .admonition-title::after,
+  html .md-typeset summary::after {
+    display: none !important;
+  }
+
+  /* 🔴 THE RULE THAT NEEDS `html`. Material's `html & > :last-child` sets a 12px
+   * bottom margin, and because the box had no vertical padding, that margin WAS
+   * the entire gap between the last line and the bottom border.
+   *
+   * ✅ IT GOES TO ZERO NOW, AND THE REASON THE OLD VALUE EXISTED IS GONE RATHER
+   * THAN OVERRULED. `0.3rem` was there so a border would not sit against a
+   * descender -- there is no bottom border any more, and the box's own
+   * `margin-bottom` handles separation from the next block. *A value kept after
+   * its justification expires is the definition of the rot this file logs.* */
+  html .md-typeset .admonition > :last-child,
+  html .md-typeset details > :last-child {
+    margin-bottom: 0;
+  }
+
+  html .md-typeset .admonition-title:last-child,
+  html .md-typeset summary:last-child {
+    margin-bottom: 0;
+  }
+
+  /* The gap between the label and the first line of prose. `em` so it tracks the
+   * dial; small, because the indent and the weight are already doing the work. */
+  .md-typeset .admonition-title + *,
+  .md-typeset summary + * {
+    margin-top: 0.25em;
+  }
+}
