@@ -13,12 +13,17 @@
  * theme's business, resolved from theme/canonical/* exactly as on screen. What
  * this file decides is what appears on paper at all and how wide it runs.
  *
- * ✅ AND AS OF 2026-08-19 THAT IS FINALLY TRUE. The line above was written on day
- * one and this file carried the print group's ONLY colour block -- sixteen hex
- * literals -- for its whole life, while the header was quoted approvingly a dozen
- * commits later. 🪦 Moved to `print-scheme.css`. **Not rot: it was never true.**
- * Keep the line: the first colour opinion that lands here again is the beginning
- * of a second theme nobody can see.
+ * 🪦 AND ON 2026-08-19 THAT LINE WAS DECLARED TRUE AND WAS FALSE. Moving the
+ * scheme block out of this file earned a ✅ note saying it finally held no colour
+ * -- and **two literals were left behind on the corner stamp, `#555` and `#ccc`,
+ * in the one element that prints on every sheet of every site.** Michael found
+ * them: *"the color you chose MUST be from our theme vector. that's the whole
+ * point."* They are gone, and the corner stamp now lives in `print-chrome.css`.
+ *
+ * ⚑ THE GENERALISABLE PART IS THE SELF-CONGRATULATION, NOT THE HEX. A cleanup
+ * that writes "this is finally true" in the same commit is asserting a property
+ * of the WHOLE FILE from a diff of ONE BLOCK. **Grep before you claim, not after
+ * somebody prints it.**
  *
  * =========================================================================
  * ⭐ THE PRINT GROUP IS SIX FILES AS OF 2026-08-19
@@ -31,26 +36,29 @@
  * THE SEAM WAS ALREADY WRITTEN IN THIS HEADER. It used to describe its subject
  * as "what appears on paper at all, how wide it runs, and where the page is
  * allowed to break" -- two jobs, with the `and` doing the work of a chapter
- * break. Now six files, each answering one question:
+ * break. Then the first half itself split:
  *
- *     print.css          WHAT THE SHEET IS   -- this file
- *     print-flow.css     WHERE IT BREAKS     -- break-*, orphans/widows,
- *                                              forced-open <details>, thead
- *                                              repetition, {.new-page}
- *     print-type.css     HOW BIG THE TYPE IS -- the dial, the ramp, weight
- *     print-space.css    HOW MUCH AIR        -- block and list margins,
- *                                              justification
- *     print-callout.css  WHAT THE BOX IS     -- the rule-and-indent, the icon
- *     print-scheme.css   WHOSE INK IT IS     -- the dark-reader override
+ *     print.css           HOW WIDE IT RUNS      -- this file
+ *     print-chrome.css    WHAT APPEARS AT ALL   -- the chrome-off list and the
+ *                                                  corner stamp
+ *     print-flow.css      WHERE IT BREAKS       -- break-*, orphans/widows,
+ *                                                  forced-open <details>,
+ *                                                  thead repetition, {.new-page}
+ *     print-type.css      HOW BIG THE TYPE IS   -- the dial, the ramp, weight
+ *     print-space.css     HOW MUCH AIR          -- block and list margins,
+ *                                                  justification, the tabbed set
+ *     print-callout.css   WHAT THE BOX IS       -- the rule-and-indent, the icon
+ *
+ * 🪦 `print-scheme.css` is a comment-only tombstone and is unregistered.
  *
  * ⚠️ ONE JUDGEMENT CALL, NAMED SO IT CAN BE ARGUED WITH: the code-wrapping
  * rule STAYED here. It looks like flow -- it changes where lines end -- but it
  * exists because an over-wide line is silently CUT OFF at the paper edge, which
- * is content loss on the horizontal axis. That is "what appears on paper at all
- * and how wide it runs," so it stays. Conversely the forced-open `<details>`
- * rule LEFT, even though it plainly controls what appears, because it is the
- * rule that creates the pagination problem the flow file solves. Both calls are
- * argued in full in the file that ended up with the rule.
+ * is content loss on the horizontal axis. That is "how wide it runs," so it
+ * stays. Conversely the forced-open `<details>` rule LEFT, even though it plainly
+ * controls what appears, because it is the rule that creates the pagination
+ * problem the flow file solves. Both calls are argued in full in the file that
+ * ended up with the rule.
  *
  * =========================================================================
  * WHY IT LOADS WHERE IT LOADS, WHICH IS NOT THE OBVIOUS SLOT
@@ -59,25 +67,21 @@
  * sheets and BEFORE the instance's site.css. Both halves are load-bearing, and
  * the other print sheets inherit the same sandwich.
  *
- * AFTER tokens.css, because `print-scheme.css` re-points custom properties on
- * `[data-md-color-scheme="slate"]` -- the SAME selector tokens.css writes, at the
- * SAME specificity. Put the group earlier and the generated sheet wins on source
- * order, the overrides lose silently, and a reader in dark mode prints pale grey
- * ink on a background the browser drops. There is no error. The page just comes
- * out blank-ish. 🔴 That happened anyway on 2026-08-19 WITH the order correct,
- * which is why those declarations now carry `!important` -- see that file.
+ * AFTER tokens.css, because the sheets in this group override Material rules and
+ * scheme-scoped properties that the generated sheets also write, at equal
+ * specificity -- so they win on source order or they do not win at all.
  *
  * BEFORE site.css, because an instance keeps the final word on its own look,
  * and that rule has no exception for paper.
  *
- * ⚠️ ORDER *WITHIN* THE PRINT GROUP IS FREE: no two of the six print sheets
- * share a selector-and-property PAIR, so none can win or lose a tie against
- * another. Same distinction `_FEATURE_ASSETS` draws, where its JS order is law
- * and its CSS order is genuinely free. 🔴 WITH ONE PROVEN EXCEPTION, added the day
- * it bit: `print-space.css` §9 justifies `.md-typeset p`, which MATCHES the
- * corner buildstamp and beat this file's alignment rule on SPECIFICITY, not
- * order. **The group's order is still free; what is not free is assuming two of
- * our own files cannot collide.**
+ * ⚠️ ORDER *WITHIN* THE PRINT GROUP IS FREE: no two of the print sheets share a
+ * selector-and-property PAIR, so none can win or lose a tie against another.
+ * Same distinction `_FEATURE_ASSETS` draws, where its JS order is law and its CSS
+ * order is genuinely free. 🔴 WITH ONE PROVEN EXCEPTION, added the day it bit:
+ * `print-space.css` §9 justifies `.md-typeset p`, which MATCHES the corner
+ * buildstamp and beat the stamp's `text-align: right` on SPECIFICITY, not order.
+ * **The group's order is still free; what is not free is assuming two of our own
+ * files cannot collide.**
  *
  * =========================================================================
  * ⚠️ THE ONE THING THE PRINT GROUP CANNOT FIX, STATED RATHER THAN PAPERED OVER
@@ -96,8 +100,6 @@
  * 🚫 NOT COMPENSATED FOR ANYWHERE IN THE GROUP, deliberately. Darkening semantic
  * tokens at print time would hide the defect on the one surface that shows it
  * most clearly, and the fix belongs in the light rows of canonical/colors.tsv.
- * `print-scheme.css` re-points STRUCTURAL neutrals only, for the stated reason
- * that paper genuinely is a different surface.
  */
 
 @media print {
@@ -133,109 +135,48 @@
   }
 
   /* -------------------------------------------------------------------------
-   * CHROME OFF
+   * 🔴 THE SHEET IS PAPER, NOT A SURFACE (2026-08-19)
    *
-   * Everything here is navigation or interaction, and paper has neither. The
-   * test for adding to this list: could a reader ACT on it with a pen? If not,
-   * it is furniture and it costs a column.
+   * > Michael, printing a papyrus page: the whole content column came out as a
+   * > filled parchment panel with the type sitting on it.
    *
-   * ⚠️ `.md-header` IS IN THIS LIST, WHICH MEANS THE SITE LOGO NEVER PRINTS.
-   * Worth knowing before anybody tries to make a printed mark by changing
-   * `theme.logo`: the header, its icon and the site title are all gone by the
-   * time the sheet exists. The printed mark is the corner stamp below, and it
-   * is a different element with a different job.
+   * 🪦 MY REGRESSION, AND IT TOOK TWO OF MY OWN COMMITS TO BUILD. theme.py's
+   * paper block gives a reader the theme's own LIGHT row, which on `papyrus`
+   * means `bg: #f0e6d2` -- real parchment, correctly resolved, exactly what the
+   * vector declares. And the rule that used to force the ground white left this
+   * file the same evening, inside the block that moved to print-scheme.css and
+   * was then retired. **One change supplied a ground; the other removed the
+   * thing that had been suppressing it.** Neither was visible in the other's
+   * diff.
+   *
+   * ⭐ AND THE FIX IS NOT A COLOUR, WHICH IS THE WHOLE POINT. Paper already has
+   * one -- whatever stock is in the tray -- and no vector owns it. `bg`,
+   * `surface-1..3` and `field` all describe a SCREEN ground; there is no "paper"
+   * column in any row and there should never be one. So the ground is declared
+   * TRANSPARENT: the ABSENCE of a decision rather than a substitute for one, and
+   * the only answer that stays correct on cream stock, on a photocopy, and on a
+   * theme nobody has authored yet.
+   *
+   * ✅ THE VECTOR STILL SUPPLIES EVERY MARK ON THE SHEET -- ink, rules, callout
+   * borders, marker chips, the accent, the corner stamp in print-chrome.css.
+   * What it stops supplying is the paper.
+   *
+   * ⚠️ `!important` IS DELIBERATE AND IT DOES COST SOMETHING: an instance's
+   * `site.css` loads last precisely so a site keeps the final word, and this takes
+   * "paint a printed background" away from it. Taken anyway, because the failure
+   * mode is a page flooded with ink on every sheet of a safety document, and
+   * nobody has ever wanted the other thing.
+   *
+   * 🔴 AND THE LIVE IMPLEMENTATION IS NOT IN A SHEET ANY MORE. theme.py now emits
+   * the theme's LIGHT row inside `tokens.css`, selected by the row's own `mode`
+   * column rather than by slot name -- because `papyrus` is the one join whose
+   * primary is light and whose alt is dark. The retired `print-scheme.css`
+   * tombstone explains why; the values that reach the page come from theme.py.
    * --------------------------------------------------------------------- */
-  .md-header,
-  .md-tabs,
-  .md-sidebar,
-  .md-sidebar--primary,
-  .md-sidebar--secondary,
-  .md-nav,
-  .md-search,
-  .md-top,
-  .md-dialog,
-  .md-feedback,
-  .md-footer__inner,
-  .md-footer-meta,
-  .md-clipboard,
-  .md-content__button,
-  .pagefoot,
-  .pagefoot__rule {
-    display: none !important;
-  }
-
-  /* -------------------------------------------------------------------------
-   * ✅ THE BUILD STAMP -- THE CORNER MARK IS THE PRINTED ONE
-   *
-   * A printed page leaves the system entirely: handed to a guest artist, filed,
-   * carried into a room months later. The one question nobody can answer about
-   * a piece of paper is how old it is, so the stamp is the cheapest possible
-   * provenance and it costs one line.
-   *
-   * 🔴 IT NEVER PRINTED, FOR MONTHS, AND THIS FILE IS WHERE THE BUG LIVED.
-   * `buildstamp.py` used to hand its markup to `config.copyright`, which
-   * Material renders inside `.md-footer-meta` -- which is in the chrome-off list
-   * directly above, with `!important`. `display: none` on an ANCESTOR removes
-   * the whole subtree from the box tree, and a descendant cannot opt back in:
-   * not a specificity contest, there is no box left to style. So a rule sat
-   * here looking like a working exception and had never once fired.
-   *
-   * ✅ TWO PLACEMENTS SINCE 2026-08-19, EACH VISIBLE IN EXACTLY ONE MEDIUM.
-   * `buildstamp.py` now wraps the page body: a `--corner` copy FIRST in the
-   * flow and a `--foot` copy LAST. Michael's ruling: *"on print you get a small
-   * icon in the top right header with the date... corner mark print only."*
-   *
-   *     paper   corner shows, foot hidden
-   *     screen  foot shows, corner hidden by its own `hidden` attribute
-   *
-   * ⭐ ONE COMPUTED STRING, TWO NODES -- NOT TWO CLAIMANTS. The defect that
-   * retired three manifests here is two SOURCES of one fact, which can disagree.
-   * Both placements interpolate the same label and the same detail from one
-   * `on_config` pass, so they cannot drift, and the mutually exclusive media
-   * scoping means a reader always sees exactly ONE stamp.
-   *
-   * ⭐ AND THE CORNER COPY IS FIRST IN THE FLOW FOR A MECHANICAL REASON. An
-   * element appended at the END of the content cannot be moved to the TOP of
-   * sheet one by CSS -- that needs to know where the page boundary falls, which
-   * is what `@page` margin boxes do and no major browser implements. First in
-   * flow IS the top of sheet one, for free. Same finding that closed the
-   * letterhead ruling: top of sheet one is cheap, bottom of sheet one is not.
-   *
-   * ⚠️ `display: block` ON THE CORNER IS LOAD-BEARING, NOT TIDINESS. It is what
-   * overrides the `hidden` attribute -- an author declaration beats the UA
-   * stylesheet's `[hidden] { display: none }`. Delete it and the mark vanishes
-   * from paper with nothing reporting it.
-   *
-   * 🔴 AND `text-align: right` LOST ON 2026-08-19 WITHOUT THIS FILE BEING EDITED.
-   * `print-space.css` §9 shipped `text-align: justify` on `.md-typeset p`; the
-   * corner mark IS a `<p>` inside `.md-typeset`, and (0,1,1) beats the (0,1,0)
-   * below -- source order never consulted. A justified single line renders
-   * flush-left, so the symptom read as "the stamp moved" and pointed at the wrong
-   * file. ✅ Fixed by narrowing §9 to exclude `.buildstamp`, so this stays the
-   * SINGLE claimant on where the stamp sits rather than the second armoured one.
-   *
-   * 🚩 THE ICON GOES HERE, as a print-scoped `background-image` on this rule,
-   * once a line-art SVG exists. 🚫 NEVER an `<img>`: a `display: none` image is
-   * still FETCHED, which is ~168KB on every page load of a site whose readers
-   * mostly never print. It will also need `print-color-adjust: exact` on the
-   * narrow list further down -- a brand mark's meaning IS carried by colour, and
-   * a logo that prints as an empty box is worse than no logo.
-   * --------------------------------------------------------------------- */
-  .buildstamp--corner {
-    display: block;
-    margin: 0 0 1.2rem;
-    text-align: right;
-    font-size: 0.7rem;
-    line-height: 1.2;
-    color: #555;
-    border-bottom: 1px solid #ccc;
-    padding-bottom: 0.35rem;
-  }
-
-  /* The foot copy is the SCREEN one. On paper it would be the second stamp on
-   * one sheet, which is the thing the split placement exists to avoid. */
-  .buildstamp--foot {
-    display: none !important;
+  body,
+  .md-main,
+  .md-content {
+    background: transparent !important;
   }
 
   /* -------------------------------------------------------------------------
@@ -252,6 +193,11 @@
    * type and column shrink together and the right margin grows. Anybody
    * reading this because "shrinking leaves a narrow column" should change the
    * BASE FONT SIZE, not go looking for a max-width that is already gone.
+   *
+   * ⚠️ `padding: 0` IS WHY THE TYPE RUNS FLUSH TO THE EDGE OF ANY GROUND BEHIND
+   * IT, which looked like clipping in the parchment print above and was not: the
+   * page margin is `@page`'s 12mm and the column has no inset of its own. Nothing
+   * is lost. With the ground transparent there is no longer an edge to notice.
    * --------------------------------------------------------------------- */
   .md-grid,
   .md-main__inner,
@@ -281,20 +227,6 @@
   }
 
   /* -------------------------------------------------------------------------
-   * 🪦 DARK READER, LIGHT PAPER -- MOVED TO `assets/print-scheme.css` 2026-08-19.
-   *
-   * Sixteen hex literals and the whole scheme argument left, because this file's
-   * first paragraph says it holds no colour and it held the group's only colour
-   * block. That file also carries the finding that made the move worth doing:
-   * **Material wraps its entire slate scheme in `@media screen`, so the pale ink
-   * on a dark-mode print was never Material's -- it was ours.**
-   *
-   * ⚠️ THE ONE THING TO KNOW FROM HERE: those declarations now carry `!important`
-   * because a tie won on source order is the weakest guarantee in this engine, and
-   * this block lost one on 2026-08-19 with the load order provably correct.
-   * --------------------------------------------------------------------- */
-
-  /* -------------------------------------------------------------------------
    * INK THAT ACTUALLY LANDS
    *
    * `print-color-adjust: exact` on the elements whose MEANING is carried by a
@@ -313,9 +245,11 @@
    * them on that element.** Narrowing this list was the alternative and it would
    * cost the border guarantee above.
    *
-   * 🚩 THIS IS THE LIST THE CORNER STAMP'S ICON JOINS when one exists. A brand
-   * mark qualifies on the stated test, and a logo that prints as an empty box is
-   * worse than no logo.
+   * ⚠️ `body` IS DELIBERATELY NOT ON THIS LIST and never should be. The section
+   * above turns the ground transparent; adding the ground to a list whose whole
+   * job is to FORCE colour through the printer would put the two rules in a
+   * fight, and the parchment would win on a reader whose browser prints
+   * backgrounds.
    * --------------------------------------------------------------------- */
   .md-typeset .admonition,
   .md-typeset details,
@@ -347,28 +281,6 @@
     white-space: pre-wrap;
     word-break: break-word;
     overflow: visible !important;
-  }
-
-  /* -------------------------------------------------------------------------
-   * LINKS ARE NOT EXPANDED, AND THAT IS A DECISION
-   *
-   * The reflex move is `a[href]::after { content: " (" attr(href) ")" }`. It is
-   * wrong for these documents twice over.
-   *
-   * These pages are dense with INTERNAL cross-references, so expansion would
-   * pepper every paragraph with long same-site URLs and make the prose harder
-   * to read than the thing it was trying to help with. And this family has a
-   * locked rule -- NO ROUTE BACK TO THE SOURCE (assets/base.css) -- that these
-   * are finished reference documents which should not advertise their own
-   * plumbing. Printing raw URLs into the body contradicts it on every page.
-   *
-   * Printing to PDF keeps hrefs live anyway, which covers the real use.
-   *
-   * The cross-site arrow stays: it says "this points somewhere else", which is
-   * true on paper too.
-   * --------------------------------------------------------------------- */
-  .md-typeset a {
-    text-decoration: underline;
   }
 
   /* -------------------------------------------------------------------------
