@@ -1,0 +1,34 @@
+/* 🪦 TOMBSTONE -- RETIRED 2026-08-19, THE SAME EVENING IT WAS BORN.
+ *
+ * This sheet forced seven `--dr-*` tokens and nine Material variables to
+ * hardcoded greys with `!important`, so that a dark-mode reader printed black ink
+ * on white paper. It worked. It lived about fifteen minutes.
+ *
+ * ✅ SUPERSEDED BY `docrender/theme.py` -> THE PAPER BLOCK, which emits the
+ * theme's OWN light colour row onto the slate selector inside `@media print`.
+ * That file carries the whole argument. Two reasons this one had to go rather
+ * than stay as a belt:
+ *
+ *   • IT IGNORED THE VECTOR. `#ffffff` and `#111111` are not any theme's values,
+ *     so a bespoke palette printed as generic greys. Michael's question is what
+ *     found it: *"will it still be aware of the theme choices I've made in the
+ *     vectors at all then?"*
+ *   • 🔴 IT BUILT A PALETTE NOBODY AUTHORED. It replaced the NEUTRALS and left the
+ *     SEMANTICS dark, so a printed callout border was a dark-row colour on
+ *     forced-white paper -- a combination that exists in no row of any table.
+ *
+ * 🔴 AND IT COULD NOT COEXIST WITH ITS OWN REPLACEMENT. `!important` on a
+ * hardcoded grey beats a vector value at any specificity, so leaving this file
+ * registered would have silently overridden the fix AND made it untestable.
+ * **A guard that hides the thing it guards is the failure this repo keeps
+ * logging.**
+ *
+ * ⚠️ UNREGISTERED FROM `_PRINT_ASSETS`, so it is never published. The file is
+ * kept because the finding is worth more than the rules were: **Material wraps
+ * its entire slate scheme in `@media screen` and this engine does not, which is
+ * why a dark-mode print was wearing the dark palette at all.**
+ *
+ * 🚫 DO NOT RE-ADD RULES HERE. If the paper block ever needs correcting, correct
+ * it in `theme.py` where the vector is resolved. A second claimant on which
+ * palette reaches paper is exactly what this file was.
+ */
