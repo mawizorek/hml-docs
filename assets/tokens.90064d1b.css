@@ -42,19 +42,3 @@
   --dr-data-size: 0.80rem;
   --dr-data-pad: 0.34rem 0.6rem;
 }
-@media print {
-  [data-md-color-scheme="slate"] {
-    --dr-surface: oklch(99% 0.002 260);
-    --dr-surface-raised: oklch(97% 0.004 260);
-    --dr-ink: oklch(24% 0.012 260);
-    --dr-ink-muted: oklch(46% 0.014 260);
-    --dr-rule: oklch(89% 0.006 260);
-    --dr-accent: oklch(52% 0.138 232);
-    --dr-warn: oklch(56% 0.152 62);
-    --dr-danger: oklch(52% 0.196 22);
-    --dr-ok: oklch(48% 0.134 152);
-    --dr-dead: oklch(44% 0.088 18);
-    --dr-surface: oklch(100% 0 0);
-    --dr-accent: oklch(48% 0.108 168);
-  }
-}
