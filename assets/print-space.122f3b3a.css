@@ -30,7 +30,7 @@
  *     print-type.css   HOW BIG IS THE TYPE   -- the dial, the ramp, weight,
  *                                               tracking, decoration
  *     print-space.css  HOW MUCH AIR IS       -- block margins, list margins,
- *                      BETWEEN THINGS           word spaces
+ *                      BETWEEN THINGS           word spaces, tab sets
  *
  * ⭐ AND JUSTIFICATION BELONGS HERE RATHER THAN WITH THE TYPE, WHICH IS THE ONE
  * PLACEMENT WORTH ARGUING. `text-align: justify` does not change a letterform; it
@@ -42,7 +42,7 @@
  * =========================================================================
  * 🔴 THE SECTION NUMBERS TRAVELLED WITH THE SECTIONS. DO NOT RENUMBER THEM.
  * =========================================================================
- * This file opens at §2 and its last section is §9. That looks wrong and it is
+ * This file opens at §2 and its sections run to §10. That looks wrong and it is
  * correct: **the section numbers are a namespace shared across the whole print
  * group, not a per-file sequence.** print.css, print-callout.css and the
  * doc-render-engine Decision Log all cite these by number.
@@ -50,8 +50,8 @@
  * ⭐ §4's TOMBSTONE ALREADY PROVED THIS AND NOBODY NOTICED. When callout chrome
  * left for print-callout.css, its number was kept in print-type.css as a stub
  * pointing across a file boundary -- so the namespace has spanned files since the
- * first split. Renumbering to §0-§2 here would silently invalidate every citation
- * pointing at these three sections. **A gap costs nothing; a shifted number is a
+ * first split. Renumbering to §0-§3 here would silently invalidate every citation
+ * pointing at these sections. **A gap costs nothing; a shifted number is a
  * citation that resolves to the wrong argument.**
  *
  * =========================================================================
@@ -73,6 +73,7 @@
  * `font-size` to §2's. `h2`'s `padding-bottom` in §1 is the near miss to know
  * about -- it is a spacing property living in the type file on purpose, because it
  * holds off a border that is inseparable from the size argument that chose it.
+ * ⚠️ §10 below sets a `font-size` for the same class of reason, in reverse.
  */
 
 @media print {
@@ -209,43 +210,25 @@
    * JUSTIFICATION WORK. A justified line distributes its slack into word spaces,
    * so without hyphenation one long word pushed to the next line leaves the line
    * above it stretched -- the "rivers" of white that make bad justified type worse
-   * to read than ragged type. Hyphenation lets the breaker split the word instead
-   * of the spaces. **Ship both or neither.**
+   * to read than ragged type. **Ship both or neither.**
    *
    * ⚠️ AND IT DEPENDS ON A `lang` ATTRIBUTE THIS REPO DOES NOT DECLARE. A browser
    * cannot hyphenate a language nobody named; `hyphens: auto` on an unlabelled
    * document silently does nothing at all. MkDocs writes `<html lang>` from
    * `theme.language`, which defaults to `en` -- so this works today BY
-   * INHERITANCE rather than by anything stated here. If a site ever selects a
-   * language with no hyphenation dictionary, justification degrades to rivers and
-   * nothing reports it.
+   * INHERITANCE rather than by anything stated here.
    *
-   * =====================================================================
-   * 🔴 THE `:not()` IS A BUG FIX, AND THE PROSE BELOW IT WAS ALREADY LYING
-   * =====================================================================
-   * > Michael, 2026-08-19, with a PDF: *"move the header stuff back to the RIGHT
-   * > side of the header."*
-   *
-   * `buildstamp.py` emits the corner mark as `<p class="buildstamp
-   * buildstamp--corner">`, and Material puts `.md-typeset` on the SAME div as
-   * `.md-content__inner` -- so `.md-typeset p` matches it. `print.css` aligns it
-   * with `.buildstamp--corner { text-align: right }` at (0,1,0); the rule below
-   * was (0,1,1). **One element selector, one point, and the stamp went
-   * left-aligned.** A justified single line renders flush-left, so the symptom was
-   * not "justified stamp", it was "stamp moved", which points at the wrong file.
-   *
-   * ⚑ FIFTH INSTANCE OF THE SPECIFICITY SIGNATURE IN ONE EVENING, and the first
-   * one where OUR rule beat ANOTHER OF OUR OWN rather than Material's. ⭐ The
-   * exclusion list in the paragraph below ALREADY SAID *"the buildstamp is
-   * furniture"* -- written in the same commit that shipped the selector which hits
-   * it. **A stated exclusion that the selector does not implement is worse than no
-   * exclusion: it reads as verified.** Same defect class as the callout wash note
-   * and the `sizecheck` hole.
-   *
-   * ✅ FIXED HERE RATHER THAN BY ARMOURING print.css, because this file introduced
-   * the collision and because `.buildstamp` is genuinely not prose. Narrowing the
-   * selector also keeps print.css's alignment rule the SINGLE claimant on where
-   * the stamp sits.
+   * 🔴 THE `:not()` IS A BUG FIX, AND THE PROSE BELOW IT WAS ALREADY LYING.
+   * `buildstamp.py` emits the corner mark as a `<p class="buildstamp">`, and
+   * Material puts `.md-typeset` on the SAME div as `.md-content__inner` -- so
+   * `.md-typeset p` matches it. `print.css` aligns it with
+   * `.buildstamp--corner { text-align: right }` at (0,1,0); this rule was (0,1,1).
+   * **One element selector, and the stamp went flush-left.** A justified single
+   * line renders flush-left, so the symptom read as "the stamp moved" and pointed
+   * at the wrong file. ⭐ The exclusion list below ALREADY SAID *"the buildstamp is
+   * furniture"* -- written in the commit that shipped the selector hitting it.
+   * **A stated exclusion the selector does not implement is worse than none: it
+   * reads as verified.**
    *
    * 🚫 PROSE ONLY, and each exclusion is a real case rather than caution:
    * headings are not justified because a hyphenated heading reads as a mistake
@@ -268,5 +251,96 @@
     text-align: justify;
     -webkit-hyphens: auto;
     hyphens: auto;
+  }
+
+  /* -------------------------------------------------------------------------
+   * 🔴 §10 -- THE TABBED SET (`=== "Label"`). THE WORST SPACING ON THE SHEET.
+   *
+   * > Michael, 2026-08-19: *"the spacing on '===' table objects and content when
+   * > printed is like way spaced too much."*
+   *
+   * `===` is `pymdownx.tabbed`, registered in mkdocs.yml with
+   * `alternate_style: true`. On the Types of Extinguishers sheet that is seven
+   * labels, each followed by a bulleted list, and roughly a blank line of air
+   * above and below every single label.
+   *
+   * 🔴 THREE CAUSES STACK HERE AND ONLY ONE OF THEM LOOKS LIKE SPACING. Read at
+   * source (squidfunk/mkdocs-material `_tabbed.scss`):
+   *
+   *   1  THE LABEL IS `rem`-ANCHORED.   `> label { font-size: px2rem(12.8px) }`
+   *      = 0.8rem, anchored to the ROOT while print-type.css §0's base is `pt`,
+   *      anchored to the PAPER. **Identical to the callout bug** -- the label was
+   *      never a participant in the dial, and its `em` padding therefore resolves
+   *      against a size no print rule controls.
+   *   2  ITS PADDING IS A SCREEN TAB STRIP. `padding: px2em(10px, 12.8px) 1.25em
+   *      px2em(8px, 12.8px)` -- ~18px of vertical air, correct for a clickable tab
+   *      and meaningless once the tabs are a vertical list on paper.
+   *   3  🔴 AND MARGINS DO NOT COLLAPSE, WHICH IS THE PART THAT IS INVISIBLE IN THE
+   *      SOURCE. `.tabbed-set` is `display: flex; flex-flow: column wrap`, and
+   *      Material's print block sets `.tabbed-labels` and `.tabbed-content` to
+   *      `display: contents` so labels and blocks become FLEX ITEMS of that one
+   *      container, interleaved by `order`. **Flex items do not collapse margins**
+   *      -- so the label's bottom padding and the list's `margin-top` from §2 add
+   *      up instead of overlapping, on every label, twice.
+   *
+   * ⭐ THAT THIRD ONE IS WHY §2 AND §3 DID NOT ALREADY FIX THIS. Everywhere else on
+   * the sheet adjacent block margins collapse to the larger of the two, so the
+   * numbers in this file behave like maximums. Inside a flex column they behave
+   * like ADDENDS. *A spacing rule tuned under collapsing is not the same rule
+   * under flex, and nothing in the value says which context it is in.*
+   *
+   * ✅ SO THE GAP GETS ONE OWNER: the label's `margin-top`. Padding goes to zero,
+   * the block's last child loses its bottom margin, and the only air between a
+   * block and the next label is one value in one place. Single claimant, same
+   * discipline as the corner stamp's alignment.
+   *
+   * ⚠️ `font-size: 1em` IS A SIZE RULE IN THE SPACING FILE, and it is here for the
+   * reason `h2`'s `padding-bottom` is in the type file: the padding cannot be made
+   * to track the dial without also fixing the anchor it resolves against. The two
+   * are one change. Both files' headers name this trade.
+   *
+   * ⚠️ SPECIFICITY, COUNTED: Material's `.md-typeset .tabbed-labels > label` is
+   * (0,2,1) and the armoured form below is (0,2,2); `.md-typeset .tabbed-set` is
+   * (0,2,0) against (0,2,1). Both win outright rather than on source order.
+   *
+   * 🚫 AND THE FIRST-CHILD LIST RULE NAMES ITS ELEMENTS INSTEAD OF USING
+   * `> :first-child`, deliberately. Material sets `margin: 0` on a `pre:first-child`
+   * inside a tab so a code block butts against its label -- a generic
+   * `:first-child` rule here would tie that at (0,3,1), win on load order, and
+   * silently undo it. Naming `ul`, `ol` and `p` leaves code blocks alone.
+   *
+   * 🚩 FLAGGED, NOT FIXED: the labels print UNDERLINED, because `alternate_style`
+   * gives each one an anchor link to itself and print-type.css §5 underlines every
+   * `a`. On paper that is a link to the page you are holding -- the same dead
+   * control §5 exists to argue about, arriving through a selector §5 did not
+   * anticipate. One rule to fix, and it is a link-policy decision rather than a
+   * spacing one, so it is named here rather than folded in silently.
+   * --------------------------------------------------------------------- */
+  html .md-typeset .tabbed-set {
+    margin-top: 0.7em;
+    margin-bottom: 0.7em;
+  }
+
+  html .md-typeset .tabbed-labels > label {
+    padding: 0;
+    margin-top: 0.7em;
+    font-size: 1em;
+    border-bottom: 0;
+  }
+
+  /* The first label opens the set, so the set's own margin is already the gap.
+   * Any second margin here would be the flex-addition defect one level up. */
+  html .md-typeset .tabbed-labels > label:first-child {
+    margin-top: 0;
+  }
+
+  html .md-typeset .tabbed-block > ul:first-child,
+  html .md-typeset .tabbed-block > ol:first-child,
+  html .md-typeset .tabbed-block > p:first-child {
+    margin-top: 0.2em;
+  }
+
+  html .md-typeset .tabbed-block > :last-child {
+    margin-bottom: 0;
   }
 }

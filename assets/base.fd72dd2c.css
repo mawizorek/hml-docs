@@ -17,18 +17,25 @@
  * and a bare var() would collapse the rule to NOTHING. A hairline that silently
  * vanishes is worse than one that never moved.
  *
- * ⚠️ THREE LAYERS HAVE LEFT THIS FILE. Do not add their rules back here.
+ * ⚠️ FIVE LAYERS HAVE LEFT THIS FILE. Do not add their rules back here.
  *
  *   assets/chrome.css  the Material variable mapping, THE ARMOUR, .md-header
  *   assets/nav.css     the sidebar
  *   assets/type.css    headings, and the type vector's own notes
  *   assets/data*.css   the TSV table and its list mode
+ *   assets/foot.css    the page foot: .pagefoot, the footer, the build stamp
  *
  * Every one left because this file passed a read limit, and every one is a
  * distinct surface rather than a bag of leftover bytes. Load order for all of
  * them is set in docrender/assets.py and is NOT alphabetical -- chrome.css in
  * particular must stay after this file or every dark-mode link reverts to
  * Material's blue.
+ *
+ * ⭐ AND foot.css MAKES THE REMAINING SUBJECT LEGIBLE, which is the best argument
+ * any of these splits has produced. What is left is the Material MAPPING plus
+ * DOCUMENT elements -- the lede, the aka line, the revised line, inline markers,
+ * the spec table, a dead reference. Every one of them is something an author can
+ * write. The footer is not, and it was sitting in the middle of them.
  */
 
 [data-md-color-scheme="slate"],
@@ -87,7 +94,7 @@
  * does not appear and somebody has to come here and mean it.
  *
  * The single foot-of-page edit line is the deliberate exception, switched off
- * per site with `edit_links: false`.
+ * per site with `edit_links: false`. Its styling lives in assets/foot.css.
  * ------------------------------------------------------------------------ */
 .md-header__source,
 .md-nav__source {
@@ -354,85 +361,13 @@ span.docrender-dead {
   opacity: 0.72;
 }
 
-/* Page foot: the edit link. Quiet, at the bottom, with words rather than an
- * icon. Removed entirely per site with `edit_links: false`.
+/* 🪦 THE FOOT RULES MOVED TO `assets/foot.css` 2026-08-19. `.pagefoot*`, the
+ * `.md-footer*` chrome, `.md-copyright` suppression, `.buildstamp` and the new
+ * build disclosure all live there. Nothing was edited in the move except the
+ * `cursor: help` that had been advertising a deleted `title` attribute.
  *
- * ⚠️ THE HOVER STAYS `accent` AND IS NOT AN OVERSIGHT. This is a link, so it
- * could have moved to `link` with the rest -- but its RESTING state is
- * deliberately `ink-muted` rather than a link colour, because it is furniture
- * and must not read as part of the document. Its hover is therefore doing the
- * same job as Material's link hover: move toward the identity colour to say
- * "this is interactive". Consistent with the link rule above, not exempt from
- * it. */
-.pagefoot__rule {
-  margin-top: var(--dr-gap-lg, 2.6rem);
-  border: 0;
-  border-top: var(--dr-border-w, 1px) solid var(--dr-rule);
-}
-.pagefoot {
-  font-size: 0.78rem;
-  opacity: 0.7;
-}
-.pagefoot__edit {
-  color: var(--dr-ink-muted) !important;
-}
-.pagefoot__edit:hover {
-  color: var(--dr-accent) !important;
-}
-
-/* ---------------------------------------------------------------------------
- * FOOTER
- *
- * ⚠️ THE font-size: 0 IS NOT A TYPO. Material's generator credit is a bare text
- * node plus a link, with no class of its own to target. The only way to remove it
- * without overriding the theme template -- which we would then have to maintain
- * across upgrades -- is to zero the container's font size and restore it on the
- * child we keep.
- * ------------------------------------------------------------------------ */
-.md-footer-meta {
-  background: var(--dr-surface);
-  border-top: var(--dr-border-w, 1px) solid var(--dr-rule);
-}
-.md-footer-meta__inner {
-  padding: var(--dr-pad-cell, 0.5rem) var(--dr-pad-card, 0.8rem);
-  justify-content: flex-end;
-}
-.md-copyright {
-  width: auto;
-  margin: 0;
-  padding: 0;
-  font-size: 0;
-}
-.md-copyright a {
-  display: none;
-}
-.md-copyright__highlight {
-  padding: 0;
-  color: var(--dr-ink-muted);
-}
-
-/* Build stamp. The only signal that a deploy succeeded, so it stays legible
- * rather than being decorated into invisibility -- but it is furniture, not
- * content, so it sits quiet.
- *
- * ⭐ IT STOPPED FAKING IT (2026-08-05). This was `ink-muted` at `opacity: 0.75`,
- * which computes to LESS contrast than `text-faint` carries on its own -- so the
- * token that literally means "faintest text" was being approximated by dimming
- * the one above it. `text-faint` had no consumer anywhere; now it has the exact
- * surface it was named for, and the opacity hack is gone. */
-.buildstamp {
-  font-family: var(--dr-font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.02em;
-  color: var(--dr-text-faint, var(--dr-ink-muted));
-  cursor: help;
-}
-
-/* The prev/next bar. Kept -- it is genuine reader navigation -- but toned down so
- * it stops competing with the page it sits under. */
-.md-footer__link {
-  opacity: 0.85;
-}
-.md-footer__title {
-  font-size: 0.86rem;
-}
+ * ⚠️ THE FOUR `--md-footer-*` MAPPINGS STAY HERE, in the scheme block at the top,
+ * and that is correct rather than a leftover: they are the Material VARIABLE
+ * MAPPING, which is this file's subject. foot.css consumes `--dr-*` tokens and
+ * writes rules; it declares no Material variables at all. *One surface, one
+ * address -- and the surface here is the mapping, not the footer.* */
