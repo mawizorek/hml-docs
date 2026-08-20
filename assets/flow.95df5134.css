@@ -10,8 +10,67 @@
  * The strip was designed as a SECOND footer beside Material's prev/next, where
  * looking quiet was correct. It is now the ONLY footer on a program page
  * (`hide: footer` in frontmatter, Michael's call), and the only navigation on a
- * page must look like navigation. An unstyled <nav> at the bottom of a document
- * reads as more document.
+ * page must look like navigation.
+ *
+ * =========================================================================
+ * 🔴 EVERY ANCHOR RULE IS SCOPED UNDER `.md-typeset`, AND THAT IS A BUG FIX
+ * =========================================================================
+ * The first version wrote `.dr-flow__next { background: ...; color: ... }`.
+ * Specificity 0,1,0. Material ships `.md-typeset a { color: ... }` at 0,1,1 --
+ * one class AND one type -- so MATERIAL WON THE COLOUR AND WE WON THE
+ * BACKGROUND. Every button rendered its fill correctly and painted its text in
+ * the link colour, which on papyrus is dark brown on mid brown in light mode and
+ * tan on brown in dark mode. Michael's two screenshots showed exactly that, and
+ * `on-accent` (the near-white cream the row actually declares) never applied.
+ *
+ * ⚑ SAME FAMILY AS THE DARK-MODE-BLUE-LINK INCIDENT `chrome.css` EXISTS TO
+ * FIGHT, and its header already says the winner there is decided "purely on
+ * SOURCE ORDER" against a compound Material selector. That warning was one file
+ * away and this sheet was written without reading it. ⚠️ A NEW SHEET THAT STYLES
+ * AN `<a>` INSIDE TYPESET CONTENT MUST OUT-SPECIFY `.md-typeset a` OR IT ONLY
+ * HALF-APPLIES -- and half-applying is the dangerous shape, because the rule
+ * plainly "works" at a glance.
+ *
+ * 🚫 NOT FIXED WITH `!important`. That wins the argument and loses the next one:
+ * an instance's own `theme.css` is loaded LAST precisely so a site keeps the
+ * final word on its own look, and `!important` here would silently take that
+ * away. Scoping is a real answer; `!important` is a bigger hammer with a
+ * hostage.
+ *
+ * =========================================================================
+ * ⭐ THE ARRIVED-AT FLOW IS PROMOTED BY `:target`, WITH NO JAVASCRIPT
+ * =========================================================================
+ * Michael: *"when entering the same page from different workflows, the app isn't
+ * 'aware' and puts the second (now active) program inside the 'also part of'
+ * section instead."* Correct, and it was the last real gap in the feature: the
+ * strip order is baked at build time and "which flow am I in" is a per-request
+ * fact.
+ *
+ * 🔴 THE FIX IS THE SAME MECHANISM THE COLLAPSED FORM ALREADY USES. Every strip
+ * link carries `#flow-<program id>`, so arriving from a program targets THAT
+ * program's strip. Two things then happen for free, both from the HTML spec:
+ *
+ *   1. A fragment pointing INSIDE a closed `<details>` opens it. So a flow
+ *      parked in "Also part of" is expanded on arrival rather than buried.
+ *   2. `:target` matches it, so it can be marked as the active one.
+ *
+ * ⭐ AND `order: -1` HOISTS IT ABOVE ITS SIBLINGS, which is why `.dr-flows` is a
+ * flex column. A strip promoted out of the disclosure cannot be reordered
+ * (different parent), so instead the whole disclosure is what moves down.
+ *
+ * 🚫 A `?flow=` QUERY PARAM WAS BUILT FIRST AND HAS BEEN REMOVED. Nothing read
+ * it. A URL parameter no code consumes is exactly the dead-key defect this
+ * engine keeps paying for -- `sort:`, the inert `palette:`, `revised:`,
+ * `aliases:` for two days. The fragment does the work, so the param was the
+ * decoration.
+ *
+ * ⚠️ NO SCRIPT, DELIBERATELY, AND NOT ONLY FOR PURITY. `docrender/assets.py`
+ * crossed the engine's 22KB hard read ceiling on 2026-08-19 (22,436 B), so
+ * registering a new asset means rewriting a file that can no longer be read
+ * whole -- which is how a parallel session's work gets clobbered. The JS version
+ * of this feature would also have flapped the footer on every page load. Being
+ * unable to take the bad option is not the same as choosing the good one, so:
+ * this is the good one, and the ceiling is reported separately.
  *
  * TOKENS ARE ALWAYS USED WITH A FALLBACK, and the fallback is a Material
  * variable rather than a literal. This engine generates `--dr-*` from
@@ -19,14 +78,13 @@
  * on a nine-token local skin -- the exact failure that left eleven callout
  * families painting `currentColor` on 2026-08-05. Falling back to Material's own
  * variable means the worst case is Material's look, never an invisible control.
- *
- * NO COLOUR IS HARDCODED except the one border in the form frame, which is
- * inherited from ClickUp's own embed snippet and is theirs.
  */
 
 /* ------------------------------------------------------------------ strips */
 
 .dr-flows {
+  display: flex;
+  flex-direction: column;
   margin: 2.5rem 0 0;
   padding-top: 1.2rem;
   border-top: 1px solid var(--dr-border, var(--md-default-fg-color--lightest));
@@ -42,6 +100,19 @@
   border-top: 1px dashed var(--dr-border, var(--md-default-fg-color--lightest));
 }
 
+/* THE PROMOTION. See the docstring: the reader arrived from this program, so
+ * this strip goes first and the disclosure holding the others drops below it. */
+.dr-flows > .dr-flow:target {
+  order: -1;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.dr-flows > .dr-flows__others:has(.dr-flow:target) {
+  order: -1;
+}
+
 /* The orientation line. Deliberately SMALLER than the moves below it: the
  * program name answers "where am I," the buttons answer "what now," and the
  * second question is the one a reader at the foot of a page is asking. */
@@ -53,12 +124,13 @@
   color: var(--md-default-fg-color--light);
 }
 
+.md-typeset .dr-flow__program,
 .dr-flow__program {
   font-weight: 700;
   color: var(--md-default-fg-color--light);
 }
 
-a.dr-flow__program:hover {
+.md-typeset a.dr-flow__program:hover {
   color: var(--dr-accent, var(--md-typeset-a-color));
 }
 
@@ -75,6 +147,14 @@ a.dr-flow__program:hover {
   white-space: nowrap;
 }
 
+/* The targeted strip says so in words as well as position -- a reader who
+ * arrived mid-flow should not have to infer which of three programs is the one
+ * they are walking. */
+.dr-flow:target .dr-flow__step {
+  background: var(--dr-accent, var(--md-typeset-a-color));
+  color: var(--dr-on-accent, var(--md-primary-bg-color));
+}
+
 /* Prev left, next right, and they do not collapse into each other on a phone:
  * `wrap` with a gap, so a long policy title stacks instead of truncating. A
  * truncated destination is a button you cannot trust. */
@@ -87,8 +167,9 @@ a.dr-flow__program:hover {
   margin: 0;
 }
 
-.dr-flow__prev,
-.dr-flow__next,
+.md-typeset .dr-flow__prev,
+.md-typeset .dr-flow__next,
+.md-typeset .dr-flow__end,
 .dr-flow__end {
   display: inline-block;
   padding: 0.5rem 0.85rem;
@@ -102,24 +183,27 @@ a.dr-flow__program:hover {
 
 /* NEXT IS THE PRIMARY ACTION AND IS THE ONLY FILLED CONTROL IN THE STRIP.
  * This is the fix for "is that what I'm supposed to click next?" -- when two
- * arrows carry identical weight, neither reads as the instruction. */
-.dr-flow__next {
+ * arrows carry identical weight, neither reads as the instruction.
+ *
+ * 🔴 THE `.md-typeset` PREFIX IS THE WHOLE BUG FIX. See the docstring. */
+.md-typeset .dr-flow__next {
   margin-left: auto;
   border-color: var(--dr-accent, var(--md-typeset-a-color));
   background: var(--dr-accent, var(--md-typeset-a-color));
   color: var(--dr-on-accent, var(--md-primary-bg-color));
 }
 
-.dr-flow__next:hover {
+.md-typeset .dr-flow__next:hover {
   filter: brightness(1.12);
+  color: var(--dr-on-accent, var(--md-primary-bg-color));
 }
 
-.dr-flow__prev {
+.md-typeset .dr-flow__prev {
   color: var(--md-default-fg-color--light);
   background: transparent;
 }
 
-.dr-flow__prev:hover {
+.md-typeset .dr-flow__prev:hover {
   border-color: var(--dr-accent, var(--md-typeset-a-color));
   color: var(--dr-accent, var(--md-typeset-a-color));
 }
@@ -127,7 +211,12 @@ a.dr-flow__program:hover {
 /* THE START STRIP. On a program's own page this is the only pointer into the
  * flow, so its Next runs full width -- there is no Previous to balance against
  * and nothing else on the page competes with it. */
-.dr-flow--start .dr-flow__next {
+.dr-flow--start .dr-flow__move {
+  display: block;
+}
+
+.md-typeset .dr-flow--start .dr-flow__next {
+  display: block;
   width: 100%;
   margin-left: 0;
   text-align: center;
@@ -137,6 +226,7 @@ a.dr-flow__program:hover {
  * ("end of this program"), which is worst exactly where it matters most: with
  * the footer hidden, the last step of a program is the one page with nowhere
  * to go, and it is where somebody needs the completion form. */
+.md-typeset .dr-flow__end,
 .dr-flow__end {
   margin-left: auto;
   border-color: var(--dr-good, var(--md-typeset-a-color));
@@ -144,7 +234,7 @@ a.dr-flow__program:hover {
   background: transparent;
 }
 
-a.dr-flow__end:hover {
+.md-typeset a.dr-flow__end:hover {
   background: var(--dr-good, var(--md-typeset-a-color));
   color: var(--dr-on-accent, var(--md-primary-bg-color));
 }
@@ -233,8 +323,9 @@ a.dr-flow__end:hover {
    * which step, what comes next -- and the affordance goes, because nobody
    * taps a sheet of paper. print-flow.css already forces every <details> open,
    * so a printed packet lists every program a page belongs to. */
-  .dr-flow__prev,
-  .dr-flow__next,
+  .md-typeset .dr-flow__prev,
+  .md-typeset .dr-flow__next,
+  .md-typeset .dr-flow__end,
   .dr-flow__end {
     padding: 0;
     border: 0;
@@ -256,6 +347,14 @@ a.dr-flow__end:hover {
   .dr-flow__prev::before {
     content: "Previous: ";
     font-weight: 400;
+  }
+
+  /* ⚠️ AND THE PROMOTION IS NEUTRALISED ON PAPER. `:target` cannot be true for
+   * a printed sheet in any meaningful way, and a chip inverted by a fragment
+   * that no longer applies would print as a solid block of ink. */
+  .dr-flow:target .dr-flow__step {
+    background: transparent !important;
+    color: inherit !important;
   }
 
   /* An iframe prints as a blank rectangle, so it is removed outright and the
