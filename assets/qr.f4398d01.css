@@ -1,0 +1,137 @@
+/* THE QR LAYER -- WHERE A CODE APPEARS, AND HOW BIG IT IS.
+ *
+ * Owns exactly one element family, `.dr-qr*`, emitted by docrender/qr.py. The
+ * argument for every decision is in specs/qr-codes.md (BUILD 6); this header
+ * holds only what somebody EDITING THIS SHEET has to know.
+ *
+ * =========================================================================
+ * 🔴 NOTHING IN HERE IS STYLING. EVERY RULE IS FUNCTIONAL.
+ * =========================================================================
+ * A QR code is not a picture of a thing, it is a MACHINE-READABLE SURFACE, and
+ * each property below decides whether a camera can read it:
+ *
+ *   the media gates     whether it appears at all, per the directive's flags
+ *   the mm floor        whether the modules are physically large enough to resolve
+ *   print-color-adjust  whether the ink actually lands
+ *   the colours         whether there is enough luminance contrast to decode
+ *
+ * ⚠️ SO A "TIDY-UP" HERE IS A FUNCTIONAL CHANGE. Shrinking the size, theming the
+ * colours or dropping the colour-adjust each produce a code that looks perfect
+ * and does not scan -- on somebody else's phone, in a shop, after an injury.
+ *
+ * =========================================================================
+ * WHY THIS IS ITS OWN SHEET AND ITS OWN ASSET GROUP
+ * =========================================================================
+ * It is the FIRST sheet in this engine carrying BOTH screen and print rules as
+ * one feature. `_PRINT_ASSETS` is entirely `@media print` and loads after the
+ * generated sheets for cascade reasons; this sheet needs a screen half too, so
+ * it cannot live there without lying about what that group is. assets.py gets a
+ * fifth group instead -- and `hand_written_css()` was updated IN THE SAME
+ * COMMIT, which is exactly what its own warning asks for.
+ *
+ * ⭐ ITS POSITION IS FREE. Every selector is a `.dr-qr*` class no other sheet in
+ * this engine mentions, so it can neither win nor lose a specificity tie. Said
+ * out loud so nobody later defends a position that was never load-bearing.
+ *
+ * =========================================================================
+ * 🔴 THE MEDIA GATES ARE OPT-IN, AND THE DEFAULT IS HIDDEN
+ * =========================================================================
+ * `.dr-qr` alone shows NOTHING. A code appears only where its own modifier says
+ * so: `.dr-qr--display` on screen, `.dr-qr--print` on paper.
+ *
+ * ⭐ THAT POLARITY IS THE SAFE ONE. If a future change adds a medium and forgets
+ * a rule here, the failure is an INVISIBLE code -- obvious the moment somebody
+ * looks at the page. The opposite polarity fails by PRINTING a screen-only code
+ * onto a document that was never meant to carry it, which nobody notices until
+ * it is already on paper.
+ *
+ * ⚠️ AND A `--print`-ONLY CODE IS INVISIBLE TO ITS AUTHOR ON SCREEN. That is the
+ * cost of the feature, not a bug in this sheet: "it failed to resolve" and "it
+ * resolved and is correctly hidden" are the same blank space. Verify in print
+ * preview. The build report inventory (spec step 3) is the real fix and does not
+ * exist yet.
+ */
+
+.dr-qr {
+  display: none;
+  margin: 1.25rem 0;
+}
+
+/* -------------------------------------------------------------------------
+ * 🔴 THE SIZE FLOOR, IN `mm` -- THE ONE PLACE A PHYSICAL UNIT IS CORRECT
+ * RATHER THAN TRAPPED.
+ *
+ * The sheet is a physical object and `px` at print resolution is a fiction
+ * (specs/print-identity.md §4d settled that for the letterhead). It is more true
+ * here, because a QR has a real minimum size below which a camera cannot resolve
+ * its modules.
+ *
+ * 🔴 NOT `em`. print-identity.md §3b is the finding: `em` inherits as a computed
+ * LENGTH against whatever font-size is in scope, so a code inside a callout would
+ * silently print at a different PHYSICAL size from one in body prose. A QR's size
+ * is not relative to type.
+ *
+ * ⚠️ 30mm IS A STARTING POINT, NOT A MEASUREMENT, and it is the likeliest number
+ * in this file to be wrong. It matches the QR Forge SVG this feature replaced on
+ * the incident-report page, which is the only evidence available without a
+ * scanner. 🔴 The floor belongs to Hazard Hawthorne (print-identity.md §3f) and
+ * it INTERACTS WITH THE ERROR-CORRECTION LEVEL: more correction means more
+ * modules, so at a fixed size each module gets SMALLER. Size and ECC are measured
+ * together or not at all.
+ *
+ * `height: auto` plus the SVG's own viewBox keeps it square. qr.py emits the SVG
+ * with `omitsize`, so there is no width/height attribute to fight.
+ * ---------------------------------------------------------------------- */
+.dr-qr__svg {
+  display: block;
+  width: 30mm;
+  height: auto;
+}
+
+@media screen {
+  .dr-qr--display {
+    display: block;
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * PAPER
+ *
+ * 🔴 `print-color-adjust: exact` IS MANDATORY, NOT AN OPTIMISATION. Browsers drop
+ * backgrounds and can lighten ink at print, and a QR whose contrast has been
+ * "helpfully" adjusted does not decode. assets/print.css applies this same
+ * property narrowly to elements *"whose MEANING is carried by a colour"* and
+ * reasons about a `!!! danger` border -- a QR is the purest example of that rule
+ * in the engine, so this is the same decision one sheet over, not a new one.
+ *
+ * ⚠️ DECLARED HERE RATHER THAN ADDED TO THAT LIST ON PURPOSE: this sheet owns the
+ * `.dr-qr*` family end to end, and splitting one of its functional properties
+ * into print.css would put two claimants on one element.
+ *
+ * 🔴 `break-inside: avoid` IS FUNCTIONAL TOO. A QR split across a page break is
+ * not a smaller QR, it is two halves of an unreadable one. print-flow.css owns
+ * break policy generally, but a code that must NEVER break is a property of the
+ * code rather than a pagination preference.
+ * ---------------------------------------------------------------------- */
+@media print {
+  .dr-qr--print {
+    display: block;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .dr-qr--print .dr-qr__svg {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* The download link is DEAD TEXT on toner and a LIVE LINK in a PDF, and CSS
+   * cannot tell those apart -- both are `@media print`. Michael ruled the PDF
+   * case wins (2026-08-21): *"pdfs currently still work if they have links so
+   * this shoudl still apply."* So there is deliberately NO rule hiding it, and
+   * this comment exists so nobody adds one thinking it is an oversight.
+   *
+   * 🚫 AND NO LINK DECORATION HERE EITHER. assets/base.css declares it unscoped
+   * to any medium and it reaches paper on its own; print.css's dead-reference
+   * block is an argument for NOT writing a second copy. */
+}
