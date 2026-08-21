@@ -1,0 +1,182 @@
+/* THE PRINT CHROME LAYER -- WHAT IS FURNITURE.
+ *
+ * Split out of `print.css` on 2026-08-19. Two halves of one subject, and the
+ * pairing is the reason this is one file rather than two:
+ *
+ *     REMOVED   everything the SCREEN has that paper cannot use -- the header,
+ *               the drawer, the TOC, search, the clipboard button, both footers
+ *     ADDED     the one mark PAPER has that the screen does not -- the corner
+ *               build stamp
+ *
+ * ⭐ THE TEST FOR EITHER LIST IS THE SAME ONE `print.css` ALREADY WROTE: *could a
+ * reader ACT on it with a pen?* No means it is furniture. The chrome-off list is
+ * every element that fails that test; the corner stamp is the one element that
+ * passes it in the opposite direction -- a date is not a control, it is a fact a
+ * reader needs precisely because the sheet has left the system.
+ *
+ * =========================================================================
+ * ⚠️ WHY IT SPLIT, MEASURED
+ * =========================================================================
+ * `print.css` came back **22,718 B against a 22,528 B hard read limit** carrying
+ * the paper-ground fix. Two paragraphs were cut first -- both duplicated almost
+ * word for word in `docrender/buildstamp.py` -- which got it to 22,240: still only
+ * 288 B clear, on a file that had already been split once tonight.
+ *
+ * 🚫 TRIMMING FURTHER WAS REFUSED. That move failed three times earlier the same
+ * evening, twice making a file LARGER because the "trim" replaced prose with
+ * commentary about replacing prose. **A file at its size limit is usually a file
+ * with a seam in it, and trimming prose is what you do instead of finding the
+ * seam.** print-callout.css, print-space.css and foot.css all carry that sentence.
+ *
+ * ⭐ AND THE SEAM WAS IN print.css's OWN HEADER, WHICH DESCRIBED ITS SUBJECT AS
+ * *"what appears on paper at all, how wide it runs"* -- an `and` doing the work of
+ * a chapter break, for the second time in one file. The first `and` in that same
+ * sentence produced `print-flow.css`. This is the other one:
+ *
+ *     print.css         HOW WIDE IT RUNS      -- @page, the ground, the column,
+ *                                                the ink policy, code wrapping
+ *     print-chrome.css  WHAT APPEARS AT ALL   -- this file
+ *
+ * =========================================================================
+ * 🔴 AND THE SPLIT FOUND A BROKEN INVARIANT NOBODY HAD TESTED
+ * =========================================================================
+ * `assets.py` claims, and every print sheet repeats, that the group's internal
+ * load order is FREE because *"no two of the print sheets share a
+ * selector-and-property PAIR."* Reading both files whole to perform this split:
+ *
+ *     print.css       .md-typeset a  { text-decoration: underline }
+ *     print-type.css  .md-typeset a  { text-decoration: underline }   §5
+ *
+ * **Same selector. Same property. Since print-type.css was created.** The values
+ * are identical so nothing ever rendered wrong, which is exactly why it survived:
+ * ⚑ *an invariant with no consequence when broken is an invariant nobody checks.*
+ * The print.css copy is deleted -- §5 owns link policy and argues it at length --
+ * and the claim is true again rather than merely repeated.
+ *
+ * =========================================================================
+ * ⚠️ LOAD POSITION: FREE WITHIN THE GROUP, AND THE GROUP'S SLOT IS NOT
+ * =========================================================================
+ * Nothing here shares a selector-and-property pair with any other print sheet, so
+ * this file's position among them genuinely does not matter. What matters is that
+ * the GROUP loads after the generated sheets and before an instance's `site.css`;
+ * `assets.py` `_PRINT_ASSETS` carries that argument.
+ *
+ * 🔴 ONE RULE HERE DOES DEPEND ON ORDER INSIDE THIS FILE, and it is not obvious:
+ * the chrome-off list hides `.md-footer-meta` with `!important`, and the corner
+ * stamp used to live INSIDE that subtree. `display: none` on an ANCESTOR removes
+ * the whole subtree from the box tree and a descendant cannot opt back in -- not a
+ * specificity contest, there is no box left to style. That is why `buildstamp.py`
+ * had to stop using `config.copyright` at all. **Keeping both halves in one file
+ * is what makes that relationship readable instead of a cross-file surprise.**
+ */
+
+@media print {
+  /* -------------------------------------------------------------------------
+   * CHROME OFF
+   *
+   * Everything here is navigation or interaction, and paper has neither. The
+   * test for adding to this list: could a reader ACT on it with a pen? If not,
+   * it is furniture and it costs a column.
+   *
+   * ⚠️ `.md-header` IS IN THIS LIST, WHICH MEANS THE SITE LOGO NEVER PRINTS.
+   * Worth knowing before anybody tries to make a printed mark by changing
+   * `theme.logo`: the header, its icon and the site title are all gone by the
+   * time the sheet exists. The printed mark is the corner stamp below, and it is
+   * a different element with a different job.
+   *
+   * ⚠️ `!important` THROUGHOUT, AND IT IS NOT LAZINESS. Several of these are
+   * Material's own layout elements carrying their own `display` values from
+   * compound selectors, and a few are toggled by Material's JavaScript at
+   * runtime. This is the one list in the print group where the goal is absolute
+   * removal rather than a negotiated value -- there is no site that wants its nav
+   * drawer on paper.
+   * --------------------------------------------------------------------- */
+  .md-header,
+  .md-tabs,
+  .md-sidebar,
+  .md-sidebar--primary,
+  .md-sidebar--secondary,
+  .md-nav,
+  .md-search,
+  .md-top,
+  .md-dialog,
+  .md-feedback,
+  .md-footer__inner,
+  .md-footer-meta,
+  .md-clipboard,
+  .md-content__button,
+  .pagefoot,
+  .pagefoot__rule {
+    display: none !important;
+  }
+
+  /* -------------------------------------------------------------------------
+   * ✅ THE BUILD STAMP -- THE CORNER MARK IS THE PRINTED ONE
+   *
+   * A printed page leaves the system entirely: handed to a guest artist, filed,
+   * carried into a room months later. The one question nobody can answer about a
+   * piece of paper is how old it is, so the stamp is the cheapest possible
+   * provenance and it costs one line.
+   *
+   * 🔴 IT NEVER PRINTED, FOR MONTHS, AND THE CAUSE IS THE LIST DIRECTLY ABOVE.
+   * `buildstamp.py` used to hand its markup to `config.copyright`, which Material
+   * renders inside `.md-footer-meta`. A rule sat in print.css bringing
+   * `.buildstamp` back to `display: block` and could never win: the ancestor was
+   * already gone from the box tree. It looked like a working exception and had
+   * never once fired. Two placements in the page body fixed it; the whole argument
+   * lives in `docrender/buildstamp.py`.
+   *
+   *     paper   corner shows, foot hidden
+   *     screen  foot shows, corner hidden by its own `hidden` attribute
+   *
+   * 🔴 AND ITS TWO COLOURS WERE THE LAST HARDCODED VALUES IN THE PRINT GROUP
+   * (Michael, 2026-08-19: *"the color you chose MUST be from our theme vector.
+   * that's the whole point."*). `color: #555` and a `#ccc` hairline, on the one
+   * element that appears on every printed sheet of every site -- so a bespoke
+   * palette put its date line in neutral grey. Now `ink-muted` and `rule`.
+   *
+   * ⚠️ THE FALLBACK IS A MATERIAL VARIABLE, NEVER A LITERAL. A nine-token local
+   * theme emits neither token, and the point of a fallback is to degrade to
+   * somebody else's design system rather than to a number typed here. A literal
+   * fallback is a hardcoded colour that only shows up on the themes nobody is
+   * looking at.
+   *
+   * ⚠️ `display: block` IS LOAD-BEARING, NOT TIDINESS. It is what overrides the
+   * `hidden` attribute -- an author declaration beats the UA stylesheet's
+   * `[hidden] { display: none }`. Delete it and the mark vanishes from paper with
+   * nothing reporting it.
+   *
+   * 🔴 AND `text-align: right` LOST ON 2026-08-19 WITHOUT ANY OF THIS BEING
+   * EDITED. `print-space.css` §9 shipped `text-align: justify` on `.md-typeset p`;
+   * the corner mark IS a `<p>` inside `.md-typeset`, and (0,1,1) beats the (0,1,0)
+   * below -- source order never consulted. A justified single line renders
+   * flush-left, so the symptom read as "the stamp moved" and pointed at the wrong
+   * file entirely. ✅ Fixed by narrowing §9 to exclude `.buildstamp`, so this stays
+   * the SINGLE claimant on where the stamp sits rather than the second armoured
+   * one.
+   *
+   * 🚩 THE ICON GOES HERE, as a print-scoped `background-image` on this rule, once
+   * a line-art SVG exists. 🚫 NEVER an `<img>`: a `display: none` image is still
+   * FETCHED, ~168KB on every page load of a site whose readers mostly never
+   * print. It will also need `print-color-adjust: exact`, which `print.css` owns
+   * -- a brand mark's meaning IS carried by colour, and a logo that prints as an
+   * empty box is worse than no logo.
+   * --------------------------------------------------------------------- */
+  .buildstamp--corner {
+    display: block;
+    margin: 0 0 1.2rem;
+    text-align: right;
+    font-size: 0.7rem;
+    line-height: 1.2;
+    color: var(--dr-ink-muted, var(--md-default-fg-color--light));
+    border-bottom: 1px solid
+      var(--dr-rule, var(--md-default-fg-color--lightest));
+    padding-bottom: 0.35rem;
+  }
+
+  /* The foot copy is the SCREEN one. On paper it would be the second stamp on one
+   * sheet, which is the thing the split placement exists to avoid. */
+  .buildstamp--foot {
+    display: none !important;
+  }
+}
