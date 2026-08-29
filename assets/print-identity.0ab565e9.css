@@ -1,0 +1,179 @@
+/* THE PRINT IDENTITY LAYER -- WHOSE DOCUMENT IT IS.
+ *
+ * Created 2026-08-29, the seventh sheet in the print group. Declared by
+ * `specs/print-identity.md` §2 and §4 long before it existed; this is that file
+ * arriving, scoped to exactly one element.
+ *
+ *     print.css          HOW WIDE IT RUNS
+ *     print-chrome.css   WHAT APPEARS AT ALL   -- and it still owns the corner
+ *                                                 stamp's own box
+ *     print-flow.css     WHERE IT BREAKS
+ *     print-type.css     HOW BIG THE TYPE IS
+ *     print-space.css    HOW MUCH AIR
+ *     print-callout.css  WHAT THE BOX IS
+ *     print-identity.css WHOSE DOCUMENT IT IS  -- this file
+ *
+ * =========================================================================
+ * 🔴 WHY THIS IS A NEW FILE AND NOT FOUR LINES IN print-chrome.css
+ * =========================================================================
+ * That file measured 22,201 B against a 22,528 B hard read limit -- 327 B of
+ * headroom, which is less than the comment this rule needs. Its own header
+ * carries the sentence the whole print group repeats: **a file at its size limit
+ * is usually a file with a seam in it, and trimming prose is what you do instead
+ * of finding the seam.** The seam was already named in the spec.
+ *
+ * =========================================================================
+ * 🔴 EVERY SELECTOR HERE IS NET-NEW, AND THAT IS A CASCADE REQUIREMENT
+ * =========================================================================
+ * `assets.py` `_PRINT_ASSETS` and print-chrome.css both assert, loudly, that the
+ * order WITHIN the print group is free because *no two of the print sheets share
+ * a selector-and-property PAIR*. That invariant has already been broken once by
+ * accident (`text-decoration: underline` in two sheets) and once for real
+ * (print-space.css §9's `justify` beating the corner stamp's `text-align` on
+ * specificity).
+ *
+ * ⭐ SO THIS SHEET DOES NOT TOUCH `.buildstamp--corner` AT ALL. It would have
+ * been the obvious place to put `display: flex`, and print-chrome.css already
+ * declares `display: block` on that exact selector -- same selector, same
+ * property, a genuine pair, and the group's freedom gone. Instead `buildstamp.py`
+ * emits an inner `.buildstamp__row` and every rule below hangs off a class no
+ * other sheet in this engine mentions. **The layout moved into a new element
+ * specifically so the cascade claim stays true.**
+ *
+ * ⚠️ CONSEQUENCE, STATED RATHER THAN DISCOVERED: `display: block` on the `<p>` is
+ * still what overrides its `hidden` attribute, and it still lives in
+ * print-chrome.css. Delete it there and this whole sheet renders nothing, with
+ * nothing reporting it. The two files are one feature in two places, on purpose.
+ *
+ * =========================================================================
+ * ✅ THE HEIGHT BUDGET IS MEASURED, NOT CALCULATED. 137% AGAINST A 140% CAP.
+ * =========================================================================
+ * > Michael, 2026-08-29: *"do NOT increase the height of the header by any more
+ * > than 140% of what it is right now."*
+ *
+ * A cap is a number, so it was rendered rather than reasoned about. Letter, 12mm
+ * margins, the real corner-stamp box from print-chrome.css, the real logo:
+ *
+ *     today, text only ............  5.30 mm     the baseline the cap is 140% OF
+ *     140% ceiling ................  7.42 mm
+ *     mark 6mm ....................  7.75 mm     146%  🔴 OVER -- the first guess
+ *     mark 5.6mm ..................  7.35 mm     139%  ok, and too close
+ *     mark 5.5mm ..................  7.25 mm     137%  ✅ SHIPPED
+ *
+ * 🔴 **THE FIRST NUMBER WAS WRONG AND ONLY A RENDER CAUGHT IT.** 6mm was derived
+ * from the stamp's own font-size and padding and it looked sound; the box came out
+ * at 146% because the border and padding sit OUTSIDE the flex row and the
+ * arithmetic had quietly assumed they were inside it. ⚑ *A budget expressed as a
+ * ratio of an existing box cannot be computed from the properties you can see --
+ * the box you are a percentage of has to be measured.*
+ *
+ * ⭐ AND 5.5mm RATHER THAN 5.6mm IS DELIBERATE HEADROOM. 139% satisfies the cap and
+ * leaves one tenth of a millimetre before it breaks; print-type.css owns the type
+ * dial this box is built on and can move it without ever reading this file. **The
+ * spare 3% is what keeps a cap from becoming a tripwire on somebody else's edit.**
+ *
+ * ⭐ THE TEXT SHRINKS, AND THAT IS WHAT BUYS THE MARK ITS ROOM. Michael asked for
+ * both in one sentence. The row's height is driven by the mark, so a smaller text
+ * size is not cosmetic -- it is the reason a logo fits inside the budget at all.
+ *
+ * ⚠️ `mm`, NOT `px` AND NOT `em`. The sheet is a physical object and `px` at print
+ * resolution is a fiction; `em` is the trap `specs/print-identity.md` §3b spends a
+ * section on, and it has already cost this repo two reverts.
+ *
+ * ⚠️ MEASURED IN WeasyPrint, WHICH IS NOT THE BROWSER THAT WILL PRINT THIS. It
+ * honours `mm`, `contain` and flex the same way, and the ratio is what matters
+ * rather than the absolute -- but this is a second engine's reading of the same
+ * CSS, so **a browser print preview is still owed** before anybody calls the
+ * budget verified. Said plainly because the number above is real and could invite
+ * more confidence than one renderer earns.
+ *
+ * =========================================================================
+ * 🚫 NEVER AN `<img>`, AND THE NUMBER IS THE ARGUMENT
+ * =========================================================================
+ * A `display: none` image is still FETCHED. The URITP horizontal mark is ~168KB
+ * as a JPEG, on every page load of a site whose readers mostly never print. A
+ * `background-image` inside `@media print` is fetched when the print media
+ * applies and not before, so a screen reader pays nothing.
+ *
+ * 🔴 THIS SHEET DECLARES NO `background-image`, AND THAT IS A MEASURED DECISION
+ * RATHER THAN AN OVERSIGHT. The tidy shape is `background-image: var(--dr-print-logo)`
+ * with the URL delivered inline as a custom property -- and it rendered an EMPTY BOX
+ * in WeasyPrint every way it was tried, including declared in the sheet itself.
+ * `buildstamp.py` therefore writes `background-image` directly into the element's
+ * style attribute and this sheet owns only the box around it: size, position,
+ * repeat, colour policy.
+ *
+ * ⚑ **THE GENERAL POINT IS ABOUT WHICH FAILURES ARE VISIBLE.** Browsers do
+ * substitute custom properties into `background-image`, so the tidy version is very
+ * likely correct in Chrome -- but this element's failure mode is a blank corner on a
+ * printed safety sheet, with nothing in the build report to say so. **A mechanism
+ * whose failure is silent does not get the benefit of the doubt.** The variant that
+ * rendered in the one engine available to test is the one that ships.
+ *
+ * ⭐ THE SHEET STILL NAMES NO PATH AND NO SITE, so the leak rule is untouched --
+ * that property was never doing that work, the ENGINE was.
+ *
+ * ⭐ ABSENT MEANS ABSENT. A site with no `print.logo` gets no mark span at all --
+ * not an empty box, which would spend the height budget on nothing. There is no
+ * fallback declaration here because there is nothing to fall back FROM.
+ *
+ * 🔴 `print-color-adjust: exact` IS MANDATORY AND IT IS HERE RATHER THAN IN
+ * print.css. That file owns the property and applies it to elements *whose
+ * meaning is carried by a colour*; a brand mark qualifies and the spec says to
+ * put it on that list. It is here instead because print.css had 296 B of headroom
+ * and because the selector is net-new, so no pair is created either way.
+ * 🚩 Move it there when that file is split and has room. Without it a browser may
+ * drop the background entirely and **a logo that prints as an empty box is worse
+ * than no logo.**
+ */
+
+@media print {
+  /* The row is the letterhead: mark hard left, text hard right, baselines
+   * aligned. `space-between` with exactly two children needs no widths. */
+  .buildstamp__row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 4mm;
+    font-size: 0.58rem;
+    line-height: 1.15;
+  }
+
+  /* An empty span carrying a background. `contain` letterboxes rather than
+   * distorting, so the box does not have to know the mark's aspect ratio -- a
+   * square logo in this slot is small and centred, never stretched. */
+  .buildstamp__mark {
+    flex: 0 0 auto;
+    width: 27mm;
+    height: 5.5mm;
+    background-repeat: no-repeat;
+    background-position: left center;
+    background-size: contain;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ⚠️ `text-align: right` is declared HERE and not inherited. print-space.css §9
+   * justifies `.md-typeset p` and was narrowed to spare `.buildstamp`; these
+   * spans are not `p` elements so §9 cannot reach them, but the alignment is the
+   * whole point of the layout and is stated rather than assumed. */
+  .buildstamp__text {
+    flex: 0 1 auto;
+    text-align: right;
+  }
+
+  /* > Michael, 2026-08-29: *"make URITP Safet bold, while the new formatted date
+   * remains non-bold."*
+   *
+   * ⭐ TWO WEIGHTS ARE WHY THE LINE CAN STAY TWO FACTS. The 08-19 and 08-28
+   * post-mortems in `buildstamp.py` both refused a third CLAUSE on this line.
+   * Weight is not a clause: it separates the two facts already there without
+   * adding a word, which is the cheapest hierarchy available on a stamp. */
+  .buildstamp__id {
+    font-weight: 700;
+  }
+
+  .buildstamp__when {
+    font-weight: 400;
+  }
+}
