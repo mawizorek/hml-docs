@@ -1,0 +1,159 @@
+/* THE PRINT INK LAYER -- WHAT COLOUR THE MARKS ARE.
+ *
+ * Created 2026-08-29, the eighth sheet in the print group.
+ *
+ *     print.css          HOW WIDE IT RUNS
+ *     print-chrome.css   WHAT APPEARS AT ALL
+ *     print-flow.css     WHERE IT BREAKS
+ *     print-type.css     HOW BIG THE TYPE IS
+ *     print-space.css    HOW MUCH AIR
+ *     print-callout.css  WHAT THE BOX IS
+ *     print-identity.css WHOSE DOCUMENT IT IS
+ *     print-ink.css      WHAT COLOUR IT IS     -- this file
+ *
+ * =========================================================================
+ * 🔴 THIS FILE CONTRADICTS print.css's FOUNDING RULE, BY RULING, ONCE
+ * =========================================================================
+ * > Michael, 2026-08-29: *"When we print, we should make all the body text and
+ * > primary content black instead of using the theme color. I think it's still
+ * > nice to see headings and other elements in color."* Then, on the findings:
+ * > *"body black ink yes. just make that change. park header and leave links not
+ * > colored at print."*
+ *
+ * `print.css`'s header opens with **"THIS FILE IS STRUCTURE, NOT COLOUR. What a
+ * thing IS coloured stays the theme's business."** That rule is not weakened and
+ * it is not amended -- it is EXEMPTED for one property, on one medium, by the
+ * person who wrote it. 🚫 **Do not read this file as permission to put a second
+ * colour opinion in the print group.** The next one needs its own ruling.
+ *
+ * ⚠️ AND IT IS A LITERAL, WHICH IS THE PART THAT NEEDED ASKING. Michael's own
+ * 08-19 verdict on two greys in the corner stamp was *"the color you chose MUST
+ * be from our theme vector. that's the whole point."* `#000` is from no vector.
+ * ⭐ The distinction that makes both rulings true at once: **the vector describes
+ * a SCREEN, and there is no paper column in any row of any table** -- the same
+ * argument print.css already makes when it declares the printed GROUND
+ * transparent rather than white. *Black ink on white stock is the absence of a
+ * colour decision, not a substitute for one.* 🚩 If a `paper-ink` column is ever
+ * authored upstream, this file reads it and the literal goes.
+ *
+ * =========================================================================
+ * ✅ WHY, MEASURED, AND IT IS A LEGIBILITY ARGUMENT NOT A TASTE ONE
+ * =========================================================================
+ * `uritp-safety`'s light row sets `text: #4a3826`, a brown. Against white stock:
+ *
+ *     brown #4a3826 on white .....  11.14:1
+ *     black #000000 on white .....  21.00:1     +88%
+ *     brown, on a photocopy ......   9.81:1
+ *     black, on a photocopy ......  18.49:1
+ *
+ * ⭐ THE PHOTOCOPY ROW IS THE ONE THAT MATTERS AND print-type.css §7 ALREADY
+ * WROTE THE ARGUMENT: these sheets get photocopied and read standing up in a shop
+ * or a dim corridor by somebody hunting one rule. §7 spends a whole section
+ * defending a ~9pt floor for exactly that reader. **Ink contrast is the same
+ * argument on a different axis, and it had never been asked.**
+ *
+ * =========================================================================
+ * ⭐ WHAT KEEPS THE THEME'S INK, AND EVERY ONE STILL CLEARS AA 4.5 ON WHITE
+ * =========================================================================
+ *     h1 / h2 / h3 ...... --dr-ink ......... 11.14:1   set below
+ *     the lede .......... --dr-ink-muted ...  5.95:1   base.css, untouched
+ *     table column one .. --dr-accent ......  4.91:1   data.css, untouched
+ *     section band ...... --dr-ink ......... 11.14:1   data.css, untouched
+ *
+ * 🔴 HEADINGS WERE NEVER COLOURED, WHICH IS WHY THIS FILE HAS A HEADING RULE AT
+ * ALL. Grepped at HEAD: no rule anywhere in this engine sets a heading `color`.
+ * They inherited `--dr-ink` from `.md-typeset` -- the SAME brown as the body. So
+ * *"keep headings in colour"* preserved nothing; it had to CREATE the thing it
+ * asked to keep, and the hierarchy it produces is new rather than restored.
+ *
+ * ⚠️ h4-h6 GO BLACK WITH THE PROSE, and that is `print-type.css`'s own boundary
+ * rather than a fresh judgement: it sizes them at `1em` because *"by that depth a
+ * heading is a run-in label inside prose"*, and `type.css` withholds the display
+ * face from them for the same reason. A brown bold label mid-paragraph would read
+ * as a mistake. **The same line already divides structure from label twice; this
+ * is the third place and it agrees with both.**
+ *
+ * =========================================================================
+ * ⚠️ LINKS: NOT TOUCHED, AND THE REASON IS A MEASUREMENT HE ACTED ON
+ * =========================================================================
+ * `print-type.css` §5 sets `color: inherit` on every printed link, on a LOCKED
+ * dead-control argument. That declaration is (0,1,1) on the anchor itself, so it
+ * beats inheritance and links now print BLACK along with the prose around them.
+ * That is the ask -- *"leave links not colored at print"* -- and it is unchanged
+ * behaviour, not a new rule.
+ *
+ * 🔴 AND THE ALTERNATIVE WAS MEASURED AND REFUSED BY HIM: `--dr-link` is
+ * `#52a0d8`, which is **2.85:1 on white paper and FAILS AA 4.5** -- the same
+ * value already flagged failing at 2.30:1 on screen in this site's own
+ * `site.yml`. Colouring printed links would have made them the LEAST readable
+ * text on a safety sheet. 🚩 The upstream one-cell fix is still open; when it
+ * lands, this decision can be revisited and not before.
+ *
+ * ⭐ ONE CONSEQUENCE WORTH KNOWING RATHER THAN DISCOVERING: a link inside an h2
+ * inherits the HEADING's ink, so it prints brown. Correct -- it is part of the
+ * heading -- and it falls out of `inherit` for free.
+ *
+ * =========================================================================
+ * ⚠️ WHAT THIS DOES **NOT** DARKEN, DELIBERATELY
+ * =========================================================================
+ * 🚫 NOT the semantic tokens. `print.css` refuses to compensate for `good`,
+ * `warn`, `bad` and `info` being byte-identical across 16 of 19 dark/light pairs,
+ * because *"darkening semantic tokens at print time would hide the defect on the
+ * one surface that shows it most clearly."* That refusal STANDS. Callout borders,
+ * icons and marker chips are untouched here.
+ *
+ * ⭐ AND THE CALLOUT COMES OUT RIGHT ANYWAY, WITHOUT A RULE. `blocks.css` colours
+ * the box `border-color`, the icon and the `::after` marker per family -- it never
+ * sets the title's `color`. So a `!!! danger` title's TEXT goes black while its
+ * red rule and red icon survive: four cues intact (rule, icon, bold, wording),
+ * which is exactly the set `print-callout.css` names as the safety floor.
+ *
+ * 🚫 NOT `.dr-mark` chips, NOT the dead-reference marker (`base.css` gives it a
+ * `--dr-dead` dotted underline that reaches paper on its own and print.css has a
+ * whole block arguing against re-declaring it).
+ *
+ * =========================================================================
+ * ⚠️ WHY A NEW FILE, AND IT WAS FORCED THREE WAYS
+ * =========================================================================
+ * Measured at HEAD, against the 22,528 B read ceiling: `print.css` 22,232 B (296
+ * B), `print-chrome.css` 22,201 B (327 B), `print-type.css` 22,289 B (239 B, and
+ * its own PR asked that the next edit SPLIT it first). None has room for this
+ * comment. And the subject is genuinely new -- `print.css` disclaims colour in
+ * its first paragraph, so putting ink there would make its header a lie.
+ * **Same three-way argument that created `print-identity.css` five hours ago.**
+ *
+ * 🪦 AND IT IS NOT `print-scheme.css`. That tombstone was a colour sheet too, and
+ * its retirement note says **"DO NOT RE-ADD RULES HERE. If the paper block ever
+ * needs correcting, correct it in `theme.py`."** ⭐ That instruction was checked
+ * and does not cover this: it governs which PALETTE reaches paper, and re-pointing
+ * `--dr-ink` in `theme.py` would darken headings too -- the one thing this ruling
+ * asks to keep. **A pointer that names one mechanism does not bind a change that
+ * needs a different one**; the tombstone's actual defect (a hardcoded palette
+ * silently overriding the vector wholesale) is the thing being avoided here.
+ *
+ * ⚠️ ORDER WITHIN THE GROUP IS STILL FREE. No other print sheet declares `color`
+ * on `.md-typeset` or on a heading -- `print-type.css` sets heading SIZE, WEIGHT
+ * and TRACKING and never colour, so the property sets stay disjoint. 🔴 The one
+ * near miss is §5's `color: inherit` on `a`, which is a different SELECTOR, so
+ * there is no pair. **Add a `color` to any heading rule in print-type.css and the
+ * group's load order stops being free.**
+ *
+ * ⚠️ MEASURED IN WeasyPrint by reading computed `color` off eleven elements, not
+ * eyeballed -- but that is a second engine, so **a browser print preview is still
+ * owed**, as it is for the letterhead.
+ */
+
+@media print {
+  /* `html` prefix is (0,1,1) against base.css's `.md-typeset` (0,1,0). It has to
+   * beat a declaration, not merely inherit past one. */
+  html .md-typeset {
+    color: #000;
+  }
+
+  /* Structure keeps the theme's ink. See the header on why h4-h6 are absent. */
+  html .md-typeset h1,
+  html .md-typeset h2,
+  html .md-typeset h3 {
+    color: var(--dr-ink, #000);
+  }
+}
