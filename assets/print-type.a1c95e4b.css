@@ -51,7 +51,9 @@
  * the ROOT while §0 is anchored to the PAPER -- so no value of `--dr-print-base`
  * could ever move it. Fixed in `print-callout.css`, which carries the finding.
  * **Anything that must scale with the prose is `em`; a `rem` is a deliberate
- * opt-out and should say so.**
+ * opt-out and should say so.** 🔴 AND IT COST A SECOND ROUND TRIP ON 2026-08-29:
+ * the TSV data table had the identical defect and nobody had pointed the rule at
+ * it. See §10.
  *
  * =========================================================================
  * ⚠️ `pt`, AND IT IS THE CORRECT UNIT HERE FOR THE SAME REASON `mm` IS
@@ -99,7 +101,11 @@
 
   /* Dense content is scanned rather than read, which is what the house's 1.35
    * was chosen for. Sizes here are relative to the base above, so a table stays
-   * proportional to the prose when the dial moves. */
+   * proportional to the prose when the dial moves.
+   *
+   * ⚠️ THIS REACHES THE UNCLASSED MARKDOWN TABLE ONLY -- the TSV data table
+   * carries a class on purpose, so `:not([class])` excludes it. §10 is this same
+   * rule for the classed one. */
   .md-typeset table:not([class]),
   .md-typeset figcaption {
     font-size: 0.92em;
@@ -322,6 +328,10 @@
    * the count is stated ONCE, here, and `print-space.css` points at it rather
    * than keeping a second tally.
    *
+   * 🔴 §10 MAKES IT EIGHT, and that increment is counted in §10 rather than edited
+   * into this sentence -- see the note there on why a table getting shorter moves
+   * every break below it.
+   *
    * 🚩 AND ITS TRUE HOME IS ARGUABLY `print-flow.css`, WHICH OWNS `{.new-page}`
    * -- a warning is most useful beside the rule it is about, which is where
    * somebody deciding to author one would read. Flagged rather than moved: that
@@ -331,4 +341,63 @@
    * and settled. The automatic rules in print-flow.css exist so that work is
    * mostly unnecessary.
    * --------------------------------------------------------------------- */
+
+  /* -------------------------------------------------------------------------
+   * 🔴 §10 -- THE TSV TABLE JOINS THE DIAL. SAME DEFECT AS THE CALLOUT.
+   *
+   * > Michael, 2026-08-29: *"can font size of tsv tables be the same as font size
+   * > of body text outside it? those embedded tsv are reading MASSIVE."*
+   *
+   * ⚑ HE SAID THIS ON 2026-08-19 ABOUT THE CALLOUT -- *"shrink the callout text to
+   * the same size as the body ... they just look ENORMOUS"* -- and the cause and
+   * remedy are identical. `print-callout.css` carries the diagnosis and this does
+   * NOT restate it: `rem` anchors to the ROOT, §0 anchors to the PAPER, so a `rem`
+   * child never participates in the dial.
+   *
+   * 🔴 EVERY SIZE IN `data.css` IS `rem` -- the table from `--dr-data-size`
+   * (0.80rem), `thead th` 0.72, the section band 0.74, the caption 0.8. And
+   * `table:not([class])` above cannot reach them, because the TSV table carries a
+   * class ON PURPOSE (three defences against Material's `display: block`).
+   * **The rule for the unclassed sibling was one selector away the whole time.**
+   *
+   * ⭐ ROOT-AGNOSTIC BY DESIGN. Material's root size was NOT determined this
+   * session -- `base.css` implies 16px, Material is commonly 125% -- so the SIZE of
+   * the defect is unknown and the remedy must not depend on it. Cells against a
+   * 10pt body, measured both ways: root 16px 9.60pt (96%), root 125% 12.00pt
+   * (120%), both -> 10.00pt. ⭐ Michael's word MASSIVE is the evidence for the 125%
+   * branch; nobody calls 96% massive. HIS observation, not a verified root.
+   *
+   * ⚠️ ONE VALUE FOR ALL FOUR, WHICH IS A DECISION. Header, band and caption were
+   * each ~90% of the table and are now 1em like the cells. A column header is
+   * already ranked by WEIGHT, CASE and LETTERSPACING, so size bought hierarchy that
+   * existed -- and keeping the 90% put an ALL-CAPS label at exactly §7's ~9pt
+   * photocopy floor, where all-caps is the worst case because it removes the
+   * word-shape cues a scanning reader uses. **§7 is a floor a later decision is
+   * allowed to lose to.**
+   *
+   * ⚠️ NO PAIR WITH ANY OTHER PRINT SHEET, checked rather than assumed.
+   * `print-chrome.css` owns `.dr-data` / `.dr-data__table` for the uncaging fix and
+   * declares `max-height`, `overflow`, `container-type`, `width`, `min-width`,
+   * `table-layout`, `white-space`, `position` -- never `font-size`. The `html`
+   * prefix is specificity armour against data.css's (0,2,1).
+   *
+   * ⚠️ AND THIS IS §8's EIGHTH INVALIDATION, counted here rather than by editing
+   * that section: a table whose cells move 12.0pt -> 10.0pt is SHORTER, so every
+   * hand-placed break below one has moved.
+   *
+   * 🚫 `.dr-data__source` IS DELIBERATELY ABSENT: print-chrome.css hides it, and a
+   * declaration on a box that does not exist can never be observed.
+   *
+   * 🚩 FLAGGED, NOT FIXED, BECAUSE THE ASK WAS TYPE: the WIDTHS are still
+   * root-anchored (`thead th { min-width: 6rem; max-width: 12rem }`, `4.5rem` in the
+   * container query) and they decide how many columns fit a sheet. ⭐
+   * `td.dr-col--prose`'s `max-width` is in `ch`, so it tracks the font and
+   * self-corrects.
+   * --------------------------------------------------------------------- */
+  html .md-typeset .dr-data__table,
+  html .md-typeset .dr-data__table thead th,
+  html .md-typeset .dr-data__section-label,
+  html .md-typeset .dr-data__caption {
+    font-size: 1em;
+  }
 }
