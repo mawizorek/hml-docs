@@ -125,11 +125,15 @@
    * prev/next links. It fails the pen test outright -- the arrows are most of it
    * and neither can be followed on paper.
    *
-   * ✅ THE PROGRAM NAME SURVIVED THE MEDIUM CHANGE. It was the strip's stated
-   * payload (*"the PROGRAM NAME is the payload; the arrows are the instruction"*),
-   * and it now prints on the corner stamp instead -- `buildstamp.py` asks
-   * `program.flow_names()`. ⚑ *When a medium drops an element, ask which of its
-   * facts were about the MEDIUM and which were about the DOCUMENT.*
+   * 🪦 AND THE PROGRAM NAME IS SIMPLY LOST, AFTER ONE ATTEMPT TO SAVE IT THAT WAS
+   * REVERTED THE SAME EVENING. ~~It prints on the corner stamp instead.~~ PR #182
+   * exported it there and #184 took it back off: *"ew ew ew FUCK that header of all
+   * that additional text. NO. just site name and date, like before."* A corner mark
+   * carrying three clauses is a HEADER rather than a stamp, and `program.py` calling
+   * the name its payload was an argument about the FACT rather than about whether
+   * the destination had room. 🚩 The orientation gap on paper is real and now OPEN:
+   * if it is ever wanted it needs its own element beside the h1, not a third clause
+   * on a line that has now refused two.
    *
    * ⭐ AND HIDING THE ANCESTOR IS WHY THIS NEEDS NO SECOND RULE. print-flow.css
    * forces every `<details>` open on paper, which includes `.dr-flows__others`;
@@ -324,6 +328,12 @@
    *     paper   corner shows, foot hidden
    *     screen  foot shows, corner hidden by its own `hidden` attribute
    *
+   * ⚠️ AND THE LINE IS SITE + DATE, TWO FACTS, WHICH IS A CONSTRAINT RATHER THAN A
+   * DESCRIPTION. It has now refused two additions on sight -- the PR number
+   * (2026-08-19) and a program name (2026-08-28) -- and `buildstamp.py` carries both
+   * post-mortems. 🚫 Do not style this rule as though it will grow: a third clause
+   * turns a stamp into a header, which is exactly the objection both times.
+   *
    * 🔴 AND ITS TWO COLOURS WERE THE LAST HARDCODED VALUES IN THE PRINT GROUP
    * (Michael, 2026-08-19: *"the color you chose MUST be from our theme vector.
    * that's the whole point."*). `color: #555` and a `#ccc` hairline, on the one
@@ -351,11 +361,12 @@
    * one.
    *
    * 🚩 THE ICON GOES HERE, as a print-scoped `background-image` on this rule, once
-   * a line-art SVG exists. 🚫 NEVER an `<img>`: a `display: none` image is still
-   * FETCHED, ~168KB on every page load of a site whose readers mostly never
-   * print. It will also need `print-color-adjust: exact`, which `print.css` owns
-   * -- a brand mark's meaning IS carried by colour, and a logo that prints as an
-   * empty box is worse than no logo.
+   * a line-art SVG exists -- and it is the one addition this line has not already
+   * refused, because a mark is not a third clause of text to read. 🚫 NEVER an
+   * `<img>`: a `display: none` image is still FETCHED, ~168KB on every page load of
+   * a site whose readers mostly never print. It will also need
+   * `print-color-adjust: exact`, which `print.css` owns -- a brand mark's meaning IS
+   * carried by colour, and a logo that prints as an empty box is worse than none.
    * --------------------------------------------------------------------- */
   .buildstamp--corner {
     display: block;
