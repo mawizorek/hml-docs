@@ -4,7 +4,8 @@
  * pairing is the reason this is one file rather than two:
  *
  *     REMOVED   everything the SCREEN has that paper cannot use -- the header,
- *               the drawer, the TOC, search, the clipboard button, both footers
+ *               the drawer, the TOC, search, the clipboard button, both footers,
+ *               the flow strip
  *     ADDED     the one mark PAPER has that the screen does not -- the corner
  *               build stamp
  *
@@ -113,6 +114,45 @@
    * runtime. This is the one list in the print group where the goal is absolute
    * removal rather than a negotiated value -- there is no site that wants its nav
    * drawer on paper.
+   *
+   * =======================================================================
+   * 🔴 `.dr-flows` JOINED THE LIST 2026-08-28, AND IT COSTS SOMETHING REAL
+   * =======================================================================
+   * > Michael: *"when printing i do NOT want to see the navigation footer stuff
+   * > that says 'step 1 of 1' for program details."*
+   *
+   * The flow strip from `docrender/program.py`: program name, step count, and
+   * prev/next links. It fails the pen test outright -- the arrows are most of it
+   * and neither can be followed on paper.
+   *
+   * 🔴 BUT IT TAKES THE PROGRAM NAME WITH IT, AND THAT IS NOT NOTHING. program.py
+   * argues the strip's job is ORIENTATION rather than navigation -- *"the PROGRAM
+   * NAME is the payload; the arrows are the instruction"* -- and a printed sheet is
+   * precisely where a reader cannot tell which program handed it to them. 🚫 A
+   * narrower rule keeping `.dr-flow__where` and dropping only `.dr-flow__move` was
+   * available and was NOT taken: Michael named the step count and asked for the
+   * footer gone. 🚩 If the program name is wanted on paper it belongs beside the
+   * date on the corner stamp, which is already the sheet's provenance line -- not
+   * in a nav block with its links removed.
+   *
+   * ⭐ AND HIDING THE ANCESTOR IS WHY THIS NEEDS NO SECOND RULE. print-flow.css
+   * forces every `<details>` open on paper, which includes `.dr-flows__others`;
+   * `display: none` here removes that whole subtree from the box tree, so the
+   * descendant cannot opt back in. **Same mechanism this file already documents
+   * for `.md-footer-meta` and the buildstamp** -- and here it is the outcome we
+   * want rather than the bug it was there.
+   *
+   * ⚠️ THE `.dr-at` MARKERS AND program.py's PER-PAGE `<style>` ARE LEFT ALONE,
+   * deliberately. Both are zero-height, and the promotion rules in that style key
+   * off `:target` -- which no printed page has, since a sheet carries no fragment.
+   * Nothing to hide and nothing that fires.
+   *
+   * 🚩 SEPARATE, AND IT IS WHAT THE QUOTE ABOVE ACTUALLY SHOWS: *"step 1 of 1"*
+   * means a chain of ONE page. `_member_strip` renders that with no prev, no next,
+   * and a `Finish <name>` link -- a whole navigation block whose only content is
+   * that you are done. It carries no information on SCREEN either. Worth a look at
+   * whether a one-step chain should draw a strip at all; not decided here, because
+   * it is a question about the flow model rather than about paper.
    * --------------------------------------------------------------------- */
   .md-header,
   .md-tabs,
@@ -129,7 +169,8 @@
   .md-clipboard,
   .md-content__button,
   .pagefoot,
-  .pagefoot__rule {
+  .pagefoot__rule,
+  .dr-flows {
     display: none !important;
   }
 

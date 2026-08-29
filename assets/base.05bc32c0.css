@@ -161,12 +161,37 @@
  * nobody can audit it, so it rots -- and the first symptom of a rotted one is a
  * search that quietly stopped matching, which is close to undiagnosable. Quiet
  * is the requirement here, not invisible.
+ *
+ * =========================================================================
+ * 🔴 THE SIZE WAS `rem` AND THEREFORE NEVER SMALL (fixed 2026-08-28)
+ * =========================================================================
+ * `0.78rem` anchors to the ROOT (12.48px) while Material's `.md-typeset` base is
+ * `0.8rem` (12.8px) -- so this "small print" rendered at **97% of body text** on
+ * screen, and at 9.36pt against print-type.css §0's 10pt dial on paper. Furniture
+ * the size of prose, which is what Michael saw on a printed sheet: *"shrink size
+ * of 'Revised' text in footer."*
+ *
+ * ✅ `0.85em` PARTICIPATES IN THE DIAL, and the number is an in-repo precedent
+ * rather than one somebody liked: 8.5pt on paper, beside the printed corner
+ * stamp's 8.4pt. Same register, same size -- both are provenance furniture.
+ * ⚠️ print-type.css already documents this exact trap for Material's callout box
+ * (*"a child sized in `rem` is OUTSIDE the dial entirely"*) and names the rule:
+ * anything that must scale with the prose is `em`, and a `rem` is a deliberate
+ * opt-out that should say so. **Third element to hit it.**
+ *
+ * 🔴 AND `opacity: 0.85` WAS A LIVE AA FAILURE, MEASURED, SO IT IS GONE.
+ * `ink-muted` on this site's light row is **4.81:1** -- composited at 85% it is
+ * **3.62:1**, under the 4.5 text floor, on the row every printed sheet uses. The
+ * dark row went 7.11 -> 5.51 and still passed, which is why nobody caught it.
+ * ⚑ *An opacity is a contrast change that no contrast table can see:
+ * `contrast.tsv` measures TOKEN against TOKEN, and a rule that fades one is
+ * invisible to it.* Same family as the four `data-*` slots -- a defect the check
+ * most likely to be pointed at it cannot detect.
  * ------------------------------------------------------------------------ */
 .md-typeset .dr-aka {
   margin-top: var(--dr-gap-lg, 2rem);
-  font-size: 0.78rem;
+  font-size: 0.85em;
   color: var(--dr-ink-muted);
-  opacity: 0.85;
 }
 
 /* ---------------------------------------------------------------------------
@@ -204,12 +229,25 @@
  * it leaves the two furniture lines further apart than either is from the prose.
  * The adjacent-sibling rule is the only case where that happens, and it costs
  * one selector to get right in both.
+ *
+ * ⚠️ SIZE AND OPACITY: THE AKA LINE ABOVE CARRIES THAT FINDING. One statement,
+ * and both lines take the same fix because they are an adjacent pair -- leaving
+ * one at 97% of body beside the other at 85% would read as a paint bug.
+ *
+ * 🚩 AND THE COLOUR IS `ink-muted`, NOT `accent`. Michael, 2026-08-28: *"italic
+ * and accent color still"* -- the ask was to LEAVE the colour alone, and it is
+ * left alone. Named because the two are genuinely hard to tell apart on parchment
+ * (`#75604a` against `#97663a`) and because painting it accent would FAIL: 3.96:1
+ * light, 3.42:1 dark, against a 4.5 text floor. ⚑ *`accent` is a FILL, not a
+ * lettering colour* -- the rule `inciardi-collection` wrote down after its
+ * wordmark vanished on the light ramp twice. If accent is genuinely wanted here,
+ * `accent-deep` clears light at 6.31 and fails dark at 2.15, so it needs a
+ * per-scheme pair rather than one value, and that is a ruling rather than an edit.
  * ------------------------------------------------------------------------ */
 .md-typeset .dr-revised {
   margin-top: var(--dr-gap-lg, 2rem);
-  font-size: 0.78rem;
+  font-size: 0.85em;
   color: var(--dr-ink-muted);
-  opacity: 0.85;
 }
 .md-typeset .dr-aka + .dr-revised {
   margin-top: 0.35rem;
