@@ -1,0 +1,202 @@
+/* THE ALIGNMENT LAYER -- WHERE A BLOCK SITS ACROSS THE MEASURE.
+ *
+ * > Michael, 2026-08-29: *"can we align headers or qr codes to the right or
+ * > center?"* Then, on the recommendation: *"exactly. full send."*
+ *
+ * FIVE FORMS, AND THE SPELLING IS DECIDED BY THE MARKUP RATHER THAN BY TASTE:
+ *
+ *     ## Emergency Contacts {.align-center}      a heading
+ *     Some paragraph. {.align-right}             a paragraph
+ *     ![Rep plot](plot.png){.align-center}       an image (see IMAGES below)
+ *     !!! qr "incident-report" print=true align=center
+ *     !!! data "inventory"
+ *         align: center
+ *
+ * =========================================================================
+ * 🔴 IMAGES: A CLASS ON AN INLINE ELEMENT IS INERT, AND THIS FILE OVERSOLD
+ *     ITSELF ABOUT IT (corrected 2026-08-29, hours after shipping)
+ * =========================================================================
+ * The first version of this header said the classes work on "any block". True of
+ * the CSS and FALSE of what an author can reach, which is the worse half.
+ *
+ * `attr_list` attaches a class to the element it TOUCHES. On
+ * `![img](x){.align-center}` that is the `<img>` -- an INLINE box, where
+ * `text-align` has nothing to distribute. Measured: unmoved, hard left.
+ *
+ * ⚑ **AND THE SEAM WAS ALREADY DOCUMENTED ONE CASE OVER.** This file explains at
+ * length why `!!! qr` needs a directive option, and did not notice the ADJACENT
+ * constraint applies to images. *A file that carefully explains one instance of a
+ * limit is the file most likely to be believed about the instances it never
+ * checked.*
+ *
+ * ✅ FIXED BELOW by giving the class a BOX (`display: block`) -- the same move the
+ * QR needed, for the same reason. 🚫 LINKS ARE DELIBERATELY NOT FIXED: an inline
+ * run inside a sentence has no box and must not be given one, or the link leaves
+ * its own paragraph. **Align the PARAGRAPH; the link travels with it, and that
+ * already works.**
+ *
+ * ⚠️ AND A CAPTIONED FIGURE HAS NO AUTHORING PATH AT ALL. These rules DO work on
+ * `<figure class="dr-figure align-center">` (measured centred), but `figure.py`'s
+ * pattern requires the brace to hold ONLY `caption="..."`, so a class cannot be
+ * written beside it. 🚩 Reported rather than worked around -- the fix is in that
+ * module's regex, which is somebody else's contract. An UNCAPTIONED image takes
+ * the class directly and works today.
+ *
+ * =========================================================================
+ * 🚫 THERE IS NO `.align-left`, AND THAT IS THE FIRST DECISION
+ * =========================================================================
+ * Left is what every block already does. A class that produces the current
+ * rendering is a DEAD CONTROL -- an author writes it, nothing happens, and there
+ * is no way to tell that from a class that failed to resolve. This engine kills
+ * those on sight: `edit_links: false`, the retired PR number on the corner stamp,
+ * the printed link policy, and `!!! qr`'s refusal of an all-false directive are
+ * all the same rule. 🚩 If a future block is ever centred BY DEFAULT, that block
+ * earns a `.align-left` and this paragraph is the argument for scoping it to that
+ * block rather than adding a global one.
+ *
+ * =========================================================================
+ * ⭐ SCREEN AND PRINT BOTH, WHICH IS WHY THIS IS ITS OWN ASSET GROUP
+ * =========================================================================
+ * Alignment is a property of the DOCUMENT, not of a medium: an author who centres
+ * a form's title means it centred, and a class that silently did nothing on
+ * screen would be unverifiable before printing. `!!! qr`'s own scar says exactly
+ * that -- a print-only element is invisible to its author.
+ *
+ * 🔴 SO IT CANNOT JOIN `_PRINT_ASSETS`. That group is entirely `@media print` and
+ * loads where it does for a cascade reason; `assets.py` states the law directly:
+ * **"A group is a claim about WHEN a sheet loads and WHY. Adding a member that
+ * breaks the claim is worse than adding a group."** `qr.css` set this precedent
+ * for the same reason on 2026-08-21 -- it is the other sheet here with a screen
+ * half and a print half as one feature.
+ *
+ * ⭐ ITS POSITION IS GENUINELY FREE, on the `_FLOW_ASSETS` precedent, and it is
+ * said out loud so nobody later defends a position that was never load-bearing.
+ * `.align-*` is a class no other sheet in this engine mentions, and the selectors
+ * it borrows (`.dr-qr__svg`, `.dr-data__table`) are matched with a `margin-inline`
+ * that neither `qr.css` nor `data.css` declares -- so there is no
+ * selector-and-property PAIR anywhere, in either medium.
+ *
+ * =========================================================================
+ * 🔴 CONTENT-RELATIVE, NOT PAPER-RELATIVE, AND TODAY THEY LOOK IDENTICAL
+ * =========================================================================
+ * `text-align` resolves against the containing block -- the content column. On
+ * paper that column currently runs edge to edge, because `print.css` unrails it
+ * (`max-width: none; padding: 0`), so *flush right to the text* and *flush right
+ * to the sheet* are the same pixel today.
+ *
+ * ⚠️ THEY DIVERGE THE MOMENT ANYBODY ADDS AN INSET, and the choice is deliberate:
+ * a printed line should agree with the prose above it, not with the trim. **A
+ * value that happens to agree with another value is not the same as a value that
+ * tracks it** -- `type.css` makes this exact distinction about `letter-spacing`
+ * at parity.
+ *
+ * =========================================================================
+ * 🔴 A FIXED-WIDTH BLOCK IGNORES `text-align`, AND THREE OF THE FIVE ARE ONE
+ * =========================================================================
+ * `text-align` distributes INLINE content. The QR is
+ * `.dr-qr__svg { display: block; width: 30mm }`, the data table is
+ * `width: max-content`, and an aligned image gets `display: block` below -- three
+ * boxes with intrinsic widths, whose position is decided by their MARGINS. So the
+ * text rule is not a second way of saying the same thing; margins are the only
+ * mechanism that works on any of them.
+ *
+ * ✅ VERIFIED ON A RASTERISED SHEET rather than reasoned about. Letter, 12mm
+ * margins, a 30mm block in a 191.9mm content column:
+ *
+ *     no rule ....................  x  14.2mm      left
+ *     text-align: right on parent   x  14.2mm      UNMOVED -- the whole point
+ *     margin-inline: auto ........  x  93.0mm      centred
+ *     margin-inline: auto 0 ......  x 171.7mm      flush right
+ *
+ * ⚠️ AND THE FIRST MEASUREMENT OF THIS SAID "NO EFFECT" FOR EVERY SPELLING,
+ * INCLUDING `margin: 0 auto`. That reading came from the layout API rather than
+ * from ink, and it was wrong -- a false negative that would have condemned a
+ * working property. ⚑ *An engine's own layout objects are a PROXY for the page;
+ * the page is the pixels.* Two of this session's three CSS findings came from
+ * rasterising and one nearly went the other way. Measure the output.
+ *
+ * ⚠️ WHICH IS ALSO WHY THE QR AND THE TABLE TAKE DIRECTIVE OPTIONS RATHER THAN
+ * THIS CLASS. `!!! qr` and `!!! data` are block directives and `attr_list` cannot
+ * decorate either, so `docrender/qr.py` emits `dr-qr--align-*` from `align=` and
+ * `docrender/table.py` emits `dr-data--align-*` from an indented `align:` option.
+ * 🔴 Neither option lives in its module's media/data vocabulary: `qr.py`'s `_shape`
+ * iterates `_KEYS` to decide which MEDIA a code appears in, and `sheet.py`'s
+ * `apply_options` validates DATA-SHAPING keys and emits no HTML by contract. A
+ * layout key inside either one would change what appears by talking about where it
+ * sits. Two vocabularies, one parser, and the seam is written in every file.
+ *
+ * ⭐ THE `.align-center > .dr-qr` FORM IS KEPT ANYWAY, for the case where a QR
+ * sits inside a block an author HAS centred. It costs one selector and it means
+ * the two mechanisms cannot disagree about the same code.
+ *
+ * =========================================================================
+ * ⚠️ WHAT THIS DELIBERATELY DOES NOT DO
+ * =========================================================================
+ * 🚫 NO `float`. A floated heading takes the following prose up beside it, which
+ * is a layout nobody asked for and a pagination hazard `print-flow.css` would
+ * then have to reason about.
+ * 🚫 NO callout or figure alignment. Each is a component with its own sheet and
+ * its own argument; a global rule reaching into them would be a second claimant.
+ * 📄 THE TSV TABLE WAS ON THIS LIST AND CAME OFF IT ON 2026-08-29, by request and
+ * through its own directive option rather than by a global rule -- which is the
+ * shape that refusal was asking for, not a reversal of it.
+ * 🚫 NO `text-align: justify`. `print-space.css` §9 owns justification and
+ * narrowed its own selector once already to stop hitting the corner stamp.
+ */
+
+.align-center {
+  text-align: center;
+}
+
+.align-right {
+  text-align: right;
+}
+
+/* THE FIXED-WIDTH BLOCK CASE. `margin-inline` because a 30mm block cannot be
+ * moved by `text-align` -- see the header, where both are measured. Logical
+ * property, so an RTL site gets the correct edge for free. */
+.dr-qr--align-center > .dr-qr__svg,
+.align-center > .dr-qr .dr-qr__svg {
+  margin-inline: auto;
+}
+
+.dr-qr--align-right > .dr-qr__svg,
+.align-right > .dr-qr .dr-qr__svg {
+  margin-inline: auto 0;
+}
+
+/* AN IMAGE, WHICH NEEDS A BOX BEFORE A MARGIN CAN MOVE IT. `display: block` is not
+ * tidiness here -- without it the class measured completely inert. ⚠️ It also takes
+ * the image out of any sentence it was sharing, which is correct for a whole-line
+ * image and is why this is scoped to an `img` CARRYING the class rather than to
+ * every image inside an aligned block. See IMAGES in the header. */
+img.align-center {
+  display: block;
+  margin-inline: auto;
+}
+
+img.align-right {
+  display: block;
+  margin-inline: auto 0;
+}
+
+/* THE TSV DATA TABLE. `data.css` builds `.dr-data__table` as `width: max-content`
+ * so it can scroll sideways -- another sized box, so margins again and never
+ * `text-align`. The class comes from an `align:` option on the `!!! data` block,
+ * emitted by `table.py`, because a directive cannot be decorated by attr_list.
+ *
+ * ⚠️ THE WRAPPER IS NOT MOVED, THE TABLE INSIDE IT IS. `.dr-data` is the scroll
+ * box and is full-width by design; centring the box would leave the table still
+ * pinned to its own left edge.
+ *
+ * 🔴 AND ON PAPER A WIDE TABLE WILL NOT APPEAR TO MOVE. `print-chrome.css`
+ * uncages the box (`width: 100%`, `table-layout: auto`) so the table fills the
+ * measure and has no slack left -- correct behaviour, and worth knowing before it
+ * reads as a bug on the one medium this feature was asked for. */
+.dr-data--align-center > .dr-data__table {
+  margin-inline: auto;
+}
+
+.dr-data--align-right > .dr-data__table {
+  margin-inline: auto 0;
+}
