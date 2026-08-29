@@ -180,6 +180,89 @@
   }
 
   /* -------------------------------------------------------------------------
+   * 🔴 AND THE DATA TABLE WAS STILL PAINTING FOUR GROUNDS (2026-08-28)
+   *
+   * > Michael, printing Emergency Contacts: *"any way to ensure the table prints
+   * > with an opaque fill so that it doesn't create these thick blobs at print?"*
+   *
+   * ⭐ THE ANSWER IS THE OPPOSITE OF THE ASK, AND THE MEASUREMENT IS WHY. These
+   * are not fills that failed to be opaque -- they are the only fills on the
+   * sheet that were GUARANTEED to print, sitting on a wrapper that was not.
+   * `assets/data.css` declares a background in exactly four places: the
+   * `.dr-data` wrapper (`surface`), `thead th` (`surface-raised`), `tbody
+   * td:first-child` (`surface`), and the `.dr-data__section` band
+   * (`surface-raised`). The ink list below covers `.dr-data__table th, td`, so
+   * the three BANDS are forced through the printer while the wrapper behind them
+   * is dropped for free. Three dark blocks floating on bare paper. That is a blob.
+   *
+   * ⚑ SAME MECHANISM THE INK BLOCK BELOW ALREADY WARNED ABOUT, ONE SURFACE OVER:
+   * *"a rule that forces one colour to print forces all of them on that
+   * element."* It was written about the callout panel, and print-callout.css
+   * turns that panel off by hand for exactly this reason. The table was the
+   * SECOND instance of the same sentence and nobody had printed one.
+   * **A warning that names its mechanism is a prediction, and this one came true
+   * nine days later on a different element.** Being predicted is not the same as
+   * being handled.
+   *
+   * ✅ SO THE FILLS COME OFF RATHER THAN BECOMING OPAQUE (Michael, 2026-08-28:
+   * *"fills off at print yes"*). A printed table is drawn with RULES: the
+   * `border-bottom` and `border-right` in `--dr-rule` are untouched, as are the
+   * first column's `accent` ink and the section band's `accent-2` top rule. Every
+   * mark the vector supplies survives; only the grounds go.
+   *
+   * 🚫 AN OPAQUE WRAPPER WAS THE ALTERNATIVE AND IT LOSES ON THE ARGUMENT DIRECTLY
+   * ABOVE. It would put one panel of ink on every sheet carrying a table, and
+   * `--dr-surface` is a SCREEN ground -- there is no paper column in any row, so
+   * an opaque printed fill is a value nobody authored for the medium it lands on.
+   *
+   * 🔴 THE `box-shadow` IS THE HALF THAT IS NOT A BACKGROUND, AND IT IS THE WORST
+   * OF THEM. The sticky first column carries `10px 0 10px -10px rgb(0 0 0 / 45%)`
+   * -- the only semi-transparent value in the table, printing as a blurred grey
+   * smear down the column-one seam. data.css is explicit that it is not
+   * decoration: without an edge nothing says the box SCROLLS. Paper does not
+   * scroll, so on a sheet it is chrome for an affordance that no longer exists.
+   *
+   * ⚠️ `!important` FOR THE SAME REASON THE GROUND ABOVE TAKES IT, and at the same
+   * cost: an instance's `site.css` loses "paint a printed table ground." Taken
+   * anyway. ⭐ It also means ONE selector per surface is enough -- an `!important`
+   * declaration beats a non-important one at any specificity, so the
+   * `.md-typeset`-prefixed twins data.css writes for the cascade fight do not
+   * need repeating here. That is a departure from the house both-spellings
+   * pattern and it is legal only because of the `!important`; if these ever lose
+   * it, the prefixed forms come back.
+   *
+   * 🚫 NOT DONE BY EDITING `data.css` INSTEAD. That file's header states the table
+   * rules live there and nowhere else, and it is right -- but a `@media print`
+   * block inside it would put the print group's subject in the screen layer, and
+   * the print group is where somebody looks when a sheet is wrong.
+   *
+   * 🚩 FLAGGED, NOT FIXED IN THIS PASS: `.dr-data` keeps `max-height: 78vh;
+   * overflow: auto` on paper. The CODE block below takes `overflow: visible
+   * !important` because *"a horizontal scrollbar has no paper equivalent"* and
+   * the data table never got the same treatment, so a long sheet is silently
+   * CLIPPED on both axes. The 13-row contacts table survives; a 130-row inventory
+   * does not. Same content-loss class as the collapsed-`<details>` bug
+   * print-flow.css calls the strongest argument for a print sheet existing at
+   * all -- and unlike this one it is not a taste question, so it should not have
+   * waited on a ruling. It is waiting on Michael only because it was found in the
+   * same read.
+   * --------------------------------------------------------------------- */
+  .dr-data,
+  .dr-data__table thead th,
+  .dr-data__table tbody td:first-child,
+  .dr-data__table tbody tr:hover td,
+  .dr-data__table .dr-data__section th {
+    background: transparent !important;
+  }
+
+  /* The scroll edge, separately, because it is a shadow rather than a ground and
+   * a reader in print PREVIEW can still hover a row -- so the hover selector
+   * above earns its place for the same reason. */
+  .dr-data__table tbody td:first-child {
+    box-shadow: none !important;
+  }
+
+  /* -------------------------------------------------------------------------
    * THE CONTENT COLUMN COMES OFF ITS RAILS
    *
    * Material sizes .md-grid for a viewport with two sidebars beside it. On
@@ -244,6 +327,14 @@
    * panel along with it. **A rule that forces one colour to print forces all of
    * them on that element.** Narrowing this list was the alternative and it would
    * cost the border guarantee above.
+   *
+   * 🔴 THAT WARNING CAME TRUE A SECOND TIME ON 2026-08-28, on the two
+   * `.dr-data__table` rows below it: the table's header, first column and section
+   * band were forced through the printer as blobs. Handled in the fills block
+   * above rather than by narrowing this list, for the reason stated there -- the
+   * table's `--dr-rule` borders and `accent` ink are exactly the meaning-carrying
+   * marks this list exists to guarantee. **The list is right; the grounds were
+   * the problem.**
    *
    * ⚠️ `body` IS DELIBERATELY NOT ON THIS LIST and never should be. The section
    * above turns the ground transparent; adding the ground to a list whose whole
