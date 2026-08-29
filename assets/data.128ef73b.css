@@ -12,6 +12,15 @@
  * assets/data-list.css, which is a FEATURE layer rather than a second copy: it
  * touches only .dr-data--list and only inside a container query.
  *
+ * ⚠️ PAPER IS THE PRINT GROUP'S, AND THIS IS THE ONLY POINTER TO IT. Every rule
+ * below is written for a SCREEN. `print.css` turns this table's four backgrounds
+ * off (they printed as blobs) and `print-chrome.css` uncages the scroll box --
+ * max-height, overflow, container-type, width, white-space, position -- because a
+ * scroll box on a sheet is a CROP, not a panel. Both carry the argument. 🚫 Do not
+ * re-add a paper note beside a rule: five scattered pointers at this one fact are
+ * what pushed this file over the read line on 2026-08-28, in the file whose own
+ * header forbids exactly that. The same DECLARATION must never appear in both.
+ *
  * Consumes --dr-* tokens only. A site retunes every colour, font, measure and
  * currency symbol from its own theme.css and never edits this file.
  * ------------------------------------------------------------------------- */
@@ -85,11 +94,37 @@
   line-height: 1.35;
 }
 
+/* ---------------------------------------------------------------------------
+ * ⭐ CELL DENSITY IS THE THEME'S, PER AXIS (2026-08-28, Michael: *"per-theme
+ * density dial"*)
+ *
+ * `pad-cell` takes the vertical, `pad-card` the horizontal. TWO primitives because
+ * the value has two axes: the reverted `data-pad -> pad-cell` bridge row (PR #82)
+ * mapped both to one number and made every row 48% taller and every column 17%
+ * narrower at once. Short rows so more fit, wide columns so they separate -- now by
+ * construction rather than by a literal.
+ *
+ * 🔴 IT IS A DIAL, NOT A TIGHTENING. Against the 5.44/9.6px literal it replaces:
+ * `uritp-safety` and `database` 2/8 and `eos` 3/8 are tighter; `tight` 8/16,
+ * `standard` 10/20 and `loose` 12/24 are LOOSER. ⚠️ `tight` is sized around a 42px
+ * touch target and is not tight for a table.
+ *
+ * ✅ THE FALLBACKS ARE THE OLD LITERALS. A theme with no join emits no spacing
+ * primitives (theme.py `_bridge()` reports it) and a bare var() would collapse
+ * padding to zero. 🚩 The vendored canonical/spacing.tsv is also missing the
+ * `uritp-safety` row upstream maw-themes has, so a vendored-fallback build renders
+ * byte-identically to before -- stale projection, upstream re-copy.
+ *
+ * 🪦 `--dr-data-pad` is retired from theme/typography.tsv rather than kept as an
+ * override hook: `theme.py:_shared()` skips every non-`base` row, so a per-theme
+ * value could never be emitted and the hook would be a dead control. 🚩 That filter
+ * is still open for `data-font`, `data-size` and `measure`.
+ * ------------------------------------------------------------------------ */
 .md-typeset .dr-data__table th,
 .md-typeset .dr-data__table td,
 .dr-data__table th,
 .dr-data__table td {
-  padding: var(--dr-data-pad);
+  padding: var(--dr-pad-cell, 0.34rem) var(--dr-pad-card, 0.6rem);
   border-bottom: 1px solid var(--dr-rule);
   border-right: 1px solid var(--dr-rule);
   white-space: nowrap;
@@ -281,7 +316,8 @@
  * ⚑ THIRD TIME nowrap has been correct for VALUES and wrong for PROSE (see the
  * column kinds above, and PR #50). The pattern is not that nowrap is wrong -- it
  * is that a rule written for the short case gets applied to the long one by
- * inheritance, and nothing about the rule says which case it was for.
+ * inheritance, and nothing about the rule says which case it was for. A FOURTH
+ * arrived on 2026-08-28, where the long case was the MEDIUM: paper.
  *
  * Scoped INSIDE .dr-data only. Page prose is untouched, the box shape survives,
  * and a marked note still reads as marked -- it just breaks like text.
@@ -323,11 +359,14 @@
   white-space: nowrap;
 }
 
+/* The label carries the band's padding, so it takes the same two primitives as a
+ * cell. A band keeping a literal while every row around it followed the theme
+ * would read as a paint bug at both ends of the spacing grid. */
 .dr-data__section-label {
   position: sticky;
   left: 0;
   display: inline-block;
-  padding: var(--dr-data-pad);
+  padding: var(--dr-pad-cell, 0.34rem) var(--dr-pad-card, 0.6rem);
   color: var(--dr-ink);
   font-weight: 700;
   font-size: 0.74rem;
@@ -413,6 +452,10 @@
  * router.css on the revealed menu). The engine has a build report, a size gate, a
  * leak scan and a contrast gate, and nothing that looks at a rendered page at
  * 390px. Until it does, this is where the phone gets thought about on purpose.
+ *
+ * ⚑ PAPER IS THE FOURTH SUCH SURFACE AND THE WORST: this `vh` cage cropped every
+ * long printed sheet, it was found by reading stylesheets while answering a
+ * different question, and nothing in CI can look at a printed page at all.
  * ------------------------------------------------------------------------ */
 @media screen and (max-width: 44.9375em) {
   .dr-data { max-height: none; }

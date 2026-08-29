@@ -14,6 +14,13 @@
  * passes it in the opposite direction -- a date is not a control, it is a fact a
  * reader needs precisely because the sheet has left the system.
  *
+ * ⭐ AND ON 2026-08-28 THE SUBJECT GREW A THIRD LIST, WHICH IS THE HONEST READING
+ * OF THE SAME QUESTION. A scroll box is furniture too: `overflow: auto` is an
+ * INTERACTION, and on paper it does not degrade to a longer page, it degrades to
+ * content that was never printed. So *what appears at all* now covers three
+ * lists -- what is removed, what is UNCAGED, and what is added. See THE TABLE IS
+ * NOT A SCROLL BOX below.
+ *
  * =========================================================================
  * ⚠️ WHY IT SPLIT, MEASURED
  * =========================================================================
@@ -37,6 +44,15 @@
  *                                                the ink policy, code wrapping
  *     print-chrome.css  WHAT APPEARS AT ALL   -- this file
  *
+ * 🔴 AND THAT MEASUREMENT IS WHY THE 2026-08-28 UNCAGING RULE LANDED HERE RATHER
+ * THAN BESIDE THE CODE-WRAPPING RULE IT ARGUES FROM. `print.css` was at
+ * **22,232 B of 22,528** after the table-fills fix -- 296 B of headroom, which is
+ * less than the comment this rule needs. Placement was therefore forced, and it
+ * would have been wrong to let a byte budget pick a home quietly: the argument
+ * for this file owning it is written out below on its own merits, and if that
+ * argument is bad the rule should move once `print.css` has room, not stay
+ * because it fitted.
+ *
  * =========================================================================
  * 🔴 AND THE SPLIT FOUND A BROKEN INVARIANT NOBODY HAD TESTED
  * =========================================================================
@@ -52,6 +68,13 @@
  * ⚑ *an invariant with no consequence when broken is an invariant nobody checks.*
  * The print.css copy is deleted -- §5 owns link policy and argues it at length --
  * and the claim is true again rather than merely repeated.
+ *
+ * ⚠️ THE UNCAGING RULE BELOW RE-TESTS THAT CLAIM AND KEEPS IT TRUE, but only just.
+ * It declares `overflow` and `max-height` on `.dr-data`, and `print.css` declares
+ * `overflow` on `.md-typeset pre` -- different SELECTORS, so there is no pair and
+ * the order stays free. 🔴 If anybody ever adds `.dr-data` to print.css's code-
+ * wrapping rule, or a `pre` to this one, the group's order stops being free and
+ * starts being law. That is the exact rot condition print-space.css names.
  *
  * =========================================================================
  * ⚠️ LOAD POSITION: FREE WITHIN THE GROUP, AND THE GROUP'S SLOT IS NOT
@@ -108,6 +131,110 @@
   .pagefoot,
   .pagefoot__rule {
     display: none !important;
+  }
+
+  /* -------------------------------------------------------------------------
+   * 🔴 THE TABLE IS NOT A SCROLL BOX -- IT WAS BEING CLIPPED, ON BOTH AXES
+   * (2026-08-28, found while answering a question about printed table fills)
+   *
+   * `assets/data.css` builds `.dr-data` as a scroll box on purpose and argues it
+   * well: `max-height: 78vh` with `overflow: auto`, so a 130-row sheet is a
+   * readable panel instead of a page you scroll past. Every word of that reasoning
+   * is about a SCREEN.
+   *
+   * 🔴 ON PAPER A SCROLL BOX IS A CROP. `78vh` of a printed page is roughly the
+   * first 8 inches of it and `overflow: auto` has no paper equivalent, so every row
+   * past the cut and every column past the right edge is **simply not printed**.
+   * No ellipsis, no marker, nothing that tells a reader the sheet is partial. The
+   * 13-row Emergency Contacts table fits and survives; the audio inventory does
+   * not.
+   *
+   * ⚑ THIS IS THE SAME DEFECT AS THE COLLAPSED `<details>`, WHICH print-flow.css
+   * CALLS *"the single strongest argument for a print sheet existing at all: every
+   * other default here is ugly, and this one LOSES CONTENT."* Two files have now
+   * independently argued that content loss outranks everything else on paper --
+   * and the data table, the densest content this engine renders, was never checked
+   * against either argument.
+   *
+   * ⭐ AND THE HORIZONTAL HALF IS ALREADY RULED, IN print.css, ABOUT CODE: *"a
+   * horizontal scrollbar has no paper equivalent, so an over-wide line is simply
+   * cut off at the edge with no indication. Wrapping is the only option that does
+   * not lose characters."* That is this table exactly. `data.css` even reaches the
+   * same conclusion one surface in, for markers: *"A TABLE CELL CANNOT MAKE THE
+   * LINE LONGER."* ⚑ *The rule existed twice, correct both times, and neither copy
+   * was ever pointed at the element that needed it most.* Third instance of this
+   * repo's oldest shape: a rule that is right in isolation and unreachable in
+   * place.
+   *
+   * WHAT EACH DECLARATION IS FOR, because none of them is decoration:
+   *
+   *   max-height / overflow   the vertical crop, and the whole reason this block
+   *                           exists. print-flow.css already lets the TABLE break
+   *                           across pages (`break-inside: auto`), keeps a ROW
+   *                           whole (`tr`), and repeats the header
+   *                           (`display: table-header-group`) -- so once the cage
+   *                           is off, correct pagination is already waiting.
+   *   container-type          🔴 THE NON-OBVIOUS ONE. `inline-size` containment
+   *                           makes the box monolithic for fragmentation, so a
+   *                           contained table can refuse to break across sheets
+   *                           and get cropped even with the height cage removed.
+   *                           Neutralised so the rules above can actually run.
+   *   width / table-layout    the horizontal crop. The screen table is
+   *                           `width: max-content` so it can scroll sideways; on
+   *                           paper that is columns past the edge. 100% of the
+   *                           measure, sized by the browser.
+   *   white-space             the id/num/money/date/tok columns are `nowrap` by
+   *                           design, which on paper is an unbreakable box in a
+   *                           column that cannot grow. Same ruling as code, for
+   *                           the same reason.
+   *   position                sticky is an affordance for scrolling. There is no
+   *                           scrolling, and a sticky cell inside a fragmented
+   *                           table is undefined enough to be worth not finding
+   *                           out about.
+   *
+   * ⚠️ AND IT WEAKENS THE MOST-EXPLAINED RULE IN print.css, WHICH IS SAID OUT LOUD
+   * RATHER THAN LEFT TO BE DISCOVERED. That file's `@page { margin: 12mm }` is
+   * justified almost entirely by keeping the printed sheet ABOVE the 640px
+   * container-query threshold so tables do not silently flip to list mode
+   * (726px at Letter, 703px at A4). With `container-type: normal` here, **the
+   * query cannot fire on paper at any margin**, so that specific danger is gone
+   * and the inline axis is no longer load-bearing for that reason. 🚫 The 12mm is
+   * NOT changed in this pass: it is also just a sensible page margin, and
+   * rewriting print.css's argument is an edit to a file with 296 B of headroom.
+   * 🚩 Flagged for whoever splits that file next.
+   *
+   * ⚠️ NOT VERIFIED ON PAPER. This is reasoned from the stylesheets and from two
+   * specs, and the engine still has nothing that looks at a rendered page --
+   * `data.css` says so at length about the phone. The one-page contacts sheet
+   * cannot prove any of it, because it was never being clipped. **The proof is a
+   * print of a long sheet**, and until somebody does that this block is an
+   * argument rather than a result.
+   * --------------------------------------------------------------------- */
+  .dr-data {
+    max-height: none !important;
+    overflow: visible !important;
+    container-type: normal !important;
+  }
+
+  .dr-data__table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: auto;
+  }
+
+  .md-typeset .dr-data__table th,
+  .md-typeset .dr-data__table td,
+  .dr-data__table th,
+  .dr-data__table td {
+    white-space: normal;
+  }
+
+  .dr-data__table thead th,
+  .dr-data__table tbody td:first-child,
+  .dr-data__caption,
+  .dr-data__source,
+  .dr-data__section-label {
+    position: static;
   }
 
   /* -------------------------------------------------------------------------
