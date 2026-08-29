@@ -5,7 +5,7 @@
  *
  *     REMOVED   everything the SCREEN has that paper cannot use -- the header,
  *               the drawer, the TOC, search, the clipboard button, both footers,
- *               the flow strip
+ *               the flow strip, the TSV source line
  *     ADDED     the one mark PAPER has that the screen does not -- the corner
  *               build stamp
  *
@@ -125,15 +125,11 @@
    * prev/next links. It fails the pen test outright -- the arrows are most of it
    * and neither can be followed on paper.
    *
-   * 🔴 BUT IT TAKES THE PROGRAM NAME WITH IT, AND THAT IS NOT NOTHING. program.py
-   * argues the strip's job is ORIENTATION rather than navigation -- *"the PROGRAM
-   * NAME is the payload; the arrows are the instruction"* -- and a printed sheet is
-   * precisely where a reader cannot tell which program handed it to them. 🚫 A
-   * narrower rule keeping `.dr-flow__where` and dropping only `.dr-flow__move` was
-   * available and was NOT taken: Michael named the step count and asked for the
-   * footer gone. 🚩 If the program name is wanted on paper it belongs beside the
-   * date on the corner stamp, which is already the sheet's provenance line -- not
-   * in a nav block with its links removed.
+   * ✅ THE PROGRAM NAME SURVIVED THE MEDIUM CHANGE. It was the strip's stated
+   * payload (*"the PROGRAM NAME is the payload; the arrows are the instruction"*),
+   * and it now prints on the corner stamp instead -- `buildstamp.py` asks
+   * `program.flow_names()`. ⚑ *When a medium drops an element, ask which of its
+   * facts were about the MEDIUM and which were about the DOCUMENT.*
    *
    * ⭐ AND HIDING THE ANCESTOR IS WHY THIS NEEDS NO SECOND RULE. print-flow.css
    * forces every `<details>` open on paper, which includes `.dr-flows__others`;
@@ -147,12 +143,37 @@
    * off `:target` -- which no printed page has, since a sheet carries no fragment.
    * Nothing to hide and nothing that fires.
    *
-   * 🚩 SEPARATE, AND IT IS WHAT THE QUOTE ABOVE ACTUALLY SHOWS: *"step 1 of 1"*
-   * means a chain of ONE page. `_member_strip` renders that with no prev, no next,
-   * and a `Finish <name>` link -- a whole navigation block whose only content is
-   * that you are done. It carries no information on SCREEN either. Worth a look at
-   * whether a one-step chain should draw a strip at all; not decided here, because
-   * it is a question about the flow model rather than about paper.
+   * =======================================================================
+   * 🔴 `.dr-data__source` JOINED IT TOO, AND IT TAKES A TRIPWIRE WITH IT
+   * =======================================================================
+   * > Michael: *"can you hide the '12 rows file name.tsv' at the bottom of the
+   * > tsv inputs when printed?"*
+   *
+   * `table.py` closes every data block with `13 rows · emergency-contacts.tsv`,
+   * where the filename is an `<a download>`. ✅ THE LINK HALF IS AN OPEN-AND-SHUT
+   * PEN-TEST FAILURE: a download attribute on paper cannot be operated, and
+   * print-type.css §5 has already stripped its colour, so it prints as underlined
+   * body text that looks like a control and is not one -- the DEAD CONTROL this
+   * family kills on sight (`edit_links: false`, the retired PR number, NO ROUTE
+   * BACK TO THE SOURCE).
+   *
+   * 🔴 THE ROW COUNT IS NOT THE SAME KIND OF THING, AND IT IS WHY THIS ENTRY IS
+   * LONGER THAN THE RULE. `13 rows` is a claim about the DOCUMENT, and on paper it
+   * was the only cross-check a reader had against the uncaging fix directly below
+   * -- which is **still unverified on paper**. Count the printed rows, compare to
+   * the stated total, and a crop announces itself. Hiding this removes that.
+   *
+   * 🚫 TAKEN ANYWAY, on two grounds rather than on the ask alone. A tripwire whose
+   * audience is a guest artist is not a tripwire -- **nobody holding a safety sheet
+   * is auditing our pagination**, so the number was doing that job for an audience
+   * that does not exist. And it cannot be kept alone: splitting the count from the
+   * filename means emitting two elements from `table.py` to let CSS drop one,
+   * which is engine surface bought for a check a reader will never run.
+   *
+   * ✅ SO THE VERIFICATION MOVES WHERE IT BELONGS: one print of a long sheet, by
+   * somebody who can read a build report. 🚩 Named in the PR, and it is now the ONLY
+   * way the uncaging below gets proven -- which is a better place for it than a
+   * line on a page, but only if somebody actually prints one.
    * --------------------------------------------------------------------- */
   .md-header,
   .md-tabs,
@@ -170,7 +191,8 @@
   .md-content__button,
   .pagefoot,
   .pagefoot__rule,
-  .dr-flows {
+  .dr-flows,
+  .dr-data__source {
     display: none !important;
   }
 
@@ -244,12 +266,12 @@
    * rewriting print.css's argument is an edit to a file with 296 B of headroom.
    * 🚩 Flagged for whoever splits that file next.
    *
-   * ⚠️ NOT VERIFIED ON PAPER. This is reasoned from the stylesheets and from two
-   * specs, and the engine still has nothing that looks at a rendered page --
-   * `data.css` says so at length about the phone. The one-page contacts sheet
-   * cannot prove any of it, because it was never being clipped. **The proof is a
-   * print of a long sheet**, and until somebody does that this block is an
-   * argument rather than a result.
+   * 🔴 NOT VERIFIED ON PAPER, AND AS OF THIS COMMIT THAT IS HARDER TO CATCH. This
+   * is reasoned from the stylesheets and from two specs, and the engine has nothing
+   * that looks at a rendered page. The one-page contacts sheet cannot prove any of
+   * it, because it was never being clipped -- and the `13 rows` line a reader could
+   * have counted against is now hidden by the list above. **The proof is a print of
+   * a long sheet, and it is the only proof left.**
    * --------------------------------------------------------------------- */
   .dr-data {
     max-height: none !important;
@@ -270,10 +292,15 @@
     white-space: normal;
   }
 
+  /* ⚠️ `.dr-data__source` IS DELIBERATELY NOT IN THIS LIST ANY MORE. It was, until
+   * the chrome-off list above started hiding it -- and a `position` reset on a box
+   * that no longer exists is a declaration that can never be observed. ⚑ Same
+   * family as the chevron rule that could not match and the `.buildstamp` revival
+   * that could never win: *a rule is only as real as the state it is allowed to
+   * observe.* Deleted rather than left as a harmless spare. */
   .dr-data__table thead th,
   .dr-data__table tbody td:first-child,
   .dr-data__caption,
-  .dr-data__source,
   .dr-data__section-label {
     position: static;
   }
