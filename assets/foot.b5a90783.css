@@ -27,13 +27,25 @@
  *     .md-footer*     Material's own footer    chrome + the prev/next bar
  *     .md-copyright   Material's generator credit, suppressed
  *     .buildstamp*    docrender/buildstamp.py  the stamp and its disclosure
+ *     .dr-owner       docrender/lede.py        the ownership tag (2026-08-30)
  *
  * ⚠️ LOADS AFTER base.css, and that is a real order rather than a habit: the
  * footer rules override Material's own at equal specificity and consume `--dr-*`
  * tokens that base.css maps. Registered in `docrender/assets.py` `_DATA_ASSETS`.
  *
- * 🚫 DO NOT ADD A DOCUMENT RULE HERE. Same law as nav.css, type.css and the table
+ * 🚩 DO NOT ADD A DOCUMENT RULE HERE. Same law as nav.css, type.css and the table
  * layers: one surface, one address. If an author can write it, it is not foot.
+ *
+ * 🔴 AND `.dr-owner` IS THE ONE ADMISSION THAT TESTED THAT LAW RATHER THAN BENDING
+ * IT (2026-08-30). It looks like a document element -- it shares the revised
+ * line, which lives in base.css -- and it is not one: **no author writes it.** It
+ * is declared ONCE per site in `instances/<slug>/site.yml`, exactly as the
+ * printed letterhead is, so it fails the "can an author write it" test and lands
+ * here by the same reasoning that put `.buildstamp` here. ⚠️ THE SECOND REASON IS
+ * LESS PRINCIPLED AND IS STATED ANYWAY: base.css had ~290 B of headroom and three
+ * attempts to fit the tag's prose into it went 22,909 / 23,946 / 22,886 against
+ * the 22,528 ceiling. ⚑ *Trimming prose to fit is this repo's oldest losing move;
+ * the file's own header says split, and this is the split it could actually have.*
  */
 
 /* Page foot: the edit link. Quiet, at the bottom, with words rather than an
@@ -60,6 +72,73 @@
 }
 .pagefoot__edit:hover {
   color: var(--dr-accent) !important;
+}
+
+/* ---------------------------------------------------------------------------
+ * THE OWNERSHIP TAG (2026-08-30, Michael) -- ONE FOOTER LINE, TWO ENDS
+ *
+ *   Revised Aug 2026                Posted by Michael A Wizorek · michael@...
+ *
+ * > *"Leave the revised function and position and font and size exactly the same
+ * > on the left side of the footer. Add POSTED BY aligned right in the same line
+ * > of the footer. No stacking ... don't fucking move or change revised."*
+ *
+ * From `owner: {name, email}` in the instance's site.yml -- one declaration per
+ * SITE, no page edit anywhere. `docrender/lede.py` `owner()` emits it and carries
+ * the account; absent means no line, so five of six sites are untouched.
+ *
+ * =========================================================================
+ * 🔴 EMITTED **AFTER** REVISED AND PULLED BACK ONTO ITS LINE. MEASURED, BOTH WAYS.
+ * =========================================================================
+ * The obvious build puts the float BEFORE revised, because a float shares a line
+ * with what FOLLOWS it. That was built first and it is wrong here:
+ *
+ *   float BEFORE revised   `margin-top` moved the float NOT AT ALL in WeasyPrint.
+ *                          It landed one line low, and the error VARIED with
+ *                          whatever preceded it -- 12.8px after body prose, 5.6px
+ *                          under the keywords line. **No single value aligns both
+ *                          cases**, and it also inserts a DOM sibling between
+ *                          `.dr-aka` and `.dr-revised`, breaking that adjacency
+ *                          rule and forcing a restoration selector.
+ *   float AFTER revised    the offset is CONSTANT (25.7px) because it hangs off
+ *                          revised's own bottom rather than off whatever came
+ *                          before. One value fixes every case, no sibling is
+ *                          inserted anywhere, and base.css is not touched at all.
+ *
+ * ⭐ So the order that ALIGNS is also the order that TOUCHES NOTHING, which is
+ * the whole requirement. ⚑ *The mechanism that looks correct in the abstract was
+ * the one that required editing the thing we were told not to edit.*
+ *
+ * ✅ `-2.36em` IS VERIFIED, NOT DERIVED: rendered four ways and read off the
+ * layout -- with and without the keywords line, at root 16px and at root 20px
+ * (Material's root is not determined; see print-type.css §0). In all four,
+ * `.dr-revised` was displaced **0.0px** from where it sits with no tag present,
+ * and the two lines shared **one baseline (dy 0.0)**. `em` rather than `px` is
+ * what makes it survive the root question.
+ *
+ * ⚠️ A FLOAT RATHER THAN `text-align: right`, so a long address WRAPS instead of
+ * colliding with the revision date on a narrow screen. `margin-bottom: 0` keeps
+ * a pulled-up float from re-opening the gap it was lifted out of.
+ *
+ * ⚠️ THE SIZE AND COLOUR MATCH THE REVISED LINE ON PURPOSE -- `0.85em` and
+ * `ink-muted`, the same pair base.css uses for the aka and revised lines. Three
+ * furniture lines in one register; one of them at a different size reads as a
+ * paint bug (base.css § THE AKA LINE carries that finding in full).
+ *
+ * 🔴 THE ADDRESS IS A REAL `mailto:` ANCHOR, so on screen it takes
+ * `--md-typeset-a-color` -- and on this site that token is **2.30:1 on parchment,
+ * FAILING AA**, already logged in `instances/uritp-safety/site.yml` and open
+ * upstream in maw-themes. The tag does not cause that defect and is now the line
+ * a curious reader is most likely to click. On paper `print-type.css` §5 strips
+ * link colour, so it prints as one unbroken line of provenance -- which is the
+ * surface it was built for.
+ * ------------------------------------------------------------------------ */
+.md-typeset .dr-owner {
+  float: right;
+  margin-top: -2.36em;
+  margin-bottom: 0;
+  font-size: 0.85em;
+  color: var(--dr-ink-muted);
 }
 
 /* ---------------------------------------------------------------------------
