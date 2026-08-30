@@ -1,0 +1,111 @@
+/* THE PROGRAM PACKET -- screen side. BUILD 10, specs/print-packet.md.
+ *
+ * Two surfaces only: the BUTTON on a program page, and the COVER + SECTION
+ * boundaries on the generated packet page. Print rules are the sibling sheet
+ * (print-packet.css), in the same group -- see docrender/assets.py, which argues
+ * why a feature carrying both mediums stays one group.
+ *
+ * 🔴 EVERY TOKEN IS USED WITH A MATERIAL VARIABLE AS ITS FALLBACK, on the same
+ * law flow.css states: tokens are generated per site, so a --dr-* that exists on
+ * `eos` can be absent on a nine-token local skin -- the failure that left eleven
+ * callout families painting currentColor on 2026-08-05. Material's own variable
+ * makes the worst case Material's look rather than an invisible control, and an
+ * invisible control is the one thing a download button must never be.
+ *
+ * ⚠️ NO SELECTOR HERE IS SHARED WITH ANOTHER SHEET. Every rule is a .dr-packet*
+ * class no other file mentions, which is what makes this sheet's POSITION free
+ * (assets.py D8). Do not infer a load-order rule from where it sits. */
+
+/* ------------------------------------------------------------------ THE BUTTON
+ * It sits with the flow strip by constraint rather than by taste: `hide: footer`
+ * makes the strip the only navigation on a program page, and a SECOND footer was
+ * rejected by name on 2026-08-19 ("all this other foot matter"). */
+.md-typeset .dr-packet__cta {
+  margin: 1.2rem 0 0.2rem;
+}
+
+.md-typeset .dr-packet__button {
+  display: inline-block;
+  padding: 0.5em 1.1em;
+  border: 1px solid var(--dr-accent, var(--md-primary-fg-color));
+  border-radius: var(--dr-radius, 4px);
+  background: var(--dr-surface-2, var(--md-code-bg-color));
+  color: var(--dr-accent, var(--md-primary-fg-color));
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--dr-motion-med, 200ms) ease,
+              color var(--dr-motion-med, 200ms) ease;
+}
+
+.md-typeset .dr-packet__button:hover,
+.md-typeset .dr-packet__button:focus {
+  background: var(--dr-accent, var(--md-primary-fg-color));
+  color: var(--dr-on-accent, var(--md-primary-bg-color));
+}
+
+/* ⚠️ THE FOCUS RING IS NOT DECORATION. A button reachable only by mouse is a
+ * button a keyboard reader cannot find, and this is the only route to a whole
+ * program. Material's own ring variable, so it matches every other control. */
+.md-typeset .dr-packet__button:focus-visible {
+  outline: 2px solid var(--dr-accent, var(--md-accent-fg-color));
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------- THE COVER
+ * It is the packet's ONLY navigation and its only outline: Blink emits no PDF
+ * bookmark pane and has never implemented @page margin boxes, so there is no
+ * page number and no outline to be had. This list is the whole answer. */
+.md-typeset .dr-packet__toc {
+  margin: 1.5rem 0 2rem;
+  padding: 1rem 1.2rem;
+  border: 1px solid var(--dr-border, var(--md-default-fg-color--lightest));
+  border-radius: var(--dr-radius, 4px);
+  background: var(--dr-surface-1, var(--md-code-bg-color));
+}
+
+.md-typeset .dr-packet__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.md-typeset .dr-packet__list li {
+  margin: 0.35em 0;
+}
+
+.md-typeset .dr-packet__list a {
+  text-decoration: none;
+}
+
+/* A fixed-width counter so titles line up as a column rather than ragging off
+ * the digit width -- the difference between a contents page and a list. */
+.md-typeset .dr-packet__n {
+  display: inline-block;
+  min-width: 1.8em;
+  color: var(--dr-text-faint, var(--md-default-fg-color--light));
+  font-family: var(--dr-mono, var(--md-code-font-family, monospace));
+  font-size: 0.85em;
+}
+
+/* ---------------------------------------------------------------- THE SECTIONS
+ * A visible rule on screen, because on screen there is no sheet edge to say a
+ * new policy started. On paper the page break says it and this rule is dropped
+ * -- see print-packet.css. */
+.md-typeset .dr-packet__section {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid var(--dr-border, var(--md-default-fg-color--lightest));
+}
+
+.md-typeset .dr-packet__section:first-of-type {
+  margin-top: 1rem;
+}
+
+/* ⚠️ EACH SECTION KEEPS ITS OWN h1, which looks wrong for one document and is
+ * right for this one: a packet is a BINDING, and a sheet pulled out of it must
+ * still say what it is. Sized down so the cover's h1 still reads as the
+ * document title. */
+.md-typeset .dr-packet__section > h1 {
+  font-size: 1.5em;
+  margin-top: 0;
+}
