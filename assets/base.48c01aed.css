@@ -31,11 +31,20 @@
  * particular must stay after this file or every dark-mode link reverts to
  * Material's blue.
  *
+ * 🔴 AND IT IS AT THE LINE AGAIN, 2026-08-30. The ownership tag took this file to
+ * 22,909 B -- 381 B OVER the 22,528 B read ceiling -- and was trimmed back in the
+ * same PR. The overrun was PROSE, not rules, and it was written without measuring
+ * it, which is the scar this repo has now collected six times. 🚩 THE NEXT LAYER TO
+ * LEAVE IS THE DOCUMENT-ELEMENT SET (lede, aka, tag, revised, markers, spec
+ * table, dead reference): it is a real surface and it is most of what is left.
+ * Split it BEFORE the next feature rather than trimming a comment again.
+ *
  * ⭐ AND foot.css MAKES THE REMAINING SUBJECT LEGIBLE, which is the best argument
  * any of these splits has produced. What is left is the Material MAPPING plus
- * DOCUMENT elements -- the lede, the aka line, the revised line, inline markers,
- * the spec table, a dead reference. Every one of them is something an author can
- * write. The footer is not, and it was sitting in the middle of them.
+ * DOCUMENT elements -- the lede, the aka line, the revised line, the ownership
+ * tag, inline markers, the spec table, a dead reference. Every one of them is
+ * something an author can write, or on the tag's account something a SITE
+ * declares once. The footer is not, and it was sitting in the middle of them.
  */
 
 [data-md-color-scheme="slate"],
@@ -195,44 +204,53 @@
 }
 
 /* ---------------------------------------------------------------------------
- * THE REVISED LINE (2026-08-07, Michael)
+ * THE OWNERSHIP TAG AND THE REVISED LINE -- ONE RULE, TWO LINES
  *
+ *     Posted by Michael A Wizorek · michael.wizorek@rochester.edu
  *     Revised Aug 2026
  *
- * From `revised:`, and the LAST thing the document says. The edit rule and its
- * link still sit below it -- that rule is the seam between the document and the
- * scaffolding, and `edit_links: false` takes the whole lower half away.
+ * THE REVISED LINE (2026-08-07, Michael) is from `revised:` and is the LAST
+ * thing the document says. THE OWNERSHIP TAG (2026-08-30, Michael) sits directly
+ * above it, from `owner:` in the instance's site.yml -- one declaration per SITE,
+ * no page edit anywhere. Full account of the tag: docrender/lede.py `owner()`.
+ * The edit rule and its link still sit below both; that rule is the seam between
+ * the document and the scaffolding, and `edit_links: false` removes it.
  *
- * ⭐ WHY IT EXISTS AT ALL. The field was declared optional on every page type
- * from the day the type system shipped, and NOTHING IN THE ENGINE EVER READ IT.
- * The date a reader actually saw was a line typed by hand at the bottom of the
- * page. So the field was decoration and the body line was the real one, which is
- * the exact inverse of what the README and the page template both said.
+ * ⭐ ONE DECLARATION BLOCK FOR BOTH, DELIBERATELY. They are an adjacent pair of
+ * provenance furniture in the same register, and the aka-line finding above
+ * already proved what happens when two lines of the same kind carry different
+ * sizes -- it reads as a paint bug. A second block would be a second claimant on
+ * one visual decision. 🚩 `.dr-owner` has no rule of its own and should not get
+ * one without a reason: the day it must differ, split it and say why.
  *
- * ⭐ AND THE INTERESTING PART IS WHAT TWO COPIES DID TO THE VALUE. A field has
- * one spelling; a typed line has as many as there are authors. Live across nine
- * pages at the time of writing: `Aug 2026`, `Aug 2026.`, `Aug 26`,
- * `August 2026.`, `Jun 2026.`, `May 2026.`, a bare `Revised` with no date at
- * all, and one page shipped public still carrying the template's literal
- * `Revised Month Year.` placeholder. Nothing broke and nothing reported. The
- * duplication did not cause a CONTRADICTION, it caused a DRIFT -- and a drift
- * has no failing build to announce it.
+ * ⭐ WHY THE REVISED LINE EXISTS AT ALL. The field was declared optional on every
+ * page type from the day the type system shipped, and NOTHING IN THE ENGINE EVER
+ * READ IT. The date a reader actually saw was a line typed by hand at the bottom
+ * of the page. So the field was decoration and the body line was the real one,
+ * which is the exact inverse of what the README and the page template both said.
+ * Nine live spellings of it, and the drift that produced them: docrender/lede.py.
+ *
+ * 🚩 THAT DRIFT IS NOW THE TAG'S PROBLEM TOO, and it is the one thing to know
+ * before trusting this pair on paper. A sheet carrying a NAMED OWNER beside a
+ * missing or placeholder date looks controlled and is not -- worse than carrying
+ * neither, because the tag is an implicit claim that somebody is maintaining
+ * this. The tag renders unconditionally; `revised:` is still optional. Raised
+ * with Michael 2026-08-30 and deferred to the revision-log conversation.
  *
  * ⚠️ THE ITALIC IS AN `<em>` IN THE MARKUP AND NOT `font-style` HERE. Italic was
  * the request rather than a styling choice, so it should survive print.css, a
  * stylesheet that failed to load, and anything reading the HTML without our CSS.
  * This rule owns size, colour and spacing, and nothing else. Do not tidy the
- * `<em>` away into a declaration below.
+ * `<em>` away into a declaration below. ⚠️ The tag is deliberately NOT italic:
+ * same register, different voice, and the roman face is what keeps an email
+ * address legible at 8.5pt on a photocopy.
  *
- * ⚠️ TWO MARGINS, WHICH IS ONE MORE THAN IT LOOKS LIKE IT NEEDS. The keywords
- * line already spends `gap-lg` opening the foot block, so a second big gap under
- * it leaves the two furniture lines further apart than either is from the prose.
- * The adjacent-sibling rule is the only case where that happens, and it costs
- * one selector to get right in both.
- *
- * ⚠️ SIZE AND OPACITY: THE AKA LINE ABOVE CARRIES THAT FINDING. One statement,
- * and both lines take the same fix because they are an adjacent pair -- leaving
- * one at 97% of body beside the other at 85% would read as a paint bug.
+ * ⚠️ THREE ADJACENT-SIBLING PAIRS, WHICH IS TWO MORE THAN IT LOOKS LIKE IT NEEDS.
+ * The keywords line already spends `gap-lg` opening the foot block, so a second
+ * big gap under it leaves the furniture further apart than any of it is from the
+ * prose. Every pair that can OCCUR is listed: aka+tag, aka+revised (a site with
+ * no owner declared -- five of six today), and tag+revised. Miss one and a 2rem
+ * hole opens between two lines that belong together, on those sites only.
  *
  * 🚩 AND THE COLOUR IS `ink-muted`, NOT `accent`. Michael, 2026-08-28: *"italic
  * and accent color still"* -- the ask was to LEAVE the colour alone, and it is
@@ -243,13 +261,23 @@
  * wordmark vanished on the light ramp twice. If accent is genuinely wanted here,
  * `accent-deep` clears light at 6.31 and fails dark at 2.15, so it needs a
  * per-scheme pair rather than one value, and that is a ruling rather than an edit.
+ *
+ * 🔴 THE ADDRESS IN THE TAG IS A REAL ANCHOR, so on screen it takes
+ * `--md-typeset-a-color` from the mapping at the top of this file -- and
+ * `uritp-safety.link` is **2.30:1 on this site's parchment and FAILS AA**, logged
+ * in that instance's own site.yml and open upstream in maw-themes. The tag does
+ * not cause that defect and is now one more surface reading it. On paper
+ * print-type.css §5 strips link colour, so the tag prints as one unbroken line.
  * ------------------------------------------------------------------------ */
-.md-typeset .dr-revised {
+.md-typeset .dr-revised,
+.md-typeset .dr-owner {
   margin-top: var(--dr-gap-lg, 2rem);
   font-size: 0.85em;
   color: var(--dr-ink-muted);
 }
-.md-typeset .dr-aka + .dr-revised {
+.md-typeset .dr-aka + .dr-revised,
+.md-typeset .dr-aka + .dr-owner,
+.md-typeset .dr-owner + .dr-revised {
   margin-top: 0.35rem;
 }
 
