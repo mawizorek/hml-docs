@@ -230,11 +230,56 @@
    * **A stated exclusion the selector does not implement is worse than none: it
    * reads as verified.**
    *
+   * =======================================================================
+   * 🔴 AND IT HAPPENED AGAIN ON 2026-08-30, TO THE OWNERSHIP TAG. SECOND INSTANCE,
+   * SAME SECTION, SAME PROPERTY, ELEVEN DAYS APART.
+   * =======================================================================
+   * > Michael: *"it does so in web, but at print i also need the text to flush to
+   * > the right side full for both lines"*
+   *
+   * `foot.css` gives `.dr-owner` `float: right; text-align: right` at (0,2,0).
+   * **This rule is (0,2,1)** -- `.md-typeset` + `p` + `:not(.buildstamp)`, because
+   * `:not()` contributes the specificity of its argument. One element selector
+   * again, and source order is never consulted, so `justify` won on paper and lost
+   * on screen. ⚑ *A rule that behaves correctly on screen and wrongly on paper is
+   * a MEDIA-SCOPED cascade fight, and nothing in the screen sheet hints that a
+   * print sheet outranks it.*
+   *
+   * 🔴 THE SYMPTOM DOES NOT LOOK LIKE JUSTIFICATION, WHICH IS WHY THIS COST A ROUND
+   * BOTH TIMES. The tag is two lines joined by a `<br>`, and a line ended by a
+   * FORCED BREAK is treated as a last line, so `text-align-last: auto` renders it
+   * flush-LEFT. Both lines therefore left-aligned inside a right-hand box -- which
+   * reads as "the float broke" or "text-align never applied," and points at
+   * `foot.css`, where nothing is wrong. Same misdirection as the corner stamp:
+   * **justify's failure mode is silent left alignment.**
+   *
+   * ✅ FIXED THE WAY THE STAMP WAS: ONE MORE EXCLUSION, NOT A SECOND `text-align`.
+   * Adding `text-align: right` to a print sheet would put two sheets in a fight
+   * over one property on one selector -- the exact ROT CONDITION this file's own
+   * header names, and it would make the print group's load order law instead of
+   * free. Excluding it here leaves `foot.css` as the single claimant.
+   *
+   * ✅ AND IT TAKES `hyphens: auto` OFF THE TAG WITH IT, WHICH IS A BONUS RATHER
+   * THAN A SIDE EFFECT: an email address is not prose and must never be broken
+   * across lines by a hyphen a reader might type.
+   *
+   * ✅ MEASURED BEFORE AND AFTER, in the engine that renders paper. Before: both
+   * lines flush left at x=628.0, the name ending 15.4px short of the measure.
+   * After: name 643.4 → **789.3**, address 628.0 → **789.3** -- both flush to the
+   * content edge (789.3px = 592pt). `.dr-revised` unmoved at 26.7 in both.
+   *
+   * 🚩 THE STANDING LESSON, THIRD SIGHTING OF THIS SHAPE IN THIS SECTION: any new
+   * FURNITURE that sets its own `text-align` must be added to this list in the
+   * same commit. The list is the mechanism; prose describing an exclusion is not
+   * one. ⚠️ Not converted to a positive selector (`p.md-prose`) because that would
+   * mean touching every page's markup -- named as the alternative, refused.
+   *
    * 🚫 PROSE ONLY, and each exclusion is a real case rather than caution:
    * headings are not justified because a hyphenated heading reads as a mistake
    * and a two-word h2 would stretch across the measure; table cells are not,
-   * because a narrow column cannot absorb slack; **the buildstamp is furniture
-   * and is now actually excluded rather than merely described as excluded.**
+   * because a narrow column cannot absorb slack; **the buildstamp and the
+   * ownership tag are furniture and are now actually excluded rather than merely
+   * described as excluded.**
    *
    * ⚠️ THE HONEST LIMIT, AND IT IS A MEASURE PROBLEM RATHER THAN A JUSTIFICATION
    * ONE. `print.css` unrails the content column so the page IS the measure --
@@ -246,7 +291,7 @@
    * decision made to stop two thirds of the sheet printing blank, so it is named
    * here and NOT taken.
    * --------------------------------------------------------------------- */
-  .md-typeset p:not(.buildstamp),
+  .md-typeset p:not(.buildstamp):not(.dr-owner),
   .md-typeset li {
     text-align: justify;
     -webkit-hyphens: auto;

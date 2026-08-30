@@ -33,6 +33,11 @@
  * footer rules override Material's own at equal specificity and consume `--dr-*`
  * tokens that base.css maps. Registered in `docrender/assets.py` `_DATA_ASSETS`.
  *
+ * 🔴 AND IT LOADS **BEFORE** THE WHOLE PRINT GROUP, WHICH IS THE TRAP THIS FILE
+ * FELL INTO ON 2026-08-30. A print sheet can outrank anything written here on
+ * paper while leaving the screen untouched, so a rule that behaves correctly in a
+ * browser is not evidence it behaves on paper. See § THE OWNERSHIP TAG.
+ *
  * 🚩 DO NOT ADD A DOCUMENT RULE HERE. Same law as nav.css, type.css and the table
  * layers: one surface, one address. If an author can write it, it is not foot.
  *
@@ -96,6 +101,34 @@
  * right-hand box, which reads as a mistake rather than a choice.
  *
  * =========================================================================
+ * 🔴 THIS RULE IS NOT SELF-SUFFICIENT ON PAPER. IT DEPENDS ON AN EXCLUSION IN
+ * ANOTHER FILE, AND WITHOUT IT THE TAG PRINTS FLUSH LEFT (2026-08-30, v4).
+ * =========================================================================
+ * `print-space.css` §9 justifies prose with `.md-typeset p:not(.buildstamp)`,
+ * which is **(0,2,1)** -- `:not()` contributes its argument's specificity. The
+ * `text-align: right` below is (0,2,0). One element selector, source order never
+ * consulted, so **`justify` won on paper and lost on screen**, and the tag shipped
+ * correct in a browser and wrong in print preview for one round.
+ *
+ * ⚠️ AND THE SYMPTOM POINTS HERE, WHERE NOTHING IS WRONG. The tag is two lines
+ * joined by a `<br>`, and a line ended by a FORCED BREAK counts as a last line, so
+ * `text-align-last: auto` renders it flush-LEFT. Both lines therefore left-align
+ * inside a right-hand box, which reads as "the float broke." ⚑ *Justify's failure
+ * mode is silent left alignment* -- the same misdirection that cost the corner
+ * stamp a round on 08-19.
+ *
+ * ✅ FIXED IN §9 BY ADDING `:not(.dr-owner)`, NOT BY A SECOND `text-align` HERE OR
+ * IN A PRINT SHEET. Two sheets fighting over one property on one selector is the
+ * rot condition print-space.css's own header names, and it would convert the print
+ * group's free load order into law. **This rule stays the single claimant.** Bonus:
+ * the exclusion also takes `hyphens: auto` off the tag, and an email address must
+ * never be broken by a hyphen a reader might type.
+ *
+ * 🚩 SO IF THIS RULE EVER STOPS WORKING ON PAPER, CHECK §9's EXCLUSION LIST FIRST.
+ * Anything else that lands in this file and sets its own `text-align` needs adding
+ * to that list in the same commit -- prose describing an exclusion is not one.
+ *
+ * =========================================================================
  * 🔴 EMITTED **AFTER** REVISED AND PULLED BACK ONTO ITS LINE. MEASURED, BOTH WAYS.
  * =========================================================================
  * The obvious build puts the float BEFORE revised, because a float shares a line
@@ -127,6 +160,14 @@
  * it survive the root question, and the two-line form needs no separate value
  * because the pull acts on the box top, not on its height.
  *
+ * ✅ AND BOTH MEDIA ARE NOW CONFIRMED BY A HUMAN LOOKING AT THEM. ~~The browser is
+ * the unverified half.~~ Michael confirmed the SCREEN render on 2026-08-30
+ * (*"it does so in web"*) and reported PAPER as the broken one -- the exact
+ * inverse of what this comment predicted, because the prediction reasoned about
+ * which ENGINE had been tested and not about which CASCADE applied. ⚠️ Struck
+ * rather than deleted: a wrong prediction with a named cause is worth more than a
+ * silent correction.
+ *
  * ⚠️ A FLOAT RATHER THAN `text-align` ON A FULL-WIDTH BLOCK, so a long address
  * WRAPS inside its own box instead of colliding with the revision date on a
  * narrow screen. `margin-bottom: 0` keeps a pulled-up float from re-opening the
@@ -145,12 +186,11 @@
  * link colour, so it prints as one unbroken line of provenance -- which is the
  * surface it was built for.
  *
- * 🚩 THE BROWSER IS THE UNVERIFIED HALF, AND ON THIS ELEMENT THAT IS THE INVERSE
- * OF EVERY OTHER RULE IN THIS FILE. WeasyPrint IS the print engine, so paper is
- * the surface with evidence behind it; no browser was reachable from the session
- * that built this. If the two lines are off by a line on screen, the value to
- * adjust is `-2.36em` and nothing else -- do not reach for the emit order, which
- * is settled above, and do not touch `.dr-revised`.
+ * 🚩 STILL UNVERIFIED, AND IT IS A PAGINATION CASE RATHER THAN AN ALIGNMENT ONE: a
+ * float carrying a NEGATIVE top margin that lands at a page boundary. No sample
+ * has hit it, the shape is known to be awkward in paged media, and the fix if it
+ * ever bites is a `break-inside`/`break-before` rule in `print-flow.css`, which
+ * owns pagination -- not a change to the value above.
  * ------------------------------------------------------------------------ */
 .md-typeset .dr-owner {
   float: right;
