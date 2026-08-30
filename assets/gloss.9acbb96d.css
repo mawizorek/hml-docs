@@ -1,0 +1,197 @@
+/* THE ROLE GLOSS -- a hover box on screen, a parenthesis on paper.
+ *
+ * Consumed by docrender/markerlinks.py, which emits `data-gloss` (what to show)
+ * and `data-role-print` (what to print) on a marker LINK. Read that module for
+ * why the text lives on the target page rather than in this repo, and
+ * objects/role.yml for the field it comes from.
+ *
+ * ==========================================================================
+ * WHY THIS IS NOT `title=`, WHICH IS A RULING AND NOT A PREFERENCE
+ * ==========================================================================
+ * figure.py refused the browser's own tooltip on 2026-08-06: it does not appear
+ * on touch devices at all, is announced inconsistently by screen readers, and
+ * cannot be reached by keyboard -- "shipping something that does not do what the
+ * author writing it believes it does." Michael ruled the styled box on
+ * 2026-08-30.
+ *
+ * HIDDEN WITH `opacity`, NEVER `display: none` OR `visibility: hidden`, AND THAT
+ * IS AN ACCESSIBILITY DECISION RATHER THAN A TRANSITION TRICK. Both of those
+ * remove an element from the accessibility tree, so a hover-only fact becomes
+ * invisible to anybody not hovering. At zero opacity with `pointer-events: none`
+ * the text stays in the tree and is read normally, and absolute positioning means
+ * it costs no layout. buildstamp.py made this argument first; this is the same
+ * mechanism on a different host.
+ *
+ * AND THE HOST BEING AN ANCHOR IS WHY THERE IS NO JAVASCRIPT AND NO `tabindex`.
+ * buildstamp needed one because its host was a `<span>`. A link is already
+ * focusable, so `:focus-visible` reaches this for free. Do not add a tabindex --
+ * it would make the element focusable twice and change nothing.
+ *
+ * ==========================================================================
+ * ONE PSEUDO-ELEMENT, TWO MEDIA, TWO ATTRIBUTES
+ * ==========================================================================
+ * `::after` is the popup on screen and the inline parenthesis on paper. Same
+ * element, different `content` source per medium:
+ *
+ *     screen   content: attr(data-gloss)        the hover box
+ *     print    content: attr(data-role-print)   " (like this)", inline
+ *
+ * That is deliberate and it is what keeps the two from disagreeing: there is one
+ * box, one string per medium, and no second element that could be styled out of
+ * step with the first.
+ *
+ * THE PRINT HALF IS GATED ON THE ATTRIBUTE AND NOT ON THE CLASS. `attr()` on a
+ * missing attribute returns the empty string, so an ungated rule would print a
+ * bare " ()" on every role whose paper string is deliberately empty --
+ * `print_gloss: ""` means print NOTHING, and an empty pair of brackets is not
+ * nothing. `[data-role-print]` is the guard.
+ *
+ * ==========================================================================
+ * NO CONTAINER QUERY HERE, AND THE ABSENCE IS DELIBERATE
+ * ==========================================================================
+ * The narrow-screen clamp was first written as `@container (max-width: 40em)` and
+ * removed before this sheet ever shipped. AN UNNAMED CONTAINER QUERY BINDS TO THE
+ * NEAREST ANCESTOR DECLARING `container-type`, and nothing in this engine declares
+ * one around ordinary prose -- data.css declares exactly one, named `dr-table`, on
+ * the table wrapper.
+ *
+ * So the query would have matched inside a data table and matched NOTHING in a
+ * sentence, which is where most roles will be written. A rule that works in the
+ * place you happen to test and silently does nothing everywhere else is the
+ * dead-control shape this repo logs more than any other.
+ *
+ * `max-width: min(32ch, 80vw)` replaces it in one declaration with no ancestor
+ * dependency: the measure where there is room, the viewport where there is not.
+ *
+ * ==========================================================================
+ * EVERY TOKEN CARRIES A MATERIAL FALLBACK, WHICH IS NOT DECORATION
+ * ==========================================================================
+ * Tokens are generated per site from theme/canonical/*.tsv, so a token that
+ * exists on `eos` may be absent on a nine-token local skin -- the failure that
+ * left eleven callout families painting `currentColor` on 2026-08-05, on the one
+ * site whose job was to break loudest. Falling back to Material's own variable
+ * makes the worst case Material's look rather than an invisible box, and an
+ * invisible box is exactly what this sheet exists to prevent.
+ *
+ * Same rule flow.css states for the same reason. Do not "tidy" a fallback away.
+ */
+
+/* The host. `position: relative` on an inline anchor is enough to anchor an
+ * absolutely positioned pseudo-element, and costs no layout of its own.
+ *
+ * NO `cursor: help` HERE, DELIBERATELY. base.css gives that to `.dr-mark`, the
+ * SPAN form, where it is right because nothing else says the text is annotated.
+ * This is a LINK: it is underlined, it navigates, and a help cursor on something
+ * clickable tells the reader the wrong thing about what a click will do. The
+ * hover box is a bonus on top of a link, not the reason the text is marked. */
+.md-typeset a.dr-gloss {
+  position: relative;
+}
+
+/* THE BOX. Hidden by default, revealed on hover and on keyboard focus.
+ *
+ * `max-width` is in `ch` first because a gloss is a SENTENCE and a sentence has a
+ * comfortable measure regardless of screen; the `vw` half is the floor for a
+ * phone. See the header on why this is not a container query. */
+.md-typeset a.dr-gloss::after {
+  content: attr(data-gloss);
+
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 0.45em);
+  z-index: 5;
+
+  width: max-content;
+  max-width: min(32ch, 80vw);
+  padding: 0.4em 0.6em;
+
+  /* Prose, not a value: it WRAPS, and it must, because base.css gives `.dr-mark`
+   * `white-space: nowrap` for short measured values and that is wrong for a
+   * sentence. A 40-character note clipped at a container edge is a defect this
+   * repo has already logged twice (J25 defect 4, J26). */
+  white-space: normal;
+  text-align: left;
+  font-size: 0.78em;
+  font-weight: 400;
+  line-height: 1.35;
+  letter-spacing: normal;
+  text-decoration: none;
+
+  color: var(--dr-ink, var(--md-default-fg-color));
+  background: var(--dr-surface-2, var(--md-default-bg-color));
+  border: 1px solid var(--dr-border, var(--md-default-fg-color--lightest));
+  border-radius: var(--dr-radius, 4px);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 22%);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dr-motion-fast, 120ms) ease-in-out;
+}
+
+.md-typeset a.dr-gloss:hover::after,
+.md-typeset a.dr-gloss:focus-visible::after {
+  opacity: 1;
+}
+
+/* MOTION IS AN OPT-OUT, NOT A FEATURE. A reader who has asked their system to
+ * stop animating gets the box instantly rather than not at all -- the content is
+ * never what a preference removes. */
+@media (prefers-reduced-motion: reduce) {
+  .md-typeset a.dr-gloss::after {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+ * PAPER
+ * ==========================================================================
+ * The popup becomes an inline parenthesis. Hover does not exist on paper, so the
+ * fact has to be in the ink or it is lost -- and `print-callout.css` and
+ * `print-chrome.css` both strip controls on one test, "could a reader ACT on it
+ * with a pen?" A parenthesis passes that test; a hidden box does not.
+ *
+ * EVERY DECLARATION CARRIES `!important`, AND THAT IS NOT SUPERSTITION.
+ * print-flow.css sets `.md-typeset details > *:not(summary) { display: revert
+ * !important }`, and importance beats specificity -- a plain rule from this sheet
+ * has already lost that fight twice in this feature family this week. A role
+ * inside a collapsed block is exactly that case.
+ *
+ * GATED ON `[data-role-print]`, NEVER ON `.dr-gloss`. See the header: an empty
+ * paper string is a real state meaning print nothing, and an ungated `attr()`
+ * would render " ()" instead. */
+@media print {
+  /* The screen box, off. The pseudo-element is REUSED below rather than hidden,
+   * so this resets what made it a floating box. */
+  .md-typeset a.dr-gloss::after {
+    content: none !important;
+    position: static !important;
+    opacity: 1 !important;
+    max-width: none !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    z-index: auto !important;
+  }
+
+  /* The parenthesis, on. Inherits the surrounding type so it reads as part of
+   * the sentence rather than as an annotation bolted onto it. */
+  .md-typeset a.dr-gloss[data-role-print]::after,
+  .md-typeset a[data-role-print]::after {
+    content: " (" attr(data-role-print) ")" !important;
+    position: static !important;
+    display: inline !important;
+    opacity: 1 !important;
+    font-size: inherit !important;
+    font-style: italic !important;
+    font-weight: inherit !important;
+    line-height: inherit !important;
+    color: inherit !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    white-space: normal !important;
+  }
+}
