@@ -12,14 +12,13 @@
  * (`hide: footer` in frontmatter, Michael's call), and the only navigation on a
  * page must look like navigation.
  *
- * 🔴 THIS SHEET IS OVER BUDGET AND THE VIEW SECTION IS A LODGER (2026-08-30).
+ * 🔴 THIS SHEET IS AT ITS CEILING AND THE VIEW SECTION IS A LODGER (2026-08-30).
  * `.dr-view` belongs in its own `embed.css` -- it is neither navigation nor a
  * form -- but a new sheet must be registered in `docrender/assets.py`, which is
  * 32,684 B: past the read ceiling AND the write cap, so it cannot be rewritten
- * safely. This file was ~21.6KB before the lodger arrived, so it is now at the
- * ~22KB ceiling with nothing left. ⚠️ NEXT EDIT TO EITHER CONCERN SPLITS THIS
- * FILE; do not add a fourth thing. Recorded rather than hidden, because a
- * compromise nobody writes down becomes the convention.
+ * safely. ⚠️ NEXT EDIT TO EITHER CONCERN SPLITS THIS FILE; do not add a fourth
+ * thing. Recorded rather than hidden, because a compromise nobody writes down
+ * becomes the convention.
  *
  * =========================================================================
  * 🔴 EVERY ANCHOR RULE IS SCOPED UNDER `.md-typeset`, AND THAT IS A BUG FIX
@@ -461,7 +460,13 @@
 /* 🔴 NO `height` HERE ON PURPOSE. ClickUp's embed code for a shared VIEW ships a
  * literal `height="700px"` and `views.py` mirrors it into `min-height`, so a CSS
  * height would out-rank the attribute and make the frontmatter `height:` key a
- * lie. A key that appears to work is worse than one that is absent. */
+ * lie. A key that appears to work is worse than one that is absent.
+ *
+ * 🚫 THERE WAS A `.dr-view__caption` RULE HERE AND IT IS DELETED (2026-08-30),
+ * with the caption it styled. The engine emitted an editorial sentence onto
+ * Michael's page and he wanted it gone on sight. **This section styles STRUCTURE
+ * only -- a frame and a link. If prose belongs on a page, the author types it.**
+ * Full reasoning: `views.py` -> THE ENGINE WRITES NO PROSE ONTO A PAGE. */
 .dr-view {
   margin: 1.5rem 0 0;
 }
@@ -473,20 +478,8 @@
   border-radius: 0.25rem;
 }
 
-/* 🔴 THE CAPTION IS NOT DECORATION. The frame carries ClickUp's own *Sign up
- * free* / *Login* chrome, unremovable from outside a cross-origin iframe, and
- * unexplained it reads as an advert in a policy page. This line names it as live
- * third-party content, which turns clutter into provenance. Above the fallback:
- * provenance first, then the escape hatch. */
-.dr-view__caption {
-  margin: 0.5rem 0 0;
-  font-size: 0.7rem;
-  letter-spacing: 0.02em;
-  color: var(--md-default-fg-color--light);
-}
-
 .dr-view__fallback {
-  margin: 0.35rem 0 0;
+  margin: 0.6rem 0 0;
   font-size: 0.75rem;
   color: var(--md-default-fg-color--light);
 }
@@ -584,8 +577,7 @@
    * nothing -- the reader was going to click something anyway. For a VIEW the
    * frame IS the content, so paper gets a URL where a table belongs. 🚫 Still the
    * right call: a build-time copy for print would put two sources behind one
-   * element and they would disagree the first time a filter changed. The caption
-   * survives deliberately -- it explains why there is a link and not rows. */
+   * element and they would disagree the first time a filter changed. */
   .dr-view iframe {
     display: none;
   }
