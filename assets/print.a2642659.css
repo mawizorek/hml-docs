@@ -262,6 +262,10 @@
     box-shadow: none !important;
   }
 
+  /* 🚩 A FIFTH GROUND IS IN `print-ink.css`: the markdown table's fill (08-30,
+   * third instance of the above). This file had 296 B free; a new sheet needs
+   * `assets.py`, past the write cap. Pointer, so grounds keep ONE index. */
+
   /* -------------------------------------------------------------------------
    * THE CONTENT COLUMN COMES OFF ITS RAILS
    *

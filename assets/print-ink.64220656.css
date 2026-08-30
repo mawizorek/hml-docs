@@ -11,6 +11,15 @@
  *     print-identity.css WHOSE DOCUMENT IT IS
  *     print-ink.css      WHAT COLOUR IT IS     -- this file
  *
+ * 🔴 AND AS OF 2026-08-30 IT HOLDS ONE GROUND, WHICH ITS OWN TITLE SAYS IT
+ * SHOULD NOT. See THE MARKDOWN TABLE at the foot: `print.css` owns "which grounds
+ * print" and had 296 B of headroom, a new print sheet needs a registration in
+ * `assets.py` (32,684 B, past the WRITE cap, not merely the read one), and a CSS
+ * sidecar would be a net-new convention nobody asked for. **Placement by
+ * elimination, named as such, with a cross-pointer left in print.css so the two
+ * homes cannot become two silent claimants.** 🚩 It goes back the moment print.css
+ * splits.
+ *
  * =========================================================================
  * 🔴 THIS FILE CONTRADICTS print.css's FOUNDING RULE, BY RULING, ONCE
  * =========================================================================
@@ -25,6 +34,14 @@
  * it is not amended -- it is EXEMPTED for one property, on one medium, by the
  * person who wrote it. 🚫 **Do not read this file as permission to put a second
  * colour opinion in the print group.** The next one needs its own ruling.
+ *
+ * ✅ THAT GATE WAS TESTED ON 2026-08-30 AND IT HELD. The markdown-table fill below
+ * arrived with a ruling (*"make sure that when a Markdown table is drawn using
+ * only characters, it doesn't render a solid background when printed"*) and a
+ * screenshot. ⚠️ It is also not really a second colour OPINION: it removes a fill
+ * rather than choosing one, which is the same *absence of a decision* argument
+ * print.css makes for the printed ground. **A gate that only ever refuses is a
+ * wall; this is what it looks like satisfied.**
  *
  * ⚠️ AND IT IS A LITERAL, WHICH IS THE PART THAT NEEDED ASKING. Michael's own
  * 08-19 verdict on two greys in the corner stamp was *"the color you chose MUST
@@ -122,6 +139,12 @@
  * its first paragraph, so putting ink there would make its header a lie.
  * **Same three-way argument that created `print-identity.css` five hours ago.**
  *
+ * 🚩 AND THOSE THREE NUMBERS ARE WHY THE MARKDOWN-TABLE FILL LANDED HERE A DAY
+ * LATER. They were written as an argument for creating this file and they held as
+ * an argument for extending it: still 296 B, still 327 B, still 239 B. **A size
+ * measured once is a size that was true once -- these were re-measured, not
+ * quoted.**
+ *
  * 🪦 AND IT IS NOT `print-scheme.css`. That tombstone was a colour sheet too, and
  * its retirement note says **"DO NOT RE-ADD RULES HERE. If the paper block ever
  * needs correcting, correct it in `theme.py`."** ⭐ That instruction was checked
@@ -137,6 +160,13 @@
  * near miss is §5's `color: inherit` on `a`, which is a different SELECTOR, so
  * there is no pair. **Add a `color` to any heading rule in print-type.css and the
  * group's load order stops being free.**
+ *
+ * ⚠️ RE-CHECKED FOR THE `background` BLOCK BELOW, BECAUSE THAT CLAIM NOW COVERS A
+ * SECOND PROPERTY. `print.css` declares `background` on `body/.md-main/.md-content`
+ * and on the five `.dr-data*` surfaces; `print-callout.css` declares it on the
+ * callout panel. **None of those selectors is `table:not([class])` or its cells,
+ * so there is still no selector-and-property PAIR** -- and every declaration on
+ * both sides is `!important` anyway, which decides the tie before order can.
  *
  * ⚠️ MEASURED IN WeasyPrint by reading computed `color` off eleven elements, not
  * eyeballed -- but that is a second engine, so **a browser print preview is still
@@ -155,5 +185,85 @@
   html .md-typeset h2,
   html .md-typeset h3 {
     color: var(--dr-ink, #000);
+  }
+
+  /* -------------------------------------------------------------------------
+   * 🔴 THE MARKDOWN TABLE -- FILLS OFF (2026-08-30)
+   *
+   * > Michael, printing Todd Union Keys: *"Can you make sure that when a Markdown
+   * > table is drawn using only characters, it doesn't render a solid background
+   * > when printed"* -- with a print preview of a five-row key table sitting in a
+   * > solid parchment slab from its top border to its bottom one.
+   *
+   * 🔴 THIRD INSTANCE OF ONE MECHANISM, AND print.css PREDICTED THE RECURRENCE IN
+   * WRITING. Its ground block killed the content column's parchment fill on
+   * 08-19; its fills block killed the four `.dr-data` grounds on 08-28 and
+   * recorded the lesson as *"a warning that names its mechanism is a prediction,
+   * and this one came true nine days later on a different element. Being
+   * predicted is not the same as being handled."* ⚑ **It came true a third time,
+   * on the one table shape nobody had printed: the plain pipe table.**
+   *
+   * The chain is the same every time. `theme.py` hands a printing reader the
+   * theme's own LIGHT row, so on `papyrus` the background token IS real parchment
+   * (`#f0e6d2`) -- correctly resolved, exactly what the vector declares. Every
+   * element that paints with that token therefore paints parchment on paper.
+   * `body`, `.md-main` and `.md-content` were exempted by name; `.dr-data*` was
+   * exempted by name; **an unclassed `<table>` never was.**
+   *
+   * ⚠️ ONE LINK IN THAT CHAIN IS INFERRED RATHER THAN READ, AND IT IS SAID SO
+   * BECAUSE THIS FILE'S SIBLING HAS THE SCAR: `print-flow.css` records that its
+   * tab-label geometry was *"verified from OUTPUT (two PDFs) and not from
+   * Material's compiled stylesheet."* Same footing here -- **no rule in this
+   * engine gives a markdown table a background** (grepped: our only `table:not(
+   * [class])` rules are a font-size in print-type.css and a `break-inside` in
+   * print-flow.css), so the fill comes from Material's own typeset table rule.
+   * The exact declaration was not read from Material's source. ✅ **The fix does
+   * not depend on which rule supplies it:** `transparent !important` on the
+   * element beats any non-important background from any origin.
+   *
+   * ⭐ AND THE SCREENSHOT CARRIES A SECOND FINDING WORTH MORE THAN THE FIX.
+   * `table:not([class])` is NOT on print.css's `print-color-adjust: exact` list,
+   * so a browser would drop this fill for free -- **which means his print dialog
+   * has "Background graphics" ON.** So the reader who found this is a reader for
+   * whom EVERY unlisted background prints, and the ones this group turns off by
+   * name are off for him only because they are turned off explicitly. 🚩 That is
+   * the audience the next print bug will come from; it is not a niche setting.
+   *
+   * 🚫 SCOPED TO THE UNCLASSED TABLE, WHICH IS THE WHOLE POINT OF `:not([class])`.
+   * The TSV data table carries a class ON PURPOSE -- three defences against
+   * Material's `display: block`, documented in `data.css` and `table.py` -- so it
+   * cannot match here, and its own fills are already off via print.css. **Two
+   * table shapes, two rules, no overlap and no second claimant.**
+   *
+   * ✅ SIX SELECTORS AND DELIBERATELY NO `tr:hover`. print.css's data block lists
+   * a hover selector because *"a reader in print PREVIEW can still hover a row"*
+   * -- true, and unnecessary here: a hover background paints on the `tr` or the
+   * `td`, both of which are covered unconditionally below, and Material's hover
+   * rule is not `!important` so it loses at any specificity. **Copying the
+   * precedent would have added a selector that cannot matter.** The reverse
+   * mistake -- a rule written against state it can never observe -- is one this
+   * repo has logged five times.
+   *
+   * ✅ THE MARKS ALL SURVIVE, which is what makes removing the fill the right
+   * answer rather than making it opaque (Michael, 08-28, on the same question one
+   * table over: *"fills off at print yes"*). A printed table is drawn with RULES:
+   * Material's cell borders are untouched, and so is every `--dr-*` mark inside a
+   * cell -- including the `.dr-mark` chip visible in his own screenshot, which
+   * print.css forces through the printer on purpose and print-ink.css refuses to
+   * touch.
+   *
+   * ⚠️ `!important` COSTS THE SAME THING IT COSTS TWICE ALREADY IN THIS GROUP: an
+   * instance's `site.css` loads last so a site keeps the final word, and this
+   * takes "paint a printed markdown-table ground" away from it. Taken on the same
+   * grounds print.css states -- the failure mode is a slab of ink on a safety
+   * sheet, and nobody has ever wanted the other thing.
+   * --------------------------------------------------------------------- */
+  .md-typeset table:not([class]),
+  .md-typeset table:not([class]) thead,
+  .md-typeset table:not([class]) tbody,
+  .md-typeset table:not([class]) tr,
+  .md-typeset table:not([class]) th,
+  .md-typeset table:not([class]) td {
+    background: transparent !important;
   }
 }
