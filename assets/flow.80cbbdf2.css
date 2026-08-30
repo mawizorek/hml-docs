@@ -12,13 +12,12 @@
  * (`hide: footer` in frontmatter, Michael's call), and the only navigation on a
  * page must look like navigation.
  *
- * 🔴 THIS SHEET IS AT ITS CEILING AND THE VIEW SECTION IS A LODGER (2026-08-30).
- * `.dr-view` belongs in its own `embed.css` -- it is neither navigation nor a
- * form -- but a new sheet must be registered in `docrender/assets.py`, which is
- * 32,684 B: past the read ceiling AND the write cap, so it cannot be rewritten
- * safely. ⚠️ NEXT EDIT TO EITHER CONCERN SPLITS THIS FILE; do not add a fourth
- * thing. Recorded rather than hidden, because a compromise nobody writes down
- * becomes the convention.
+ * 🔴 PAST THE ~22KB CEILING, AND THE VIEW SECTION IS A LODGER. `.dr-view` belongs
+ * in its own `embed.css`, but a new sheet must be registered in
+ * `docrender/assets.py` -- 32,684 B, past the read ceiling AND the write cap, so
+ * it cannot be rewritten safely. ⚠️ NEXT EDIT TO EITHER CONCERN SPLITS THIS FILE.
+ * The real fix is splitting `assets.py`. Recorded rather than hidden, because a
+ * compromise nobody writes down becomes the convention.
  *
  * =========================================================================
  * 🔴 EVERY ANCHOR RULE IS SCOPED UNDER `.md-typeset`, AND THAT IS A BUG FIX
@@ -393,34 +392,43 @@
   border-top: 0;
 }
 
-/* -------------------------------------------------------------------- form */
+/* --------------------------------------------------------- form  and  view */
 
-.dr-form {
+.dr-form,
+.dr-view {
   margin: 1.5rem 0 0;
 }
 
-/* THE COLLAPSED FORM, WHICH IS THE ANSWER TO A REAL SEQUENCING PROBLEM. A
- * program page is BOTH the entrance and the exit: a reader lands there before
- * reading anything, and returns there to submit. An open form on arrival tells
- * somebody to submit a form for material they have not read yet.
+/* THE COLLAPSED EMBED, WHICH IS THE ANSWER TO TWO DIFFERENT REAL PROBLEMS.
  *
- * So `collapsed: true` renders it shut, and the last step's Next links to the
- * summary's own id. Per the HTML spec a fragment pointing INSIDE a closed
- * <details> expands it, so arriving from the end of the flow opens the form
- * with no script and no state.
+ * For a FORM it is SEQUENCING: a program page is both the entrance and the exit,
+ * so a reader lands there before reading anything and returns there to submit. An
+ * open form on arrival tells somebody to submit for material they have not read.
  *
- * ⚠️ THIS IS THE ONE FLOW LINK THAT DELIBERATELY DOES NOT GO TO THE TOP OF THE
- * PAGE, and that is the point rather than an oversight: the reader has finished
- * reading and the only thing left is to submit, so the form IS the destination.
+ * For a VIEW it is WEIGHT: a 700px frame is the tallest thing on any page it sits
+ * on, and it pushes real prose below the fold whether or not the reader wants the
+ * table today. It is also the only element here that costs a third-party request.
  *
- * DEGRADES HONESTLY where that behaviour is missing: the reader lands on a
- * visible, obvious "Complete this program" control and clicks once.
+ * Both use `collapsed: true` -> a closed `<details>` whose `<summary>` carries the
+ * id. Per the HTML spec a fragment pointing INSIDE a closed <details> expands it,
+ * so a link opens the embed with no script and no state. DEGRADES HONESTLY where
+ * that behaviour is missing: the reader gets a visible control and clicks once.
  *
- * ⚠️ THIS ONE KEEPS ITS BOX ON PURPOSE, and the contrast with THE CAP above is
- * the whole point: a completion form is the primary action on the last page of a
- * program, and the disclosure above it is a list of places the reader has
- * already been. Same element, opposite jobs. */
-.dr-form__open > summary {
+ * ✅ ONE CONTROL, ONE STYLE, BY SELECTOR LIST RATHER THAN A SECOND BLOCK. The two
+ * disclosures look identical because they ARE the same control -- and this file is
+ * past its ceiling, so ~30 bytes of selector beats a new section either way.
+ *
+ * ⚠️ BOTH KEEP THE BOX ON PURPOSE, and the contrast with THE CAP above is the
+ * point: an embed a reader is meant to open is a primary action, while the
+ * disclosure above it lists places they have already been. Same element, opposite
+ * jobs.
+ *
+ * 🔴 A VIEW'S SUMMARY TEXT IS THE AUTHOR'S `text:` AND THE ENGINE HAS NO DEFAULT
+ * FOR IT. `docrender/views-dl.md` D6-D7: the engine emits structure, never page
+ * copy. A form can default to "Complete this program" because it has exactly one
+ * purpose; a view has none. */
+.dr-form__open > summary,
+.dr-view__open > summary {
   cursor: pointer;
   display: block;
   padding: 0.7rem 1rem;
@@ -432,12 +440,14 @@
   scroll-margin-top: 4.5rem;
 }
 
-.dr-form__open > summary:hover {
+.dr-form__open > summary:hover,
+.dr-view__open > summary:hover {
   background: var(--dr-good, var(--md-typeset-a-color));
   color: var(--dr-on-accent, var(--md-primary-bg-color));
 }
 
-.dr-form__open[open] > summary {
+.dr-form__open[open] > summary,
+.dr-view__open[open] > summary {
   margin-bottom: 0.8rem;
 }
 
@@ -446,31 +456,10 @@
   width: 100%;
 }
 
-/* The fallback link is ALWAYS rendered, never a print-only afterthought: it is
- * also the answer to "the form did not load." Quiet on screen, essential on
- * paper. */
-.dr-form__fallback {
-  margin: 0.6rem 0 0;
-  font-size: 0.75rem;
-  color: var(--md-default-fg-color--light);
-}
-
-/* -------------------------------------------------------------------- view */
-
-/* 🔴 NO `height` HERE ON PURPOSE. ClickUp's embed code for a shared VIEW ships a
- * literal `height="700px"` and `views.py` mirrors it into `min-height`, so a CSS
- * height would out-rank the attribute and make the frontmatter `height:` key a
- * lie. A key that appears to work is worse than one that is absent.
- *
- * 🚫 THERE WAS A `.dr-view__caption` RULE HERE AND IT IS DELETED (2026-08-30),
- * with the caption it styled. The engine emitted an editorial sentence onto
- * Michael's page and he wanted it gone on sight. **This section styles STRUCTURE
- * only -- a frame and a link. If prose belongs on a page, the author types it.**
- * Full reasoning: `views.py` -> THE ENGINE WRITES NO PROSE ONTO A PAGE. */
-.dr-view {
-  margin: 1.5rem 0 0;
-}
-
+/* 🔴 NO `height` ON `.dr-view iframe` ON PURPOSE. ClickUp's embed code for a view
+ * ships a literal `height="700px"` and `views.py` mirrors it into `min-height`, so
+ * a CSS height would out-rank the attribute and make the frontmatter `height:` key
+ * a lie. A key that appears to work is worse than one that is absent. */
 .dr-view iframe {
   display: block;
   width: 100%;
@@ -478,6 +467,10 @@
   border-radius: 0.25rem;
 }
 
+/* The fallback link is ALWAYS rendered, never a print-only afterthought: it is
+ * also the answer to "it did not load." Quiet on screen, essential on paper.
+ * 🚫 There is no caption rule here and there must not be one -- views-dl.md D6. */
+.dr-form__fallback,
 .dr-view__fallback {
   margin: 0.6rem 0 0;
   font-size: 0.75rem;
@@ -557,32 +550,28 @@
     display: none;
   }
 
-  /* An iframe prints as a blank rectangle, so it is removed outright and the
-   * fallback link carries the address. A hole where a compliance form should be
-   * is worse than a printed URL. */
-  .dr-form iframe {
-    display: none;
-  }
-
-  .dr-form__fallback {
-    font-size: 0.85rem;
-  }
-
-  .dr-form__open > summary {
-    border: 0;
-    padding: 0;
-  }
-
-  /* 🔴 A REAL LOSS, NOT A TIDY DEGRADATION. Dropping a FORM's iframe costs
-   * nothing -- the reader was going to click something anyway. For a VIEW the
-   * frame IS the content, so paper gets a URL where a table belongs. 🚫 Still the
-   * right call: a build-time copy for print would put two sources behind one
-   * element and they would disagree the first time a filter changed. */
+  /* 🔴 AN IFRAME PRINTS AS A BLANK RECTANGLE, so it is removed outright and the
+   * fallback link carries the address. For a FORM that costs nothing -- the
+   * reader was going to click something anyway. For a VIEW the frame IS the
+   * content, so paper gets a URL where a table belongs: a real loss, stated
+   * rather than solved. 🚫 A build-time copy for print was refused -- two sources
+   * behind one element disagree the first time a filter changes.
+   *
+   * ✅ A COLLAPSED EMBED NEEDS NO PRINT RULE OF ITS OWN: `print-flow.css` already
+   * forces every <details> open, so it prints exactly as an open one does. */
+  .dr-form iframe,
   .dr-view iframe {
     display: none;
   }
 
+  .dr-form__fallback,
   .dr-view__fallback {
     font-size: 0.85rem;
+  }
+
+  .dr-form__open > summary,
+  .dr-view__open > summary {
+    border: 0;
+    padding: 0;
   }
 }
