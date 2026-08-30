@@ -77,7 +77,8 @@
 /* ---------------------------------------------------------------------------
  * THE OWNERSHIP TAG (2026-08-30, Michael) -- ONE FOOTER LINE, TWO ENDS
  *
- *   Revised Aug 2026                Posted by Michael A Wizorek · michael@...
+ *   Revised Fall 2026                      Posted by Michael A Wizorek
+ *                                       michael.wizorek@rochester.edu
  *
  * > *"Leave the revised function and position and font and size exactly the same
  * > on the left side of the footer. Add POSTED BY aligned right in the same line
@@ -86,6 +87,13 @@
  * From `owner: {name, email}` in the instance's site.yml -- one declaration per
  * SITE, no page edit anywhere. `docrender/lede.py` `owner()` emits it and carries
  * the account; absent means no line, so five of six sites are untouched.
+ *
+ * ⭐ TWO LINES, NAME OVER ADDRESS, BOTH FLUSH RIGHT (v3, from Michael's own
+ * mock-up). The `·` separator is gone: `owner()` emits a `<br>` instead, because
+ * a middot left hanging at a wrapped line end is exactly the fussiness this line
+ * is meant to avoid. `text-align: right` is what keeps the SECOND line flush --
+ * a float shrink-wraps its box, so without it the address would sit left inside a
+ * right-hand box, which reads as a mistake rather than a choice.
  *
  * =========================================================================
  * 🔴 EMITTED **AFTER** REVISED AND PULLED BACK ONTO ITS LINE. MEASURED, BOTH WAYS.
@@ -109,16 +117,20 @@
  * the whole requirement. ⚑ *The mechanism that looks correct in the abstract was
  * the one that required editing the thing we were told not to edit.*
  *
- * ✅ `-2.36em` IS VERIFIED, NOT DERIVED: rendered four ways and read off the
- * layout -- with and without the keywords line, at root 16px and at root 20px
- * (Material's root is not determined; see print-type.css §0). In all four,
- * `.dr-revised` was displaced **0.0px** from where it sits with no tag present,
- * and the two lines shared **one baseline (dy 0.0)**. `em` rather than `px` is
- * what makes it survive the root question.
+ * ✅ `-2.36em` IS VERIFIED, NOT DERIVED: rendered EIGHT ways and read off the
+ * layout -- one-line and two-line forms, with and without the keywords line, at
+ * root 16px and at root 20px (Material's root is not determined; see
+ * print-type.css §0). In all eight, `.dr-revised` was displaced **0.0px** from
+ * where it sits with no tag present, the first line of the tag shared **one
+ * baseline with it (dy 0.0)**, and the box was **flush to the content edge**
+ * (right edge 789.3px = the 592pt measure). `em` rather than `px` is what makes
+ * it survive the root question, and the two-line form needs no separate value
+ * because the pull acts on the box top, not on its height.
  *
- * ⚠️ A FLOAT RATHER THAN `text-align: right`, so a long address WRAPS instead of
- * colliding with the revision date on a narrow screen. `margin-bottom: 0` keeps
- * a pulled-up float from re-opening the gap it was lifted out of.
+ * ⚠️ A FLOAT RATHER THAN `text-align` ON A FULL-WIDTH BLOCK, so a long address
+ * WRAPS inside its own box instead of colliding with the revision date on a
+ * narrow screen. `margin-bottom: 0` keeps a pulled-up float from re-opening the
+ * gap it was lifted out of.
  *
  * ⚠️ THE SIZE AND COLOUR MATCH THE REVISED LINE ON PURPOSE -- `0.85em` and
  * `ink-muted`, the same pair base.css uses for the aka and revised lines. Three
@@ -132,9 +144,17 @@
  * a curious reader is most likely to click. On paper `print-type.css` §5 strips
  * link colour, so it prints as one unbroken line of provenance -- which is the
  * surface it was built for.
+ *
+ * 🚩 THE BROWSER IS THE UNVERIFIED HALF, AND ON THIS ELEMENT THAT IS THE INVERSE
+ * OF EVERY OTHER RULE IN THIS FILE. WeasyPrint IS the print engine, so paper is
+ * the surface with evidence behind it; no browser was reachable from the session
+ * that built this. If the two lines are off by a line on screen, the value to
+ * adjust is `-2.36em` and nothing else -- do not reach for the emit order, which
+ * is settled above, and do not touch `.dr-revised`.
  * ------------------------------------------------------------------------ */
 .md-typeset .dr-owner {
   float: right;
+  text-align: right;
   margin-top: -2.36em;
   margin-bottom: 0;
   font-size: 0.85em;
