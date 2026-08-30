@@ -3,12 +3,13 @@
  * > Michael, 2026-08-29: *"can we align headers or qr codes to the right or
  * > center?"* Then, on the recommendation: *"exactly. full send."*
  *
- * FIVE FORMS, AND THE SPELLING IS DECIDED BY THE MARKUP RATHER THAN BY TASTE:
+ * SIX FORMS, AND THE SPELLING IS DECIDED BY THE MARKUP RATHER THAN BY TASTE:
  *
  *     ## Emergency Contacts {.align-center}      a heading
  *     Some paragraph. {.align-right}             a paragraph
  *     ![Rep plot](plot.png){.align-center}       an image (see IMAGES below)
  *     !!! qr "incident-report" print=true align=center
+ *     !!! form "completion" align=center         (see EMBEDS below)
  *     !!! data "inventory"
  *         align: center
  *
@@ -76,6 +77,13 @@
  * that neither `qr.css` nor `data.css` declares -- so there is no
  * selector-and-property PAIR anywhere, in either medium.
  *
+ * ⚠️ THE EMBED RULES AT THE FOOT BREAK THAT CLEAN STORY SLIGHTLY, and it is named
+ * rather than glossed: `flow.css` DOES declare `text-align` nowhere, but it owns
+ * `.dr-form__open > summary` and `.dr-view__fallback` for other properties. There
+ * is still no selector-and-property collision -- but the claim is now "no PAIR",
+ * not "no shared selector", and a future editor should check the pair rather than
+ * trusting the older, simpler sentence.
+ *
  * =========================================================================
  * 🔴 CONTENT-RELATIVE, NOT PAPER-RELATIVE, AND TODAY THEY LOOK IDENTICAL
  * =========================================================================
@@ -124,6 +132,15 @@
  * `apply_options` validates DATA-SHAPING keys and emits no HTML by contract. A
  * layout key inside either one would change what appears by talking about where it
  * sits. Two vocabularies, one parser, and the seam is written in every file.
+ *
+ * 🔴 THAT LAST SENTENCE WAS FALSE FOR A DAY AND IT COST THREE DIRECTIVES.
+ * "The seam is written in every file" was true of `qr.py` and `table.py` and had
+ * never been written into `forms.py` or `views.py` -- which did not accept options
+ * at all. So `!!! form "x" align=center` matched NOTHING, rendered as literal text,
+ * and reported nothing, because a regex that does not match has nothing to report.
+ * ⚑ **A claim that a rule is "stated everywhere" is the most expensive kind of
+ * documentation error: it stops anybody checking.** Fixed 2026-08-30 by moving the
+ * parser to `util.directive_options` and teaching both modules to call it.
  *
  * ⭐ THE `.align-center > .dr-qr` FORM IS KEPT ANYWAY, for the case where a QR
  * sits inside a block an author HAS centred. It costs one selector and it means
@@ -199,4 +216,47 @@ img.align-right {
 
 .dr-data--align-right > .dr-data__table {
   margin-inline: auto 0;
+}
+
+/* =========================================================================
+ * EMBEDS -- 🔴 THE ALIGNMENT MOVES THE FURNITURE AND CANNOT MOVE THE FRAME
+ * =========================================================================
+ * `forms.py` and `views.py` emit `dr-form--align-*` / `dr-view--align-*` from an
+ * `align=` option, and what that can reach is narrower than an author will assume.
+ *
+ * 🔴 THE IFRAME IS `width: 100%` AND THEREFORE UNMOVABLE. The header's own
+ * measurement is the proof: a sized box moves by MARGINS and by nothing else, and
+ * a box that already fills the column has **zero slack** for a margin to consume.
+ * So there is no rule below that touches the frame, and adding one would be a
+ * declaration with no effect -- the dead control this file opens by refusing.
+ *
+ * ✅ WHAT DOES MOVE IS EVERY PIECE OF INLINE FURNITURE THE EMBED CARRIES: the
+ * disclosure's `<summary>` label, the Reload button in `.dr-form__tools`, and the
+ * fallback link. All three are inline content inside full-width blocks, which is
+ * exactly the case `text-align` is for -- so ONE declaration on the wrapper does
+ * all of it, and no per-element selector is needed.
+ *
+ * ⚠️ SO `align=center` ON AN EMBED IS A REAL BUT PARTIAL EFFECT, and that is
+ * documented rather than smoothed over: the frame stays put, its labels centre.
+ * An author who wants the FRAME narrower and centred needs a width on it, which is
+ * a different feature and is not being invented here to make this one look bigger.
+ *
+ * 🚩 AND IT IS INHERITED, NOT SCOPED TO ONE ELEMENT, which is the one sharp edge:
+ * `text-align` cascades, so it also centres any text inside the frame's siblings.
+ * On these embeds that set is exactly the furniture named above. If a future embed
+ * grows a paragraph of prose that must stay flush left, this becomes three scoped
+ * selectors instead of one inherited declaration -- cheap then, and premature now.
+ *
+ * ⭐ THE PRINT SIDE NEEDS NOTHING. Both embeds hide their frame on paper and keep
+ * the fallback link, so the aligned thing on a sheet is a link -- inline content in
+ * a block, the case that already works, in the medium this feature was asked for.
+ * ---------------------------------------------------------------------- */
+.dr-form--align-center,
+.dr-view--align-center {
+  text-align: center;
+}
+
+.dr-form--align-right,
+.dr-view--align-right {
+  text-align: right;
 }
