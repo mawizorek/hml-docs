@@ -48,7 +48,8 @@
  * 🔴 AND THAT INVARIANT WAS TESTED FOR REAL ON 2026-08-30 BY § THE RETIRED IN-FLOW
  * COPIES AT THE FOOT OF THIS FILE. Retiring the corner on paper means turning
  * `display: block` back off -- the exact pair this header forbids. It is done with a
- * CHILD-COMBINATOR selector instead, and the reasoning is written where the rule is.
+ * COMPOUND DESCENDANT selector instead, and the reasoning is written where the rule
+ * is, including why one of the three targets uses a different combinator.
  *
  * =========================================================================
  * 🔄 THE LOGO NOW DRIVES THE HEIGHT. THE 140% CAP IS SUPERSEDED, NOT BROKEN.
@@ -248,37 +249,63 @@
   }
 
   /* -------------------------------------------------------------------------
-   * 🪦 § THE RETIRED IN-FLOW COPIES (2026-08-30)
+   * 🪦 § THE RETIRED IN-FLOW COPIES (2026-08-30, corrected the same day)
    *
    * > Michael: *"i DOOO want to see the header repeated on every printed page now,
    * > and the footer that says 'revised' and my name now, also repeated as a footer
    * > on each page ... locking those two elements to true page headers and footers."*
    *
-   * `runfoot.py` now puts the mark, the site/period line, the revision date, the
+   * `runfoot.py` puts the mark, the site/period line, the revision date, the
    * ownership tag and `Page N of M` into `@page` margin boxes, which repeat on every
-   * sheet. **These three elements are the SINGLE-SHEET versions of exactly that
-   * content**, so on paper they are now duplicates and go away here.
+   * sheet. These elements are the SINGLE-SHEET versions of that content, so on paper
+   * they are duplicates and go away here.
    *
-   * ✅ ALL THREE STAY ON SCREEN, UNTOUCHED. This block is inside `@media print`, so
+   * ✅ ALL OF THEM STAY ON SCREEN, UNTOUCHED. This block is inside `@media print`, so
    * the screen footer Michael signed off on 08-30 -- `Revised` left, `Posted by`
    * floated right -- is exactly as it was. Only paper changes.
    *
    * =====================================================================
-   * 🔴 WHY A CHILD COMBINATOR AND NOT THE OBVIOUS SELECTOR
+   * 🔴 WHY NOT THE OBVIOUS SELECTOR, AND WHY THE THREE ARE NOT WRITTEN ALIKE
    * =====================================================================
-   * The obvious rule is `.buildstamp--corner { display: none }`. **That is the one
+   * `.buildstamp--corner { display: none }` is the obvious rule and it is **the one
    * thing this file's own header forbids:** print-chrome.css declares
    * `display: block` on that EXACT selector, so it would be a genuine
-   * selector-and-property PAIR, and the print group's "internal order is free"
-   * invariant -- asserted in two files -- would quietly become false.
+   * selector-and-property PAIR and the print group's "internal order is free"
+   * invariant -- asserted in two files -- would quietly become false. A compound
+   * selector is (0,2,0) against print-chrome's (0,1,0): **wins on specificity
+   * outright, never consults source order.** Same technique the header describes for
+   * `.buildstamp__row`.
    *
-   * ✅ `.md-typeset > .buildstamp--corner` is (0,2,0) against print-chrome's (0,1,0),
-   * so it **wins on specificity outright and never consults source order.** Same
-   * technique the header describes for `.buildstamp__row`: reach the element through
-   * a selector no other sheet writes, rather than out-ordering one that does.
-   * ⚠️ The child combinator is real, not decorative -- Material puts `.md-typeset`
-   * on the same element as `.md-content__inner`, and `buildstamp.py` prepends the
-   * corner as its direct child. Verified against the built HTML on gh-pages.
+   * 🔴 THE FIRST VERSION USED A CHILD COMBINATOR AND IT WAS A LIVE BUG FOR ABOUT AN
+   * HOUR. `packetbuild.py` splices each member's article INTO a
+   * `<section class="dr-packet__section">`, so inside a BUILD 10 packet these
+   * elements are GRANDCHILDREN of `.md-typeset` -- `>` missed them and the old
+   * in-flow footer came back on paper, mid-document, with no page number beside it.
+   * Michael caught it in a printout. ⚑ *A combinator chosen to win a cascade
+   * argument also encodes a structural assumption about depth, and only one of those
+   * two jobs was being thought about.* Combinators cost NO specificity, so the
+   * descendant form was always available at the same weight -- the child form bought
+   * nothing and cost a regression.
+   *
+   * 🔴 AND `.dr-revised` IS STILL CHILD-ONLY, DELIBERATELY, WHICH IS THE ONE PLACE
+   * THESE THREE DIVERGE. Do not "tidy" it into the list above.
+   *   - on an ordinary page it is a direct child -> hidden, and the running footer
+   *     carries the date on every sheet. Correct.
+   *   - inside a packet SECTION it is a grandchild -> **left visible on purpose.**
+   *     A packet's members were revised on DIFFERENT dates; that per-section date
+   *     exists nowhere else in the document, and the packet's own running footer
+   *     cannot state a single one. `packet._STRIP` deliberately does NOT cut it for
+   *     the same reason.
+   * ⚑ *The ownership tag is one fact repeated N times; a revision date is N facts
+   * that happen to share an element. Ask whether the VALUE varies, not whether the
+   * element does.* ✅ Verified all four combinations in the print engine: page copies
+   * hidden, section revised KEPT.
+   *
+   * ⚠️ AND THE PACKET CASE IS BELT AND BRACES BY DESIGN. `packet._STRIP` removes
+   * `buildstamp*`, `dr-owner` and the runfoot `<style>` from every section at
+   * assembly, so this rule should never SEE them there -- but a CSS rule that also
+   * works is what makes the two mechanisms independent. Neither is load-bearing
+   * alone; if the stripper's class list drifts, paper still looks right.
    *
    * 🔴 NO `!important`, DELIBERATELY. print-chrome.css's chrome-off list uses it and
    * this could have borrowed it -- but an `!important` here would make the revert a
@@ -286,26 +313,18 @@
    * feature whose logo half is unverified in the engine that matters. **A rule you
    * may need to remove tomorrow should not be written to win an argument.**
    *
-   * ⚠️ `display` IS NET-NEW ON THE TWO FOOTER SELECTORS -- base.css sets margin,
-   * size and colour on `.dr-revised`, foot.css sets float, alignment and colour on
-   * `.dr-owner`, and neither sets `display`. So no pair is created there either; the
-   * child combinator is kept for consistency and for the same decisive specificity.
-   *
-   * 🚩 AND THIS IS THE ONE-LINE REVERT. Delete this rule and the previous behaviour
-   * returns in full: letterhead on sheet one, footer at the end of the document,
-   * nothing repeated. That is why `buildstamp.py` still EMITS all three elements
-   * rather than dropping them -- ⚑ *a feature whose new half is unverified in the
-   * engine that prints should leave its old half one deletion away.*
-   *
    * 🚩 CONSEQUENCE FOR FIREFOX, NAMED RATHER THAN DISCOVERED: it has no margin boxes,
    * so this rule takes the header and footer away and nothing replaces them. A
    * Firefox printout gets bare pages. Accepted by Michael, 2026-08-30; there is no
    * CSS feature query for margin-box support, so the alternative was a doubled
    * header on every Chrome sheet. § `runfoot.py` § FIREFOX.
    * --------------------------------------------------------------------- */
-  .md-typeset > .buildstamp--corner,
-  .md-typeset > .dr-revised,
-  .md-typeset > .dr-owner {
+  .md-typeset .buildstamp--corner,
+  .md-typeset .dr-owner {
+    display: none;
+  }
+
+  .md-typeset > .dr-revised {
     display: none;
   }
 }
