@@ -1,0 +1,108 @@
+/* THE TASK-LIST CHECKBOX. `- [ ]` / `- [x]` on a worksheet page.
+ *
+ * Michael, 2026-08-30, on the SM inventory sheet: *"can they render as rounded
+ * squares instead of circles?"* -- and answering that is what forced the other
+ * two fixes below, because the icon and the state cue are the same mechanism.
+ *
+ * ⚠️ THIS SHEET ONLY WORKS WITH `custom_checkbox: true` (mkdocs.yml ->
+ * pymdownx.tasklist). That option is what emits `.task-list-control` and
+ * `.task-list-indicator`; without it there is no indicator to style and every
+ * rule here matches nothing. 🚫 Do not turn it off without deleting this sheet.
+ *
+ * =========================================================================
+ * 🔴 WHAT MATERIAL SHIPS, READ OUT OF ITS OWN SOURCE AT THE PINNED VERSION
+ * =========================================================================
+ * `mkdocs-material@9.7.7` -> `_tasklist.scss`, verbatim:
+ *
+ *     --md-tasklist-icon:          check-circle-fill-24.svg
+ *     --md-tasklist-icon--checked: check-circle-fill-24.svg
+ *     .task-list-indicator::before { background-color:
+ *                                    var(--md-default-fg-color--lightest) }
+ *     [type=checkbox]:checked + .task-list-indicator::before {
+ *                                    background-color: $clr-green-a400 }
+ *
+ * TWO DEFECTS, BOTH MEASURED RATHER THAN ASSERTED:
+ *
+ * 🔴 (1) THE UNCHECKED BOX IS INVISIBLE. `--md-default-fg-color--lightest` is
+ * `#00000012` -- **7.06% opacity**. Composited on the papyrus light row it paints
+ * `rgb(223,214,195)` on `#f0e6d2` = **1.17:1** against a 3.0 UI floor. This engine
+ * uses that token as a FALLBACK in four sheets and never DEFINES it, so it stays
+ * Material's default on every site.
+ *
+ * 🔴 (2) THE TWO STATES ARE THE SAME GLYPH. Both variables name
+ * `check-circle-fill-24`, so a ticked box and an empty one differ ONLY in hue --
+ * and `$clr-green-a400` (`#00e676`) measures **1.35:1** on that same row. ⭐ THAT
+ * IS THE FATAL ONE FOR THE FEATURE'S OWN PURPOSE: the reason the box is clickable
+ * at all is Michael's worksheet, *"whatever isn't checked off is what I need to
+ * order"* -- and a distinction carried by colour alone fails WCAG 1.4.1, dies on a
+ * greyscale printer, and reads as ALREADY TICKED when unchecked, which is what the
+ * 22:11 screenshot showed. ⚑ `base.css` had already written this exact law for
+ * `docrender-dead`: *"unclickable is not a cue, it is the ABSENCE of one."* Second
+ * element, same lesson.
+ *
+ * =========================================================================
+ * ✅ SO STATE IS CARRIED BY SHAPE, AND COLOUR IS ONLY LEGIBILITY
+ * =========================================================================
+ *   unchecked  an EMPTY rounded square      -- 20.5% ink coverage
+ *   checked    a FILLED rounded square with the tick knocked out -- 50.0%
+ *
+ * A 29-point ink difference, measured off a raster rather than eyeballed, which is
+ * why the pair survives a black-and-white printer and a colour-blind reader.
+ * 🔴 `fill-rule="evenodd"` IS LOAD-BEARING on the checked glyph: it is what
+ * subtracts the tick from the filled square. Without it the two subpaths merge
+ * under `nonzero` and the icon renders as a solid block with no tick at all.
+ *
+ * ⚠️ THE ICONS ARE MASKS, NOT IMAGES. Material paints them with
+ * `background-color` through `mask-image`, so the SVG fill is irrelevant and the
+ * colour comes from the two rules below.
+ *
+ * =========================================================================
+ * 🚫 THE CHECKED STATE IS NOT GREEN, AND THAT WAS A MEASUREMENT NOT A TASTE
+ * =========================================================================
+ * `--dr-good` was the obvious choice and it FAILS: **2.79:1** on the papyrus
+ * raised surface and **1.26:1** on `uritp-light`, both under the 3.0 UI floor.
+ * `--dr-ink` measures **7.72:1 worst case across six themes** and prints black.
+ * ⭐ Losing the green costs nothing here precisely because the SHAPE now carries
+ * the state -- the colour is only being asked to be legible.
+ * ------------------------------------------------------------------------ */
+
+/* ⚠️ MATERIAL DECLARES THESE IN `:root` TOO, so this is a specificity TIE won on
+ * SOURCE ORDER -- every engine sheet is linked after Material's own. Same
+ * mechanism THE ARMOUR in chrome.css documents, and the same honest name for it. */
+:root {
+  --md-tasklist-icon: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19,3H5C3.89,3 3,3.89 3,5V19C3,20.1 3.9,21 5,21H19C20.1,21 21,20.1 21,19V5C21,3.89 20.1,3 19,3M19,5V19H5V5H19Z'/%3E%3C/svg%3E");
+  --md-tasklist-icon--checked: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M10,17L5,12L6.41,10.58L10,14.17L17.59,6.58L19,8L10,17M19,3H5C3.89,3 3,3.89 3,5V19C3,20.1 3.9,21 5,21H19C20.1,21 21,20.1 21,19V5C21,3.89 20.1,3 19,3Z' fill-rule='evenodd'/%3E%3C/svg%3E");
+}
+
+/* ⚠️ SELECTORS MATCH MATERIAL'S EXACTLY -- (0,2,0) and (0,3,0) -- so these also
+ * win on source order rather than by out-specifying anything. Do not "simplify"
+ * either one: drop the `.md-typeset` and Material takes the colour back. */
+.md-typeset .task-list-indicator::before {
+  background-color: var(--dr-ink-muted, var(--md-default-fg-color--light));
+}
+
+.md-typeset [type="checkbox"]:checked + .task-list-indicator::before {
+  background-color: var(--dr-ink, var(--md-default-fg-color));
+}
+
+@media print {
+  /* 🔴 NOT SPECULATIVE ANY MORE, WHICH IS THE ONLY REASON IT IS HERE. The tick is
+   * painted by `background-color`, read out of Material's source above, and a
+   * browser drops backgrounds at print by default -- so without this a ticked box
+   * prints EMPTY. ⚡ And the failure is silent in the expensive direction: the
+   * unchecked boxes are the order list, so a sheet that lost every tick reads as a
+   * complete, plausible inventory of everything to buy. `print.css` keeps this
+   * property for exactly this class of element -- one *"whose MEANING is carried
+   * by a colour."*
+   *
+   * ⚠️ BLACK ON PAPER, BOTH STATES, on print-ink.css's standing ruling: black ink
+   * on white stock is the absence of a colour decision. An empty box printed in
+   * theme brown is furniture; printed black it is a box somebody can tick with a
+   * pen. */
+  .md-typeset .task-list-indicator::before,
+  .md-typeset [type="checkbox"]:checked + .task-list-indicator::before {
+    background-color: #000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
