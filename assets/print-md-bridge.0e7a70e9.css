@@ -1,0 +1,109 @@
+/* THE MATERIAL BRIDGE ON PAPER -- the second half of one bug.
+ *
+ * Created 2026-08-31, the ninth sheet in the print group.
+ *
+ *     print.css            HOW WIDE IT RUNS
+ *     print-chrome.css     WHAT APPEARS AT ALL
+ *     print-flow.css       WHERE IT BREAKS
+ *     print-type.css       HOW BIG THE TYPE IS
+ *     print-space.css      HOW MUCH AIR
+ *     print-callout.css    WHAT THE BOX IS
+ *     print-identity.css   WHOSE DOCUMENT IT IS
+ *     print-ink.css        WHAT COLOUR THE MARKS ARE
+ *     print-md-bridge.css  WHETHER MATERIAL CAN SEE OUR PALETTE   -- this file
+ *
+ * =========================================================================
+ * 🔴 WHAT WENT WRONG, AND THE ONE FACT THAT MADE IT FINDABLE
+ * =========================================================================
+ * > Michael, on a scripted print coming out near-black while his own manual print
+ * > of the SAME page was perfect: *"when i print a regular page in the render it
+ * > prints jsut fine doe shtat help clarfiy?"*
+ *
+ * It clarified it completely: **the difference is not the PAGE, it is WHO IS
+ * PRINTING.** Two wrong diagnoses preceded it -- his print dialog, then the
+ * `--dr-*` tokens -- and both were reasoned from source and stated confidently.
+ * This one is reasoned from source too, with one difference: it explains why the
+ * SAME page prints two ways.
+ *
+ * `assets/base.css` maps Material's own variables onto our tokens --
+ * `--md-default-bg-color: var(--dr-surface)`, `--md-typeset-color: var(--dr-ink)`
+ * and four more -- scoped to
+ * `[data-md-color-scheme="slate"], [data-md-color-scheme="default"]`.
+ * **Material paints the body and the prose from those `--md-*` variables, never
+ * from ours.**
+ *
+ *     his browser   attribute present -> base.css maps --md-* -> --dr-*
+ *                   + theme.py's print block makes --dr-* light  =  LIGHT SHEET
+ *     headless      attribute ABSENT  -> that mapping NEVER MATCHES,
+ *                   so --md-* keep Material's own dark values     =  DARK SHEET
+ *
+ * Material writes `data-md-color-scheme` from **localStorage**, and
+ * `bin/print-packets.py` mints a fresh `--user-data-dir` per page on purpose -- so
+ * a scripted print is the one reader for whom the toggle has never been touched.
+ *
+ * 🔴 SO `theme.py`'s 08-31 UNSCOPED PAPER BLOCK WAS CORRECT AND HALF A FIX. It
+ * made every `--dr-*` resolve on a no-attribute document, which was real and
+ * necessary -- and Material never reads a `--dr-*`. **The tokens were right and
+ * the bridge to the renderer was still missing.**
+ *
+ * ⚑ *THE SAME SCOPING DEFECT, ONE LAYER OVER, FOUND ONLY BECAUSE THE FIRST FIX
+ * DID NOT WORK.* A rule scoped to STATE is unreachable for a reader with no state,
+ * and fixing one file's version of that says nothing about the next file's. Fourth
+ * instance in this feature in two days: **grep the CLASS, do not patch the
+ * instance.**
+ *
+ * =========================================================================
+ * ⚠️ WHY THIS IS A NEW FILE AND NOT FIVE LINES IN base.css
+ * =========================================================================
+ * base.css's own header forbids it, correctly: *"Setting a Material colour in an
+ * unscoped :root hits BOTH schemes at once and silently breaks the dark toggle."*
+ * Exactly right on SCREEN -- and **paper has no toggle**, so inside `@media print`
+ * an unscoped mapping is not merely safe, it is the only correct scope.
+ * ⭐ *The warning is the reason this lives here rather than there; it is being
+ * obeyed, not worked around.*
+ *
+ * And it does not fit anyway: base.css is 21,190 B against a 22,528 B read
+ * ceiling. Same three-way argument that created print-identity.css and
+ * print-ink.css.
+ *
+ * 🚫 NOT IN print-ink.css EITHER, though it was the closest fit at 16,370 B. That
+ * file's subject is *what colour the MARKS are* and its one exception (the
+ * markdown-table ground) is already documented as placement-by-elimination with a
+ * flag to move it back. **A second borrowed subject in one file is how a filename
+ * stops meaning anything.**
+ *
+ * =========================================================================
+ * ✅ PURELY ADDITIVE, AND THAT IS CHECKABLE RATHER THAN HOPEFUL
+ * =========================================================================
+ * On a document that HAS the attribute, base.css already declares these five with
+ * the same right-hand sides, at (0,1,0) against this `:root`'s (0,1,0) -- a tie
+ * broken by source order, and this sheet loads after base.css with IDENTICAL
+ * values. **So an attributed print resolves exactly as it does today, and a bare
+ * one finally resolves at all.**
+ *
+ * ⚠️ FIVE DECLARATIONS, NOT THE WHOLE BLOCK. `--md-typeset-a-color` and the four
+ * `--md-footer-*` are deliberately absent: print-type.css §5 sets printed links to
+ * `color: inherit` on a LOCKED dead-control argument, and print-chrome.css hides
+ * the footer outright. **Copying a mapping whose consumer is switched off on paper
+ * would be a rule that cannot fire** -- the shape this repo has logged five times.
+ *
+ * ⚠️ ORDER WITHIN THE PRINT GROUP IS STILL FREE. No other print sheet declares a
+ * `--md-*` custom property; they consume `--dr-*` and write rules. What IS
+ * load-bearing is the GROUP's position after the generated sheets, which is
+ * `assets.py`'s argument and unchanged by this file.
+ *
+ * 🚩 STILL UNVERIFIED IN A BROWSER, and this is the second fix in a row for one
+ * sheet, so it is worth saying plainly: the mechanism is read out of base.css and
+ * mkdocs.yml at the SHA that built the failing PDF, not measured. **The next
+ * printed sheet is the proof, and it is visible on sheet one.**
+ */
+
+@media print {
+  :root {
+    --md-default-bg-color: var(--dr-surface);
+    --md-default-fg-color: var(--dr-ink);
+    --md-default-fg-color--light: var(--dr-ink-muted);
+    --md-typeset-color: var(--dr-ink);
+    --md-code-bg-color: var(--dr-surface-raised);
+  }
+}
