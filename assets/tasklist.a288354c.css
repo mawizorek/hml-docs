@@ -54,7 +54,9 @@
  *
  * ⚠️ THE ICONS ARE MASKS, NOT IMAGES. Material paints them with
  * `background-color` through `mask-image`, so the SVG fill is irrelevant and the
- * colour comes from the two rules below.
+ * colour comes from the two rules below. 🔴 AND THAT IS TRUE ON SCREEN ONLY -- the
+ * mask does not survive the print path at all, which is why the `@media print`
+ * block at the foot throws the whole mechanism away and draws the box instead.
  *
  * =========================================================================
  * 🚫 THE CHECKED STATE IS NOT GREEN, AND THAT WAS A MEASUREMENT NOT A TASTE
@@ -86,23 +88,61 @@
 }
 
 @media print {
-  /* 🔴 NOT SPECULATIVE ANY MORE, WHICH IS THE ONLY REASON IT IS HERE. The tick is
-   * painted by `background-color`, read out of Material's source above, and a
-   * browser drops backgrounds at print by default -- so without this a ticked box
-   * prints EMPTY. ⚡ And the failure is silent in the expensive direction: the
-   * unchecked boxes are the order list, so a sheet that lost every tick reads as a
-   * complete, plausible inventory of everything to buy. `print.css` keeps this
-   * property for exactly this class of element -- one *"whose MEANING is carried
-   * by a colour."*
+  /* =====================================================================
+   * 🔴 A MASK DOES NOT SURVIVE THE PRINT PATH -- IT PRINTS AS A SOLID BLOCK
+   * =====================================================================
+   * > Michael, 2026-08-30 23:44, from a printed Designations sheet: *"looks
+   * > good on web right now but at print we get these blocks."*
    *
-   * ⚠️ BLACK ON PAPER, BOTH STATES, on print-ink.css's standing ruling: black ink
-   * on white stock is the absence of a colour decision. An empty box printed in
-   * theme brown is furniture; printed black it is a box somebody can tick with a
-   * pen. */
+   * REPRODUCED, NOT THEORISED: rendering this exact markup to PDF gives a FILLED
+   * BLACK RECTANGLE where the outline belongs -- **38.0% ink** in the indicator's
+   * box against **10.9%** for a drawn outline. The mask is dropped and the
+   * `background-color` it was supposed to clip paints the whole 20px box.
+   *
+   * ⚑ WHICH MAKES THE FIRST VERSION OF THIS BLOCK EXACTLY BACKWARDS. It forced
+   * the background through the printer to protect the tick -- and the background
+   * IS the block. **A guard written for the right failure becomes the cause of
+   * the next one when the mechanism it protects never arrives.** The ticked box
+   * it was defending could not have printed either way.
+   *
+   * ✅ SO PAPER STOPS USING A MASK ENTIRELY AND DRAWS THE BOX. A border and a
+   * glyph are the two things a printer renders most reliably, and neither is a
+   * background -- so `print-color-adjust` is no longer needed here and is GONE.
+   * This rule depends on nothing being forced through.
+   *
+   *   unchecked  a bordered rounded square, empty
+   *   checked    the same box with a tick in it
+   *
+   * ⭐ THE OUTER BOX IS IDENTICAL IN BOTH STATES, which is what stops a ticked
+   * row from sitting differently to an unticked one down a 40-line inventory.
+   *
+   * ⚠️ MEASURED HONESTLY: the ink delta is **1.9 points**, far less than the 29
+   * the screen glyphs get, because a tick is a thin mark. It is still a SHAPE
+   * difference rather than a colour one -- the box is either empty or it is not --
+   * and a tick inside a square is the form a person drawing one by hand makes,
+   * which is the point on a sheet somebody finishes with a pen.
+   *
+   * ⚠️ BLACK, both states, on print-ink.css's standing ruling: black ink on
+   * white stock is the absence of a colour decision.
+   * ------------------------------------------------------------------ */
   .md-typeset .task-list-indicator::before,
   .md-typeset [type="checkbox"]:checked + .task-list-indicator::before {
-    background-color: #000 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    box-sizing: border-box;
+    border: 1.5px solid #000;
+    border-radius: 3px;
+    background-color: transparent !important;
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+    color: #000;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+  }
+
+  /* ⚠️ `content` IS THE STATE, and it is the only declaration that differs.
+   * Material sets `content: ""` on its base rule, so this replaces an empty
+   * string rather than fighting anything for it. */
+  .md-typeset [type="checkbox"]:checked + .task-list-indicator::before {
+    content: "\2713";
   }
 }
