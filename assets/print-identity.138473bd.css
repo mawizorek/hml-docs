@@ -45,11 +45,8 @@
  * print-chrome.css. Delete it there and this whole sheet renders nothing, with
  * nothing reporting it. The two files are one feature in two places, on purpose.
  *
- * 🔴 AND THAT INVARIANT WAS TESTED FOR REAL ON 2026-08-30 BY § THE RETIRED IN-FLOW
- * COPIES AT THE FOOT OF THIS FILE. Retiring the corner on paper means turning
- * `display: block` back off -- the exact pair this header forbids. It is done with a
- * COMPOUND DESCENDANT selector instead, and the reasoning is written where the rule
- * is, including why one of the three targets uses a different combinator.
+ * 🪦 AND THE RULES THAT TESTED THAT INVARIANT ARE GONE AGAIN -- see § THE RETIRED
+ * RETIREMENT at the foot of this file. They lived here for about six hours.
  *
  * =========================================================================
  * 🔄 THE LOGO NOW DRIVES THE HEIGHT. THE 140% CAP IS SUPERSEDED, NOT BROKEN.
@@ -164,12 +161,13 @@
  * three tidy spellings this element wanted have now failed in the tested engine,
  * which is worth knowing before reaching for a third.
  *
- * 🔴 AND A THIRD ON 2026-08-30, IN THE SAME FAMILY: `content: url()` inside an
- * `@page` margin box -- the mechanism `runfoot.py` uses to repeat the mark on every
- * sheet -- also renders NOTHING in WeasyPrint, proven against a working control.
- * Chrome 131+ documents support. ⚑ *Three tidy spellings, three failures, one
- * engine: at some point the pattern stops being about CSS and starts being about
- * which renderer is standing in for the real one.* § `runfoot.py` § WHAT IS VERIFIED.
+ * 🔴 AND A THIRD ON 2026-08-30: `content: url()` inside an `@page` margin box, which
+ * is how `runfoot.py` repeated the mark on every sheet. It renders NOTHING in
+ * WeasyPrint (proven against a working control) and Chrome 131+ documents support --
+ * **and then it rendered nothing in Michael's Chrome either.** ⚑ *Three tidy
+ * spellings, three failures. The pattern stopped being about which renderer is
+ * standing in for the real one the moment the real one agreed with it.*
+ * § THE RETIRED RETIREMENT below.
  *
  * ⭐ THE SHEET STILL NAMES NO PATH AND NO SITE, so the leak rule is untouched --
  * that property was never doing that work, the ENGINE was.
@@ -186,6 +184,39 @@
  * 🚩 Move it there when that file is split and has room. Without it a browser may
  * drop the background entirely and **a logo that prints as an empty box is worse
  * than no logo.**
+ *
+ * =========================================================================
+ * 🪦 § THE RETIRED RETIREMENT (2026-08-30, ~22:15 -- six hours after it shipped)
+ * =========================================================================
+ * This file briefly carried three rules hiding the in-flow letterhead, revision
+ * line and ownership tag ON PAPER, on the promise that `runfoot.py`'s `@page`
+ * margin boxes replaced them on every sheet. **Those rules are gone and the
+ * mechanism they served is now OFF BY DEFAULT.**
+ *
+ * 🔴 WHY: the margin boxes did not paint in Michael's Chrome. He printed with
+ * margins at Default, then again with "Headers and footers" UNTICKED, and got
+ * neither our letterhead nor his name either time. **So the hide rules were
+ * removing furniture and nothing was replacing it: a bare safety sheet, unsigned,
+ * with no letterhead** -- strictly worse than the 08-29 behaviour they replaced.
+ *
+ * ⚑ THE LESSON IS ABOUT WHERE A PROMISE LIVES, NOT ABOUT `@page`. These rules were
+ * a stylesheet making a promise about a mechanism in a DIFFERENT FILE, with nothing
+ * connecting them: if the boxes failed for any reason -- unsupported, suppressed,
+ * mis-measured -- the CSS still fired and still took the fallback away. **A rule
+ * that hides A because B exists must be emitted BY whatever emits B**, so that one
+ * cannot survive the other. That is exactly where they went: `runfoot.page_css`
+ * now writes them into the same `<style>` block that creates the boxes, so no
+ * boxes means no hiding, structurally rather than by anyone remembering.
+ *
+ * ✅ SO A PRINTED SHEET IS NEVER BARE, on any browser, at any margin, whatever the
+ * dialog's checkbox says. The letterhead prints at the top of sheet one and the
+ * footer at the end of the document -- the known-good 08-29 behaviour, restored.
+ *
+ * 🚩 THE FEATURE IS NOT DELETED. `runfoot.py` is intact and opt-in per site via
+ * `print: running: true`; no instance declares it. Re-enable it on a site once a
+ * real Chrome print preview has been seen to paint the boxes -- **and the ONE fact
+ * that decides that is the Chrome version**, since margin boxes need 131+ (Nov
+ * 2024) and Safari 18.2+. Nothing in CSS can test for it; there is no feature query.
  */
 
 @media print {
@@ -246,85 +277,5 @@
 
   .buildstamp__when {
     font-weight: 400;
-  }
-
-  /* -------------------------------------------------------------------------
-   * 🪦 § THE RETIRED IN-FLOW COPIES (2026-08-30, corrected the same day)
-   *
-   * > Michael: *"i DOOO want to see the header repeated on every printed page now,
-   * > and the footer that says 'revised' and my name now, also repeated as a footer
-   * > on each page ... locking those two elements to true page headers and footers."*
-   *
-   * `runfoot.py` puts the mark, the site/period line, the revision date, the
-   * ownership tag and `Page N of M` into `@page` margin boxes, which repeat on every
-   * sheet. These elements are the SINGLE-SHEET versions of that content, so on paper
-   * they are duplicates and go away here.
-   *
-   * ✅ ALL OF THEM STAY ON SCREEN, UNTOUCHED. This block is inside `@media print`, so
-   * the screen footer Michael signed off on 08-30 -- `Revised` left, `Posted by`
-   * floated right -- is exactly as it was. Only paper changes.
-   *
-   * =====================================================================
-   * 🔴 WHY NOT THE OBVIOUS SELECTOR, AND WHY THE THREE ARE NOT WRITTEN ALIKE
-   * =====================================================================
-   * `.buildstamp--corner { display: none }` is the obvious rule and it is **the one
-   * thing this file's own header forbids:** print-chrome.css declares
-   * `display: block` on that EXACT selector, so it would be a genuine
-   * selector-and-property PAIR and the print group's "internal order is free"
-   * invariant -- asserted in two files -- would quietly become false. A compound
-   * selector is (0,2,0) against print-chrome's (0,1,0): **wins on specificity
-   * outright, never consults source order.** Same technique the header describes for
-   * `.buildstamp__row`.
-   *
-   * 🔴 THE FIRST VERSION USED A CHILD COMBINATOR AND IT WAS A LIVE BUG FOR ABOUT AN
-   * HOUR. `packetbuild.py` splices each member's article INTO a
-   * `<section class="dr-packet__section">`, so inside a BUILD 10 packet these
-   * elements are GRANDCHILDREN of `.md-typeset` -- `>` missed them and the old
-   * in-flow footer came back on paper, mid-document, with no page number beside it.
-   * Michael caught it in a printout. ⚑ *A combinator chosen to win a cascade
-   * argument also encodes a structural assumption about depth, and only one of those
-   * two jobs was being thought about.* Combinators cost NO specificity, so the
-   * descendant form was always available at the same weight -- the child form bought
-   * nothing and cost a regression.
-   *
-   * 🔴 AND `.dr-revised` IS STILL CHILD-ONLY, DELIBERATELY, WHICH IS THE ONE PLACE
-   * THESE THREE DIVERGE. Do not "tidy" it into the list above.
-   *   - on an ordinary page it is a direct child -> hidden, and the running footer
-   *     carries the date on every sheet. Correct.
-   *   - inside a packet SECTION it is a grandchild -> **left visible on purpose.**
-   *     A packet's members were revised on DIFFERENT dates; that per-section date
-   *     exists nowhere else in the document, and the packet's own running footer
-   *     cannot state a single one. `packet._STRIP` deliberately does NOT cut it for
-   *     the same reason.
-   * ⚑ *The ownership tag is one fact repeated N times; a revision date is N facts
-   * that happen to share an element. Ask whether the VALUE varies, not whether the
-   * element does.* ✅ Verified all four combinations in the print engine: page copies
-   * hidden, section revised KEPT.
-   *
-   * ⚠️ AND THE PACKET CASE IS BELT AND BRACES BY DESIGN. `packet._STRIP` removes
-   * `buildstamp*`, `dr-owner` and the runfoot `<style>` from every section at
-   * assembly, so this rule should never SEE them there -- but a CSS rule that also
-   * works is what makes the two mechanisms independent. Neither is load-bearing
-   * alone; if the stripper's class list drifts, paper still looks right.
-   *
-   * 🔴 NO `!important`, DELIBERATELY. print-chrome.css's chrome-off list uses it and
-   * this could have borrowed it -- but an `!important` here would make the revert a
-   * fight rather than a deletion, and this whole block IS the revert path for a
-   * feature whose logo half is unverified in the engine that matters. **A rule you
-   * may need to remove tomorrow should not be written to win an argument.**
-   *
-   * 🚩 CONSEQUENCE FOR FIREFOX, NAMED RATHER THAN DISCOVERED: it has no margin boxes,
-   * so this rule takes the header and footer away and nothing replaces them. A
-   * Firefox printout gets bare pages. Accepted by Michael, 2026-08-30; there is no
-   * CSS feature query for margin-box support, so the alternative was a doubled
-   * header on every Chrome sheet. § `runfoot.py` § FIREFOX.
-   * --------------------------------------------------------------------- */
-  .md-typeset .buildstamp--corner,
-  .md-typeset .dr-owner {
-    display: none;
-  }
-
-  .md-typeset > .dr-revised {
-    display: none;
   }
 }
