@@ -1,0 +1,43 @@
+/* THE PROGRAM PACKET -- paper. BUILD 10 v3, specs/print-packet.md.
+ *
+ * 🪦 THIS SHEET WAS 5,117 B AND IS NOW ONE RULE, BY DELETION (2026-08-31). It carried
+ * the page-break geometry for a GENERATED HTML page -- `break-before: page` on each
+ * `.dr-packet__section`, `break-after` on the generated cover, an orphan guard on each
+ * section's h1. Michael culled that page, and **every one of those rules could only
+ * ever match inside it.**
+ *
+ * ⭐ AND THE JOB THEY DID IS NOW DONE BY THE FILE FORMAT INSTEAD OF BY CSS. Each policy
+ * is printed as its OWN document and the results are stapled, so "one policy starts a
+ * fresh sheet" is a property of the PDF rather than a rule anybody has to maintain.
+ * ⚑ *The cheapest way to keep a page-break rule honest is to not need one.*
+ *
+ * 🔴 WHAT SURVIVES IS THE ONE RULE THAT GOT MORE IMPORTANT, NOT LESS. The program page
+ * is now SHEET ONE of the packet it produces, so an unsuppressed export button prints a
+ * picture of itself on its own cover. v1 could get away with a mistake here; v3 cannot.
+ *
+ * ⚠️ IT LOADS IN THE PACKET GROUP, NOT THE PRINT GROUP, on the gloss.css precedent: a
+ * group is a claim about WHEN a sheet loads and WHY, and the print group's claim is
+ * "must beat the generated sheets at equal specificity." This rule shares no selector
+ * with any other sheet, so it has no cascade fight to win. The packet group is appended
+ * AFTER the print group, which is what keeps it clear of print-flow.css -- the only
+ * sheet that has ever contested a rule in this feature family.
+ */
+
+@media print {
+  /* 🚫 A BUTTON ON PAPER IS A LIE -- assets/flow.css said it first and in the right
+   * words. print.css's test for its own chrome-off list is "could a reader ACT on it
+   * with a pen?" A download link fails that maximally: it is the control that PRODUCED
+   * the sheet it would be printed on.
+   *
+   * 🔴 AND IT IS NOW SELF-REFERENTIAL RATHER THAN MERELY DEAD. The program page is the
+   * packet's cover sheet, so without this rule sheet one of every packet carries
+   * "Download the whole program (PDF)" -- printed, unclickable, on the front of the
+   * thing it downloads.
+   *
+   * ⚠️ `!important` because print-flow.css sets `display: revert !important` on details
+   * children and has already beaten a plain rule twice in this feature family -- the
+   * same reason gloss.css carries it throughout. */
+  .md-typeset .dr-packet__cta {
+    display: none !important;
+  }
+}

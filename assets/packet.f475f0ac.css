@@ -1,0 +1,65 @@
+/* THE PROGRAM PACKET -- screen side. BUILD 10 v3, specs/print-packet.md.
+ *
+ * ONE surface: the export BUTTON on a program page. Print rules are the sibling sheet
+ * (print-packet.css), in the same group -- see docrender/assets.py, which argues why a
+ * feature carrying both mediums stays one group.
+ *
+ * 🪦 THE COVER AND SECTION RULES ARE DELETED (2026-08-31), AND THAT IS THE CULL RATHER
+ * THAN A TIDY-UP. `.dr-packet__toc`, `.dr-packet__list`, `.dr-packet__n` and
+ * `.dr-packet__section` styled a GENERATED HTML PAGE that no longer exists: Michael
+ * asked three times for the combined page to go, and every one of those selectors
+ * could only ever match inside it. ⚠️ A stylesheet outliving its markup is the
+ * dead-rule shape this repo logs more than any other -- and it is worse than a dead
+ * Python branch, because CSS never errors and the file still reads as a feature.
+ *
+ * ⭐ THE CONTENTS LIST WAS NOT LOST WITH IT. The program page's own body is now sheet
+ * one of the printed packet, and its `!!! chain` index IS the contents list -- authored
+ * content that a reader already sees on screen, instead of a generated one that existed
+ * only on paper. *The cull deleted the copy and kept the original.*
+ *
+ * 🔴 EVERY TOKEN IS USED WITH A MATERIAL VARIABLE AS ITS FALLBACK, on the same law
+ * flow.css states: tokens are generated per site, so a --dr-* that exists on `eos` can
+ * be absent on a nine-token local skin -- the failure that left eleven callout families
+ * painting currentColor on 2026-08-05. Material's own variable makes the worst case
+ * Material's look rather than an invisible control, and an invisible control is the one
+ * thing a download button must never be.
+ *
+ * ⚠️ NO SELECTOR HERE IS SHARED WITH ANOTHER SHEET. Every rule is a .dr-packet* class
+ * no other file mentions, which is what makes this sheet's POSITION free (assets.py
+ * D8). Do not infer a load-order rule from where it sits.
+ */
+
+/* ------------------------------------------------------------------ THE BUTTON
+ * It sits with the flow strip by constraint rather than by taste: `hide: footer`
+ * makes the strip the only navigation on a program page, and a SECOND footer was
+ * rejected by name on 2026-08-19 ("all this other foot matter"). */
+.md-typeset .dr-packet__cta {
+  margin: 1.2rem 0 0.2rem;
+}
+
+.md-typeset .dr-packet__button {
+  display: inline-block;
+  padding: 0.5em 1.1em;
+  border: 1px solid var(--dr-accent, var(--md-primary-fg-color));
+  border-radius: var(--dr-radius, 4px);
+  background: var(--dr-surface-2, var(--md-code-bg-color));
+  color: var(--dr-accent, var(--md-primary-fg-color));
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--dr-motion-med, 200ms) ease,
+              color var(--dr-motion-med, 200ms) ease;
+}
+
+.md-typeset .dr-packet__button:hover,
+.md-typeset .dr-packet__button:focus {
+  background: var(--dr-accent, var(--md-primary-fg-color));
+  color: var(--dr-on-accent, var(--md-primary-bg-color));
+}
+
+/* ⚠️ THE FOCUS RING IS NOT DECORATION. A button reachable only by mouse is a button a
+ * keyboard reader cannot find, and this is the only route to a whole program as one
+ * document. Material's own ring variable, so it matches every other control. */
+.md-typeset .dr-packet__button:focus-visible {
+  outline: 2px solid var(--dr-accent, var(--md-accent-fg-color));
+  outline-offset: 2px;
+}
