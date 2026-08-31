@@ -260,3 +260,42 @@ img.align-right {
 .dr-view--align-right {
   text-align: right;
 }
+
+/* =========================================================================
+ * SIDE-BY-SIDE DATA BLOCKS -- `.dr-cols` (2026-08-31)
+ * =========================================================================
+ * > Michael, 2026-08-31: two 3-row run-crew date tables beside each other with a
+ * > small gap, instead of stacked.
+ *
+ * AUTHORED AS `<div class="dr-cols" markdown="1">` WRAPPING TWO OR MORE
+ * `!!! data` BLOCKS -- the same md_in_html mechanism `figure.py` relies on, so
+ * NOTHING in docrender/ or the asset registration changed. `01b_data` still
+ * replaces the inner `!!! data` lines on its ordinary pass; this rule only lays
+ * the resulting `.dr-data` boxes out in a row. A real `!!! cols` directive with
+ * edge-case handling (uneven heights, three-up, nested aligns) is the named
+ * follow-up -- this is the minimal version that renders today.
+ *
+ * ⚠️ MINIMAL ON PURPOSE: `flex-wrap` with a `flex-basis`, not a container query.
+ * Two blocks sit side by side when the measure allows and drop to stacked when it
+ * does not -- no query to resolve differently across browser engines, which keeps
+ * the build-once/one-artifact promise without a per-device read. Each table keeps
+ * its own `.dr-data` scroll box (`min-width: 0` lets it shrink and scroll inside
+ * its column rather than blowing the row wide).
+ *
+ * 🚩 IT LIVES IN align.css, NOT A NEW SHEET, DELIBERATELY. This file is already
+ * registered, already loaded, and its position is free -- so a layout rule lands
+ * here with zero risk of the unregistered-sheet silent failure `assets.py` warns
+ * about twice. If `.dr-cols` grows a print half or its own vocabulary, that is the
+ * moment it earns its own group, on this file's own `_PRINT_ASSETS` reasoning.
+ * ---------------------------------------------------------------------- */
+.dr-cols {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.dr-cols > .dr-data {
+  flex: 1 1 20rem;
+  min-width: 0;
+}
