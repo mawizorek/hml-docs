@@ -1,0 +1,166 @@
+/* THE PRINT MENU -- screen chrome + the one rule that keeps it off paper.
+ * BUILD 8 Feature B. The logic, and the 40mm inline budget it enforces, live in
+ * assets/printctl.js -- read that header first.
+ *
+ * 🔴 EVERY TOKEN CARRIES A MATERIAL FALLBACK, on the flow.css / packet.css law:
+ * tokens are generated per site, so a --dr-* present on `eos` can be absent on a
+ * nine-token local skin. Worst case is Material's look, never an invisible control.
+ *
+ * ⭐ POSITION FREE (assets.py D8): every selector is a .dr-printctl* class no other
+ * sheet mentions.
+ */
+
+.dr-printctl {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 3; /* above content, below Material's drawer overlay and header */
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--dr-ink, var(--md-default-fg-color));
+}
+
+.dr-printctl__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  list-style: none;
+  cursor: pointer;
+  padding: 0.45em 0.9em;
+  border: var(--dr-border-w, 1px) solid var(--dr-rule, var(--md-default-fg-color--lightest));
+  border-radius: 999px;
+  background: var(--dr-surface-raised, var(--md-default-bg-color));
+  box-shadow: 0 2px 8px rgb(0 0 0 / 18%);
+  font-weight: 600;
+  user-select: none;
+}
+.dr-printctl__toggle::-webkit-details-marker { display: none; }
+.dr-printctl__toggle::marker { content: ""; }
+
+/* A changed setting is visible from the closed pill, so a reader never prints a
+ * binder gutter by accident three pages after they set it. */
+.dr-printctl--active .dr-printctl__toggle {
+  border-color: var(--dr-accent, var(--md-primary-fg-color));
+  color: var(--dr-accent, var(--md-primary-fg-color));
+}
+
+.dr-printctl__toggle:focus-visible,
+.dr-printctl__btn:focus-visible,
+.dr-printctl input:focus-visible,
+.dr-printctl select:focus-visible {
+  outline: 2px solid var(--dr-accent, var(--md-accent-fg-color));
+  outline-offset: 2px;
+}
+
+.dr-printctl__form {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.5rem);
+  width: min(19rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 6rem);
+  overflow: auto;
+  padding: 0.8rem 0.9rem;
+  border: var(--dr-border-w, 1px) solid var(--dr-rule, var(--md-default-fg-color--lightest));
+  border-radius: var(--dr-radius, 6px);
+  background: var(--dr-surface-raised, var(--md-default-bg-color));
+  box-shadow: 0 6px 24px rgb(0 0 0 / 28%);
+}
+
+.dr-printctl__group {
+  margin: 0 0 0.7rem;
+  padding: 0;
+  border: 0;
+}
+.dr-printctl__group legend,
+.dr-printctl__row > span {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.92em;
+  color: var(--dr-ink-muted, var(--md-default-fg-color--light));
+}
+.dr-printctl__group legend { margin-bottom: 0.35rem; }
+
+.dr-printctl__opt {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.5em;
+  align-items: baseline;
+  padding: 0.25em 0;
+  cursor: pointer;
+}
+.dr-printctl__optlabel { font-weight: 600; }
+.dr-printctl__optnote {
+  grid-column: 2;
+  color: var(--dr-ink-muted, var(--md-default-fg-color--light));
+}
+
+.dr-printctl__custom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem 0.6rem;
+  margin: 0.4rem 0 0 1.4em;
+}
+.dr-printctl__custom[hidden] { display: none; }
+.dr-printctl__side {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+}
+.dr-printctl__side > span:first-child { width: 3.2em; }
+.dr-printctl__side input { width: 4em; }
+.dr-printctl__unit { color: var(--dr-ink-muted, var(--md-default-fg-color--light)); }
+
+.dr-printctl__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6em;
+}
+
+.dr-printctl input[type="number"],
+.dr-printctl select {
+  font: inherit;
+  color: inherit;
+  padding: 0.2em 0.35em;
+  border: var(--dr-border-w, 1px) solid var(--dr-rule, var(--md-default-fg-color--lighter));
+  border-radius: var(--dr-radius, 4px);
+  background: var(--dr-surface, var(--md-default-bg-color));
+}
+
+.dr-printctl__note {
+  min-height: 0;
+  margin: 0.6rem 0 0;
+  color: var(--dr-ink-muted, var(--md-default-fg-color--light));
+}
+.dr-printctl__note:empty { display: none; }
+
+.dr-printctl__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+.dr-printctl__btn {
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.4em 1em;
+  border: 1px solid var(--dr-accent, var(--md-primary-fg-color));
+  border-radius: var(--dr-radius, 4px);
+  background: var(--dr-accent, var(--md-primary-fg-color));
+  color: var(--dr-on-accent, var(--md-primary-bg-color));
+}
+.dr-printctl__btn--quiet {
+  background: transparent;
+  color: var(--dr-accent, var(--md-primary-fg-color));
+}
+
+/* 🚫 THE MENU NEVER PRINTS. A control whose whole purpose is the sheet it would
+ * be printed on fails the chrome-off test maximally (print-control.md §5b), so the
+ * rule ships in the same file as the control. `!important` because print-flow.css's
+ * `display: revert !important` on details children has beaten plain rules in this
+ * feature family twice. */
+@media print {
+  .dr-printctl { display: none !important; }
+}
