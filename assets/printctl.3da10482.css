@@ -1,0 +1,270 @@
+/* THE PRINT MENU -- the header icon, the panel, and the rule that keeps both off
+ * paper. BUILD 8 Feature B, v2. Logic and the 1.5in inline budget: printctl.js.
+ *
+ * ⭐ EVERY CONTROL IS DRAWN HERE, NONE BY THE OS (Michael, 2026-09-28: "actually
+ * design the arrows and popups"). No <select>, no number spinner, no native radio:
+ * buttons with roles, so the look is the theme's on every platform.
+ *
+ * 🔴 EVERY TOKEN CARRIES A MATERIAL FALLBACK (flow.css / packet.css law): a --dr-*
+ * present on `eos` can be absent on a nine-token local skin.
+ *
+ * ⭐ POSITION FREE (assets.py D8): every selector is a .dr-printctl* class. The
+ * trigger also carries Material's own `md-header__button md-icon`, so it inherits
+ * the palette toggle's size and spacing rather than restating them.
+ */
+
+/* ---------------------------------------------------------------- the icon */
+.dr-printctl__trigger {
+  position: relative;
+  cursor: pointer;
+  border: 0;
+  background: none;
+  color: inherit;
+}
+.dr-printctl__trigger svg { fill: currentColor; }
+/* A changed setting shows from the closed icon: a dot, so nobody prints a binder
+ * gutter by accident three pages later. */
+.dr-printctl__trigger--active::after {
+  content: "";
+  position: absolute;
+  top: 0.35rem;
+  right: 0.3rem;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--dr-accent, var(--md-accent-fg-color));
+  box-shadow: 0 0 0 2px var(--md-primary-fg-color);
+}
+.dr-printctl__trigger--float {
+  position: fixed;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 5;
+}
+
+/* ---------------------------------------------------------------- the panel */
+.dr-printctl {
+  --pc-ink: var(--dr-ink, var(--md-default-fg-color));
+  --pc-muted: var(--dr-ink-muted, var(--md-default-fg-color--light));
+  --pc-rule: var(--dr-rule, var(--md-default-fg-color--lightest));
+  --pc-bg: var(--dr-surface-raised, var(--md-default-bg-color));
+  --pc-field: var(--dr-surface, var(--md-default-bg-color));
+  --pc-accent: var(--dr-accent, var(--md-primary-fg-color));
+  --pc-on-accent: var(--dr-on-accent, var(--md-primary-bg-color));
+  --pc-radius: var(--dr-radius, 6px);
+
+  position: fixed;
+  z-index: 5; /* over the header's shadow, under Material's drawer overlay */
+  width: min(20rem, calc(100vw - 1rem));
+  max-height: calc(100vh - 5rem);
+  overflow: auto;
+  padding: 0.75rem 0.9rem 0.85rem;
+  border: 1px solid var(--pc-rule);
+  border-radius: var(--pc-radius);
+  background: var(--pc-bg);
+  color: var(--pc-ink);
+  box-shadow: 0 10px 32px rgb(0 0 0 / 35%), 0 2px 6px rgb(0 0 0 / 20%);
+  font-size: 0.72rem;
+  line-height: 1.35;
+  animation: dr-printctl-in 140ms ease-out;
+}
+.dr-printctl[hidden] { display: none; }
+@keyframes dr-printctl-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .dr-printctl { animation: none; } }
+
+/* The nub that points back at the icon. Positioned by the script. */
+.dr-printctl__caret {
+  position: absolute;
+  top: -7px;
+  right: var(--dr-printctl-caret, 16px);
+  width: 12px;
+  height: 12px;
+  background: var(--pc-bg);
+  border-left: 1px solid var(--pc-rule);
+  border-top: 1px solid var(--pc-rule);
+  transform: rotate(45deg);
+}
+
+.dr-printctl__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.55rem;
+}
+.dr-printctl__title { font-weight: 700; font-size: 0.8rem; }
+
+.dr-printctl__label {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.62rem;
+  color: var(--pc-muted);
+}
+
+/* -------------------------------------------------------- the preset cards */
+.dr-printctl__opts {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0.35rem 0 0.2rem;
+}
+.dr-printctl__opt {
+  display: grid;
+  grid-template-columns: 1rem 1fr;
+  column-gap: 0.55rem;
+  align-items: center;
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--pc-rule);
+  border-radius: var(--pc-radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms, background 120ms;
+}
+.dr-printctl__opt:hover { border-color: var(--pc-muted); }
+.dr-printctl__opt[aria-checked="true"] {
+  border-color: var(--pc-accent);
+  background: color-mix(in srgb, var(--pc-accent) 12%, transparent);
+}
+.dr-printctl__dot {
+  grid-row: span 2;
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 1.5px solid var(--pc-muted);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+.dr-printctl__opt[aria-checked="true"] .dr-printctl__dot {
+  border-color: var(--pc-accent);
+  background: radial-gradient(circle, var(--pc-accent) 0 40%, transparent 45%);
+}
+.dr-printctl__optlabel { font-weight: 600; }
+.dr-printctl__optnote { color: var(--pc-muted); font-size: 0.66rem; }
+
+/* ---------------------------------------------------------------- custom */
+.dr-printctl__custom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem 0.8rem;
+  margin: 0.5rem 0 0.1rem;
+  padding: 0.6rem;
+  border-radius: var(--pc-radius);
+  background: var(--pc-field);
+}
+.dr-printctl__custom[hidden] { display: none; }
+.dr-printctl__side { display: grid; gap: 0.2rem; }
+.dr-printctl__sidelabel { color: var(--pc-muted); font-size: 0.64rem; }
+
+/* ---------------------------------------------------------------- stepper */
+.dr-printctl__stepper {
+  display: inline-grid;
+  grid-template-columns: 1.6rem minmax(3.6rem, auto) 1.6rem;
+  align-items: stretch;
+  height: 1.6rem;
+  border: 1px solid var(--pc-rule);
+  border-radius: var(--pc-radius);
+  background: var(--pc-bg);
+  overflow: hidden;
+}
+.dr-printctl__step {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--pc-accent);
+  cursor: pointer;
+  transition: background 120ms;
+}
+.dr-printctl__step svg { width: 0.7rem; height: 0.7rem; fill: currentColor; }
+.dr-printctl__step:hover:not(:disabled) { background: color-mix(in srgb, var(--pc-accent) 16%, transparent); }
+.dr-printctl__step:disabled { color: var(--pc-muted); opacity: 0.4; cursor: default; }
+.dr-printctl__val {
+  display: grid;
+  place-items: center;
+  padding: 0 0.3rem;
+  border-left: 1px solid var(--pc-rule);
+  border-right: 1px solid var(--pc-rule);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dr-printctl__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+.dr-printctl__rowctl { display: flex; align-items: center; gap: 0.5rem; }
+.dr-printctl__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--pc-accent);
+  font: inherit;
+  font-size: 0.64rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.dr-printctl__link[hidden] { display: none; }
+
+.dr-printctl__note {
+  margin: 0.6rem 0 0;
+  color: var(--pc-muted);
+  font-size: 0.66rem;
+}
+.dr-printctl__note:empty { display: none; }
+
+/* ---------------------------------------------------------------- buttons */
+.dr-printctl__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+.dr-printctl__btn {
+  padding: 0.4em 1.1em;
+  border: 1px solid var(--pc-accent);
+  border-radius: var(--pc-radius);
+  background: var(--pc-accent);
+  color: var(--pc-on-accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.dr-printctl__btn--quiet { background: transparent; color: var(--pc-accent); }
+.dr-printctl__close {
+  display: grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--pc-muted);
+  cursor: pointer;
+}
+.dr-printctl__close svg { width: 0.75rem; height: 0.75rem; fill: currentColor; }
+.dr-printctl__close:hover { background: var(--pc-field); color: var(--pc-ink); }
+
+.dr-printctl button:focus-visible {
+  outline: 2px solid var(--dr-accent, var(--md-accent-fg-color));
+  outline-offset: 2px;
+}
+
+/* 🚫 NEITHER THE ICON NOR THE PANEL EVER PRINTS (print-control.md §5b).
+ * `!important` because print-flow.css's `display: revert !important` has beaten
+ * plain rules in this feature family twice. print-chrome.css already hides the
+ * header, but the fallback trigger and the panel live on <body>. */
+@media print {
+  .dr-printctl,
+  .dr-printctl__trigger { display: none !important; }
+}
