@@ -1,4 +1,4 @@
-/* THE PRINT COMPOSER -- BUILD 11. Reasoning lives in specs/print-compose.md;
+/* THE PRINT COMPOSER -- BUILD 12. Reasoning lives in specs/print-compose.md;
  * this header keeps only the rules the code below must obey.
  *
  * Pick several articles, order them, print as ONE document. Opened from the
@@ -14,7 +14,10 @@
  * named, never printed.
  *
  * LINK LAW (print-packet.md §3): ids -> sN-id; #frag -> #sN-frag; a page in the
- * stack -> #sM[-frag]; other relative href/src/srcset -> absolute.
+ * stack -> #sM[-frag]; other relative href/src/srcset AND inline style url()
+ * -> absolute. 🔴 The letterhead logo is an inline background-image with a
+ * page-relative URL (buildstamp.py); unresolved, it points one level off and
+ * prints a blank corner. Resolve BEFORE the cover clones the stamp.
  *
  * 📄 EACH ARTICLE KEEPS ITS LETTERHEAD AND FOOT; only screen-only
  * `.buildstamp--foot` is stripped. The cover borrows the first letterhead.
@@ -41,6 +44,7 @@
     ".dr-printctl", ".dr-printctl__trigger"
   ].join(",");
   var CURTAIN = "[class*='router'],[id*='router'],[class*='curtain'],[id*='curtain']";
+  var CSSURL = /url\(\s*(['"]?)([^'")]+)\1\s*\)/g;
 
   var IC = {
     grip: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3h2v2H5zm4 0h2v2H9zM5 7h2v2H5zm4 0h2v2H9zm-4 4h2v2H5zm4 0h2v2H9z"/></svg>',
@@ -154,6 +158,12 @@
         src = src.cloneNode(true);
         if (src.querySelector(CURTAIN)) { skipped.push(title + " (behind a route code)"); return; }
         src.querySelectorAll(STRIP).forEach(function (el) { el.remove(); });
+        // Inline style url() first: the letterhead logo lives here, and the cover clones it next.
+        src.querySelectorAll("[style*='url(']").forEach(function (el) {
+          el.setAttribute("style", el.getAttribute("style").replace(CSSURL, function (m, q, u) {
+            return /^data:/i.test(u) ? m : "url(" + q + new URL(u, page).href + q + ")";
+          }));
+        });
         var stamp = src.querySelector(".buildstamp--corner");
         if (stamp && !letterhead) letterhead = stamp.cloneNode(true);
         var sec = h("section", { "class": "dr-compose-sec", id: "s" + n });
