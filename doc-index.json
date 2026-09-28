@@ -2,9 +2,9 @@
   "site": "hml",
   "name": "HML_LLC",
   "base_url": "https://mawizorek.github.io/hml-docs/",
-  "built": "2026-09-28T19:02:47Z",
+  "built": "2026-09-28T19:10:20Z",
   "engine": "0.1.0",
-  "engine_ref": "9a1de66afe73a0a8f0bb7a3474afdcb95ab26d0a",
+  "engine_ref": "18f40fc7534f8378eeca18bd56b4b616edadcebf",
   "pages": [
     {
       "id": "home",

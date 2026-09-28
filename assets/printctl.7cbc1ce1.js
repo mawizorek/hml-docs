@@ -35,6 +35,14 @@
  * the budget above still holds. Top/bottom stay on @page, because a content
  * margin would land only on the first and last sheet. ⚠️ Browser-dependent.
  *
+ * 📝 FOOTER NOTE (2026-09-28, Michael: *"custom footer text that either replaces
+ * the 'posted by' line or adds footer text"*). Typed in the panel, inserted into
+ * the DOM at `beforeprint` and removed at `afterprint`, so the screen never shows
+ * it. One note per ARTICLE: each `.dr-compose-sec` when the composer is on, else
+ * the page body. "Replace" hides that article's `.dr-owner` and puts the note in
+ * its place wearing the same class, so it inherits the owner's float + type.
+ * 🚫 NOT A PER-SHEET FOOTER. It lands where the owner line lands: end of article.
+ *
  * sessionStorage (deviation from §6, argued in print-control-dl.md ruling 5).
  * ✅ "Standard" + "Site default" emits NOTHING: untouched = byte-identical.
  */
@@ -75,6 +83,8 @@
       var s = JSON.parse(window.sessionStorage.getItem(KEY) || "null");
       if (!s || !PRESETS[s.preset] || !Array.isArray(s.m) || s.m.length !== 4) return null;
       if (s.size && SIZES.indexOf(s.size) < 0) s.size = "";
+      if (typeof s.note !== "string") s.note = "";
+      if (s.noteMode !== "replace") s.noteMode = "add";
       return s;
     } catch (e) { return null; }
   }
@@ -82,7 +92,8 @@
     try { window.sessionStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* private mode */ }
   }
 
-  var state = load() || { preset: "standard", m: [0.5, 0.5, 0.5, 1], size: "" };
+  var BLANK = function () { return { preset: "standard", m: [0.5, 0.5, 0.5, 1], size: "", note: "", noteMode: "add" }; };
+  var state = load() || BLANK();
 
   // 1.375 -> "1 ⅜"
   var FRAC = ["", "\u215b", "\u00bc", "\u215c", "\u00bd", "\u215d", "\u00be", "\u215e"];
@@ -109,7 +120,53 @@
     return msg;
   }
 
-  function isDefault() { return state.preset === "standard" && !state.size; }
+  function isDefault() { return state.preset === "standard" && !state.size && !state.note.trim(); }
+
+  // ------------------------------------------------------------ footer note
+  var placed = [], hiddenOwners = [];
+  function units() {
+    if (document.documentElement.classList.contains("dr-compose-on")) {
+      return Array.prototype.slice.call(document.querySelectorAll(".dr-compose-doc .dr-compose-sec"));
+    }
+    var el = document.querySelector(".md-content .md-content__inner:not(.dr-compose-doc)");
+    return el ? [el] : [];
+  }
+  function placeNotes() {
+    clearNotes();
+    var text = state.note.trim();
+    if (!text) return;
+    var replace = state.noteMode === "replace";
+    units().forEach(function (u) {
+      var owner = u.querySelector(".dr-owner:not(.dr-printnote)");
+      var feet = u.querySelectorAll(".dr-owner, .dr-revised");
+      var last = feet.length ? feet[feet.length - 1] : null;
+      var p = document.createElement("p");
+      p.className = replace ? "dr-owner dr-printnote dr-printnote--owner" : "dr-printnote";
+      p.textContent = text;
+      if (replace && owner) {
+        owner.parentNode.insertBefore(p, owner);
+        owner.style.display = "none";
+        hiddenOwners.push(owner);
+      } else if (last) {
+        last.parentNode.insertBefore(p, last.nextSibling);
+      } else {
+        u.appendChild(p);
+      }
+      placed.push(p);
+    });
+  }
+  function clearNotes() {
+    placed.forEach(function (p) { if (p.parentNode) p.parentNode.removeChild(p); });
+    hiddenOwners.forEach(function (o) { o.style.display = ""; });
+    placed = []; hiddenOwners = [];
+  }
+  window.addEventListener("beforeprint", placeNotes);
+  window.addEventListener("afterprint", clearNotes);
+  if (window.matchMedia) {
+    var mq = window.matchMedia("print");
+    var onMq = function (e) { if (e.matches) placeNotes(); else clearNotes(); };
+    if (mq.addEventListener) mq.addEventListener("change", onMq); else if (mq.addListener) mq.addListener(onMq);
+  }
 
   function css() {
     var out = "";
@@ -196,6 +253,21 @@
     var sizeDefault = h("button", { type: "button", "class": "dr-printctl__link", text: "Default" });
     sizeDefault.addEventListener("click", function () { state.size = ""; apply(); sync(); });
 
+    var noteBox = h("textarea", { "class": "dr-printctl__text", rows: "2", maxlength: "240",
+      placeholder: "e.g. Printed for the Fall 2026 crew binder", "aria-label": "Footer note" });
+    noteBox.value = state.note;
+    noteBox.addEventListener("input", function () { state.note = noteBox.value; apply(); sync(); });
+    var modes = [["add", "Add a line"], ["replace", "Replace \u201cPosted by\u201d"]].map(function (m) {
+      var b = h("button", { type: "button", role: "radio", "class": "dr-printctl__seg", "data-mode": m[0], text: m[1] });
+      b.addEventListener("click", function () { state.noteMode = m[0]; apply(); sync(); });
+      return b;
+    });
+    var noteWrap = h("div", { "class": "dr-printctl__notebox" }, [
+      h("div", { "class": "dr-printctl__label", text: "Footer note" }),
+      noteBox,
+      h("div", { "class": "dr-printctl__segs", role: "radiogroup", "aria-label": "Footer note placement" }, modes)
+    ]);
+
     var closeBtn = h("button", { type: "button", "class": "dr-printctl__close", "aria-label": "Close print settings", html: ICON_CLOSE });
     var reset = h("button", { type: "button", "class": "dr-printctl__btn dr-printctl__btn--quiet", text: "Reset" });
     var go = h("button", { type: "button", "class": "dr-printctl__btn", text: "Print" });
@@ -217,6 +289,7 @@
         h("span", { "class": "dr-printctl__label", text: "Text size" }),
         h("div", { "class": "dr-printctl__rowctl" }, [sizeDefault, size.el])
       ]),
+      noteWrap,
       note,
       h("div", { "class": "dr-printctl__actions" }, [reset, go]),
       compose
@@ -242,6 +315,9 @@
       size.minus.disabled = si === 0;
       size.plus.disabled = si === SIZES.length - 1;
       sizeDefault.hidden = !state.size;
+      if (noteBox.value !== state.note) noteBox.value = state.note;
+      modes.forEach(function (b) { b.setAttribute("aria-checked", String(b.getAttribute("data-mode") === state.noteMode)); });
+      modes[0].parentNode.hidden = !state.note.trim();
       var warn = state.size && parseFloat(state.size) < 9 ? "Under 9 pt reads fine off a laser printer but can close up on a photocopy." : "";
       note.textContent = [msg, warn].filter(Boolean).join(" ");
       trigger.classList.toggle("dr-printctl__trigger--active", !isDefault());
@@ -267,7 +343,7 @@
     window.addEventListener("resize", function () { if (!panel.hidden) place(); });
 
     reset.addEventListener("click", function () {
-      state = { preset: "standard", m: [0.5, 0.5, 0.5, 1], size: "" };
+      state = BLANK();
       msg = ""; apply(); sync();
     });
     go.addEventListener("click", function () {

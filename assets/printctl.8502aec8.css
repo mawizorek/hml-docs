@@ -276,3 +276,33 @@
   color: var(--pc-accent); font: inherit; font-weight: 600; text-align: left; cursor: pointer;
 }
 .dr-printctl__compose:hover { text-decoration: underline; }
+
+/* ---------------------------------------------------------------- footer note */
+.dr-printctl__notebox { margin-top: 0.7rem; }
+.dr-printctl__text {
+  display: block; box-sizing: border-box; width: 100%; resize: vertical; min-height: 2.6rem;
+  margin-top: 0.3rem; padding: 0.4rem 0.5rem;
+  border: 1px solid var(--pc-rule); border-radius: var(--pc-radius);
+  background: var(--pc-field); color: var(--pc-ink); font: inherit; font-size: 0.68rem; line-height: 1.35;
+}
+.dr-printctl__text:focus { outline: 2px solid var(--pc-accent); outline-offset: 1px; border-color: transparent; }
+.dr-printctl__segs { display: flex; gap: 0; margin-top: 0.4rem; }
+.dr-printctl__segs[hidden] { display: none; }
+.dr-printctl__seg {
+  flex: 1 1 0; padding: 0.3rem 0.4rem; border: 1px solid var(--pc-rule); background: var(--pc-field);
+  color: var(--pc-muted); font: inherit; font-size: 0.64rem; cursor: pointer;
+}
+.dr-printctl__seg:first-child { border-radius: var(--pc-radius) 0 0 var(--pc-radius); }
+.dr-printctl__seg:last-child { border-radius: 0 var(--pc-radius) var(--pc-radius) 0; border-left: 0; }
+.dr-printctl__seg[aria-checked="true"] { background: var(--pc-accent); border-color: var(--pc-accent); color: var(--pc-on-accent); }
+.dr-printctl__seg:focus-visible { outline: 2px solid var(--pc-accent); outline-offset: 2px; }
+
+/* The note itself: in the DOM only between beforeprint and afterprint.
+ * (0,2,2) so print-space.css's justify on `.md-typeset p` (0,2,1) cannot reach it. */
+@media screen { .dr-printnote { display: none; } }
+@media print {
+  html .md-typeset p.dr-printnote { white-space: pre-line; }
+  html .md-typeset p.dr-printnote:not(.dr-owner) {
+    clear: both; margin: 0.35rem 0 0; text-align: right; font-size: 0.8em; opacity: 0.85;
+  }
+}

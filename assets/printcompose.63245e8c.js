@@ -1,56 +1,29 @@
-/* THE PRINT COMPOSER -- BUILD 11 phase 1. specs/print-compose.md.
+/* THE PRINT COMPOSER -- BUILD 11. Reasoning lives in specs/print-compose.md;
+ * this header keeps only the rules the code below must obey.
  *
- * Pick several articles from this site, put them in order, print them as ONE
- * document. Opened from the printer icon's panel ("Compose...") or `#compose`.
+ * Pick several articles, order them, print as ONE document. Opened from the
+ * printer panel ("Compose...") or `#compose`.
  *
- * Michael, 2026-09-28: *"a new render menu page entirely for printing -- that
- * would let me select multiple articles from the repo, arrange them, and print
- * them as one document... locally and just casually in the app first... then
- * we'll build this into being able to define default print groups that are
- * essentially the binders."* Phase 2 (repo-declared binders) is NOT this file.
+ * ⭐ window.print() prints one document, so the composer FETCHES each article's
+ * built HTML and stitches the bodies into ONE <article class="md-content__inner
+ * md-typeset"> inside this page's .md-content. Every print sheet and the print
+ * menu apply unchanged: to them it is simply this page's content.
  *
- * =========================================================================
- * ⭐ WHY THIS WORKS WHEN "PRINT SEVERAL PAGES" CANNOT (print-packet-dl.md A1)
- * =========================================================================
- * window.print() prints the current document only. So the composer never
- * prints several documents: it FETCHES each article's built HTML, stitches the
- * bodies into ONE <article class="md-content__inner md-typeset"> inside THIS
- * page's .md-content, hides the page's own body, and the reader prints that.
- * Every print sheet, the chrome-off list and the print menu's margins apply,
- * because to them it is simply this page's content. One dialog, one PDF.
+ * 🔴 THE FENCE IS THE SEARCH INDEX (public pages only; unlisted are excluded,
+ * hidden are not built). A body still carrying a router curtain is SKIPPED and
+ * named, never printed.
  *
- * =========================================================================
- * 🔴 WHAT IT MAY OFFER: THE SEARCH INDEX, AND WHY THAT IS THE RIGHT FENCE
- * =========================================================================
- * The list comes from Material's search/search_index.json. visibility.py
- * builds only `unlisted` and `public` pages and sets `search.exclude` on
- * unlisted ones, so the index holds exactly the pages a reader can already
- * FIND. hidden = not built, unlisted = not offered. The sidebar is NOT used:
- * navigation.prune is on, so it does not contain the whole tree.
- * ⚠️ Pages in a routed folder ARE in the index (visibility.py says so: sealing
- * is presentation, not protection). A fetched body that still carries a router
- * curtain is SKIPPED and named, never printed as a form.
+ * LINK LAW (print-packet.md §3): ids -> sN-id; #frag -> #sN-frag; a page in the
+ * stack -> #sM[-frag]; other relative href/src/srcset -> absolute.
  *
- * =========================================================================
- * THE SAME LINK LAW AS THE PACKET (print-packet.md §3), DONE IN THE BROWSER
- * =========================================================================
- *   every id                      -> sN-id
- *   #frag                         -> #sN-frag
- *   a page IN the stack           -> #sM[-frag]
- *   anything else relative        -> absolute URL
- *   img/src, srcset               -> absolute URL (else they 404 from here)
+ * 📄 EACH ARTICLE KEEPS ITS LETTERHEAD AND FOOT; only screen-only
+ * `.buildstamp--foot` is stripped. The cover borrows the first letterhead.
  *
- * 📄 THE LETTERHEAD STAYS ON EVERY ARTICLE (fix, 2026-09-28). v1 stripped
- * `buildstamp*` on the packet's A8 reasoning, but that reasoning assumed a FIXED
- * stamp; the corner stamp is IN FLOW (print-chrome.css `display: block`), so
- * each article keeps its own letterhead at the top of its first sheet, and its
- * own revised line + owner at the foot -- a sheet pulled from the binder still
- * says whose it is (packet A8's actual point). The cover borrows the first one.
- * Only the screen-only `.buildstamp--foot` is dropped. Michael: "we seem to
- * have lost header/footer content on the combined print".
+ * 📚 BINDERS (phase 2): `binders.json` from docrender/binder.py lists presets
+ * (program pages with `binder: true`) plus an {url: id} map, so "Copy as binder"
+ * returns real `chain:` ids. Missing file = no presets row, nothing else changes.
  *
- * State: sessionStorage (dies with the tab). A refresh keeps the stack; closing
- * the tab loses it. "Copy as binder" is the bridge to phase 2.
+ * State: sessionStorage (dies with the tab).
  */
 (function () {
   "use strict";
@@ -89,6 +62,7 @@
   function save() { try { sessionStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* private */ } }
 
   var PAGES = null;          // [{loc, title, group}]
+  var BINDERS = [], IDS = {}; // binders.json; both optional
   var BYLOC = {};
   var HTML = {};             // loc -> Promise<Document>
 
@@ -121,8 +95,18 @@
   }
 
   // ---------------------------------------------------------------- library
+  function binders() {
+    return fetch(BASE + "binders.json", { credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : {}; })
+      .then(function (j) {
+        BINDERS = Array.isArray(j.binders) ? j.binders : [];
+        IDS = j.ids && typeof j.ids === "object" ? j.ids : {};
+      }, function () { /* no binders on this site */ });
+  }
+
   function library() {
     if (PAGES) return Promise.resolve(PAGES);
+    var extra = binders();
     return fetch(BASE + "search/search_index.json", { credentials: "same-origin" })
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then(function (idx) {
@@ -137,7 +121,7 @@
           PAGES.push(p);
         });
         S.stack = S.stack.filter(function (l) { return BYLOC[l] !== undefined; });
-        return PAGES;
+        return extra.then(function () { return PAGES; });
       });
   }
 
@@ -252,7 +236,7 @@
   }
 
   // ---------------------------------------------------------------- the view
-  var view = null, listEl, stackEl, statusEl, filterEl, titleEl, dragFrom = -1;
+  var view = null, listEl, binderEl, stackEl, statusEl, filterEl, titleEl, dragFrom = -1;
 
   function status(t) { if (statusEl) statusEl.textContent = t || ""; }
 
@@ -274,6 +258,7 @@
     titleEl.value = S.title;
     titleEl.addEventListener("input", function () { S.title = titleEl.value; save(); });
     listEl = h("div", { "class": "dr-compose__list", role: "list" });
+    binderEl = h("div", { "class": "dr-compose__binders", role: "group", "aria-label": "Binders", hidden: "" });
     stackEl = h("ol", { "class": "dr-compose__stack" });
     statusEl = h("p", { "class": "dr-compose__status", "aria-live": "polite" });
 
@@ -303,7 +288,7 @@
         h("div", { "class": "dr-compose__body" }, [
           h("section", { "class": "dr-compose__pane" }, [
             h("div", { "class": "dr-compose__panehead" }, [h("span", { "class": "dr-compose__label", text: "Pages on this site" }), all]),
-            filterEl, listEl
+            binderEl, filterEl, listEl
           ]),
           h("section", { "class": "dr-compose__pane dr-compose__pane--stack" }, [
             h("div", { "class": "dr-compose__panehead" }, [h("span", { "class": "dr-compose__label", text: "Print order" })]),
@@ -382,12 +367,41 @@
     if (!S.stack.length) stackEl.appendChild(h("li", { "class": "dr-compose__empty", text: "Click pages on the left to add them. Drag or use the arrows to reorder." }));
   }
 
-  function draw() { drawList(); drawStack(); status(S.stack.length ? S.stack.length + " in the stack" : ""); }
+  function drawBinders() {
+    binderEl.textContent = "";
+    binderEl.hidden = !BINDERS.length;
+    if (!BINDERS.length) return;
+    binderEl.appendChild(h("span", { "class": "dr-compose__label", text: "Binders" }));
+    BINDERS.forEach(function (b) {
+      var locs = (b.pages || []).map(function (p) { return String(p.loc || ""); })
+        .filter(function (l) { return BYLOC[l] !== undefined; });
+      var chip = h("button", { type: "button", "class": "dr-compose__chip", title: locs.length + " pages" }, [
+        h("span", { text: b.title || b.id }), h("small", { text: String(locs.length) })
+      ]);
+      chip.disabled = !locs.length;
+      chip.addEventListener("click", function () {
+        S.stack = locs.slice();
+        S.title = b.title || "";
+        titleEl.value = S.title;
+        save(); draw();
+        var lost = (b.pages || []).length - locs.length;
+        status("Loaded " + (b.title || b.id) + ": " + locs.length + " pages" + (lost ? " (" + lost + " not on this site)" : "") + ". Reorder freely.");
+      });
+      binderEl.appendChild(chip);
+    });
+  }
+
+  function draw() { drawBinders(); drawList(); drawStack(); status(S.stack.length ? S.stack.length + " in the stack" : ""); }
 
   function copyBinder() {
-    var y = "binder:\n  title: " + JSON.stringify(S.title || "Print packet") + "\n  pages:\n" +
-      S.stack.map(function (l) { return "    - " + JSON.stringify(l || "/"); }).join("\n") + "\n";
-    var done = function () { status("Binder copied. Phase 2 will read this shape from the repo."); };
+    var t = S.title || "Print packet";
+    var slug = t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "binder";
+    var y = "---\ntitle: " + JSON.stringify(t) + "\nid: binder-" + slug +
+      "\ntype: program\nstatus: unlisted\nbinder: true\nchain:\n" +
+      S.stack.map(function (l) {
+        return IDS[l] ? "  - " + IDS[l] : "  # /" + l + " has no id: give it one, then list it here";
+      }).join("\n") + "\n---\n";
+    var done = function () { status("Binder copied. Save it as its own .md page in the repo."); };
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(y).then(done, function () { window.prompt("Copy the binder:", y); });
     } else window.prompt("Copy the binder:", y);

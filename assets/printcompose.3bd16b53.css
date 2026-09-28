@@ -176,3 +176,17 @@ html.dr-compose-on .md-content > .md-content__inner:not(.dr-compose-doc) { displ
   .dr-compose-sec + .dr-compose-sec { margin-top: 0; padding-top: 0; border-top: 0; break-before: page; }
   .dr-compose-doc--flow .dr-compose-sec + .dr-compose-sec { break-before: auto; margin-top: 1.5em; }
 }
+
+/* ---------------------------------------------------------------- binders (phase 2) */
+.dr-compose__binders { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; margin-bottom: 0.6rem; }
+.dr-compose__binders[hidden] { display: none; }
+.dr-compose__binders .dr-compose__label { width: 100%; }
+.dr-compose__chip {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.3rem 0.6rem; border: 1px solid var(--cp-rule); border-radius: 999px;
+  background: var(--cp-field); color: var(--cp-ink); font: inherit; font-size: 0.66rem; cursor: pointer;
+}
+.dr-compose__chip small { color: var(--cp-muted); font-variant-numeric: tabular-nums; }
+.dr-compose__chip:hover:not(:disabled) { border-color: var(--cp-accent); color: var(--cp-accent); }
+.dr-compose__chip:disabled { opacity: 0.45; cursor: default; }
+.dr-compose__chip:focus-visible { outline: 2px solid var(--cp-accent); outline-offset: 2px; }
