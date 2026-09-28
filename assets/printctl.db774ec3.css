@@ -306,3 +306,28 @@
     clear: both; margin: 0.35rem 0 0; text-align: right; font-size: 0.8em; opacity: 0.85;
   }
 }
+
+/* ---------------------------------------------------------------- page numbers
+ * A drawn switch, not a checkbox (same law as the rest of the panel). The label
+ * reuses .dr-printctl__label so the row reads like "Margins" and "Text size". */
+.dr-printctl__pagenum { margin-top: 0.75rem; }
+.dr-printctl__switch {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+  width: 100%; padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer;
+}
+.dr-printctl__track {
+  position: relative; flex: 0 0 auto; width: 1.9rem; height: 1.05rem; border-radius: 1rem;
+  background: color-mix(in srgb, var(--pc-muted) 40%, transparent); transition: background 120ms;
+}
+.dr-printctl__track::after {
+  content: ""; position: absolute; top: 0.15rem; left: 0.15rem; width: 0.75rem; height: 0.75rem;
+  border-radius: 50%; background: var(--pc-bg); box-shadow: 0 1px 2px rgb(0 0 0 / 30%); transition: transform 140ms;
+}
+.dr-printctl__switch[aria-checked="true"] .dr-printctl__track { background: var(--pc-accent); }
+.dr-printctl__switch[aria-checked="true"] .dr-printctl__track::after { transform: translateX(0.85rem); }
+.dr-printctl__switch:focus-visible { outline: 2px solid var(--pc-accent); outline-offset: 2px; border-radius: var(--pc-radius); }
+.dr-printctl__hint { margin: 0.3rem 0 0; color: var(--pc-muted); font-size: 0.64rem; }
+.dr-printctl__hint[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .dr-printctl__track, .dr-printctl__track::after { transition: none; }
+}

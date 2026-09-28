@@ -1,9 +1,9 @@
 /* THE PRINT MENU -- BUILD 8 Feature B. specs/print-control.md + print-control-dl.md.
  *
  * A printer icon in the header, beside the light/dark toggle. It opens a panel
- * with margin presets (Standard / Binder / Sign-form / Custom, in INCHES) and a
- * text-size stepper for the print dial. It writes ONE <style> element and
- * nothing else.
+ * with margin presets (Standard / Binder / Sign-form / Custom, in INCHES), a
+ * text-size stepper for the print dial, page numbers, and a footer note. It
+ * writes ONE <style> element and nothing else.
  *
  * v2 (2026-09-28, Michael): *"make it work in inches now, not mm and actually
  * design the arrows and popups rather than using os defaults ... it also floats
@@ -35,6 +35,18 @@
  * the budget above still holds. Top/bottom stay on @page, because a content
  * margin would land only on the first and last sheet. ⚠️ Browser-dependent.
  *
+ * 🔢 PAGE NUMBERS (2026-09-28, Michael: *"build and design it ourself, not
+ * chrome"*). "Page N of M" in `@page @bottom-center`, our type, ON by default.
+ * When the composer is on, the document title rides `@bottom-left`, refreshed at
+ * beforeprint because the title can change after apply(). ⭐ THIS IS NOT
+ * runfoot.py AGAIN: that one also grew the page margin to 16mm and hid the
+ * in-flow letterhead on the promise its boxes painted, so when they did not the
+ * sheet came out bare. This adds a number and touches NOTHING else: no margin
+ * change, no hiding. Worst case on a browser that drops margin boxes is no
+ * number, never a lost letterhead. ⚠️ Chrome adds its own header/footer even
+ * when author boxes exist (developer.chrome.com/blog/print-margins), so the
+ * panel tells the reader to untick "Headers and footers".
+ *
  * 📝 FOOTER NOTE (2026-09-28, Michael: *"custom footer text that either replaces
  * the 'posted by' line or adds footer text"*). Typed in the panel, inserted into
  * the DOM at `beforeprint` and removed at `afterprint`, so the screen never shows
@@ -44,7 +56,7 @@
  * 🚫 NOT A PER-SHEET FOOTER. It lands where the owner line lands: end of article.
  *
  * sessionStorage (deviation from §6, argued in print-control-dl.md ruling 5).
- * ✅ "Standard" + "Site default" emits NOTHING: untouched = byte-identical.
+ * ✅ "Standard" + "Site default" + page numbers OFF emits NOTHING: byte-identical.
  */
 (function () {
   "use strict";
@@ -58,6 +70,9 @@
   var INLINE_MAX = 1.5;   // in, left + right. See header.
   var KEY = "dr-printctl-v2";
   var STYLE_ID = "dr-printctl-style";
+  // Margin boxes do not reliably inherit custom properties, so the stack is literal.
+  var PN_BOX = "font-family:Roboto,-apple-system,\"Helvetica Neue\",Arial,sans-serif;" +
+    "font-size:7.5pt;letter-spacing:0.04em;color:#5f5f5f;";
 
   // [top, right, bottom, left]. `m: null` = print.css's own 12mm, no override.
   var PRESETS = {
@@ -85,6 +100,7 @@
       if (s.size && SIZES.indexOf(s.size) < 0) s.size = "";
       if (typeof s.note !== "string") s.note = "";
       if (s.noteMode !== "replace") s.noteMode = "add";
+      if (typeof s.pagenum !== "boolean") s.pagenum = true;
       return s;
     } catch (e) { return null; }
   }
@@ -92,7 +108,7 @@
     try { window.sessionStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* private mode */ }
   }
 
-  var BLANK = function () { return { preset: "standard", m: [0.5, 0.5, 0.5, 1], size: "", note: "", noteMode: "add" }; };
+  var BLANK = function () { return { preset: "standard", m: [0.5, 0.5, 0.5, 1], size: "", note: "", noteMode: "add", pagenum: true }; };
   var state = load() || BLANK();
 
   // 1.375 -> "1 ⅜"
@@ -120,12 +136,13 @@
     return msg;
   }
 
-  function isDefault() { return state.preset === "standard" && !state.size && !state.note.trim(); }
+  function isDefault() { return state.preset === "standard" && !state.size && !state.note.trim() && state.pagenum; }
 
   // ------------------------------------------------------------ footer note
   var placed = [], hiddenOwners = [];
+  function composed() { return document.documentElement.classList.contains("dr-compose-on"); }
   function units() {
-    if (document.documentElement.classList.contains("dr-compose-on")) {
+    if (composed()) {
       return Array.prototype.slice.call(document.querySelectorAll(".dr-compose-doc .dr-compose-sec"));
     }
     var el = document.querySelector(".md-content .md-content__inner:not(.dr-compose-doc)");
@@ -160,12 +177,33 @@
     hiddenOwners.forEach(function (o) { o.style.display = ""; });
     placed = []; hiddenOwners = [];
   }
-  window.addEventListener("beforeprint", placeNotes);
+  // apply() first: the composer's title may have changed since the last one.
+  function beforePrint() { apply(); placeNotes(); }
+  window.addEventListener("beforeprint", beforePrint);
   window.addEventListener("afterprint", clearNotes);
   if (window.matchMedia) {
     var mq = window.matchMedia("print");
-    var onMq = function (e) { if (e.matches) placeNotes(); else clearNotes(); };
+    var onMq = function (e) { if (e.matches) beforePrint(); else clearNotes(); };
     if (mq.addEventListener) mq.addEventListener("change", onMq); else if (mq.addListener) mq.addListener(onMq);
+  }
+
+  // ------------------------------------------------------------ page numbers
+  function cssStr(t) {
+    return '"' + String(t).replace(/\s+/g, " ").trim().replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"';
+  }
+  function docTitle() {
+    if (!composed()) return "";
+    var h1 = document.querySelector(".dr-compose-cover h1");
+    if (h1) return h1.textContent.trim();
+    var bar = document.querySelector(".dr-compose-bar__txt");
+    return bar ? bar.textContent.split(" \u00b7 ")[0].trim() : "";
+  }
+  function pageCss() {
+    if (!state.pagenum) return "";
+    var out = "@page{@bottom-center{content:\"Page \" counter(page) \" of \" counter(pages);" + PN_BOX + "}";
+    var t = docTitle();
+    if (t) out += "@bottom-left{content:" + cssStr(t) + ";" + PN_BOX + "text-align:left}";
+    return out + "}";
   }
 
   function css() {
@@ -181,7 +219,7 @@
       // (0,1,1) beats print-type.css §0's (0,1,0). A value override, not a selector fight.
       out += "@media print{html .md-typeset{--dr-print-base:" + state.size + "pt}}";
     }
-    return out;
+    return out + pageCss();
   }
 
   function apply() {
@@ -253,6 +291,15 @@
     var sizeDefault = h("button", { type: "button", "class": "dr-printctl__link", text: "Default" });
     sizeDefault.addEventListener("click", function () { state.size = ""; apply(); sync(); });
 
+    var pnSwitch = h("button", { type: "button", role: "switch", "class": "dr-printctl__switch" }, [
+      h("span", { "class": "dr-printctl__label", text: "Page numbers" }),
+      h("span", { "class": "dr-printctl__track", "aria-hidden": "true" })
+    ]);
+    pnSwitch.addEventListener("click", function () { state.pagenum = !state.pagenum; apply(); sync(); });
+    var pnHint = h("p", { "class": "dr-printctl__hint",
+      text: "\u201cPage 3 of 29\u201d centred on every sheet. In the print dialog, untick \u201cHeaders and footers\u201d so the browser\u2019s own URL and page count don\u2019t print too." });
+    var pnWrap = h("div", { "class": "dr-printctl__pagenum" }, [pnSwitch, pnHint]);
+
     var noteBox = h("textarea", { "class": "dr-printctl__text", rows: "2", maxlength: "240",
       placeholder: "e.g. Printed for the Fall 2026 crew binder", "aria-label": "Footer note" });
     noteBox.value = state.note;
@@ -289,6 +336,7 @@
         h("span", { "class": "dr-printctl__label", text: "Text size" }),
         h("div", { "class": "dr-printctl__rowctl" }, [sizeDefault, size.el])
       ]),
+      pnWrap,
       noteWrap,
       note,
       h("div", { "class": "dr-printctl__actions" }, [reset, go]),
@@ -315,6 +363,8 @@
       size.minus.disabled = si === 0;
       size.plus.disabled = si === SIZES.length - 1;
       sizeDefault.hidden = !state.size;
+      pnSwitch.setAttribute("aria-checked", String(!!state.pagenum));
+      pnHint.hidden = !state.pagenum;
       if (noteBox.value !== state.note) noteBox.value = state.note;
       modes.forEach(function (b) { b.setAttribute("aria-checked", String(b.getAttribute("data-mode") === state.noteMode)); });
       modes[0].parentNode.hidden = !state.note.trim();
