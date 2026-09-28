@@ -1,0 +1,178 @@
+/* THE PRINT COMPOSER -- the full-screen workspace, the preview bar, and the
+ * print rules for a stitched document. BUILD 11 phase 1; logic in printcompose.js.
+ *
+ * ⭐ EVERY CONTROL IS DRAWN, NONE BY THE OS (the printctl v2 ruling applies here
+ * too). The filter and title are text inputs, restyled; every choice is a button.
+ * 🔴 EVERY TOKEN CARRIES A MATERIAL FALLBACK (flow.css / packet.css law).
+ * ⭐ POSITION FREE (assets.py D8): every selector is .dr-compose* or scoped under
+ * html.dr-compose-on, which no other sheet mentions.
+ */
+
+.dr-compose, .dr-compose-bar {
+  --cp-ink: var(--dr-ink, var(--md-default-fg-color));
+  --cp-muted: var(--dr-ink-muted, var(--md-default-fg-color--light));
+  --cp-rule: var(--dr-rule, var(--md-default-fg-color--lightest));
+  --cp-bg: var(--dr-surface-raised, var(--md-default-bg-color));
+  --cp-field: var(--dr-surface, var(--md-code-bg-color, var(--md-default-bg-color)));
+  --cp-accent: var(--dr-accent, var(--md-primary-fg-color));
+  --cp-on-accent: var(--dr-on-accent, var(--md-primary-bg-color));
+  --cp-radius: var(--dr-radius, 6px);
+}
+html.dr-compose-lock { overflow: hidden; }
+
+/* ---------------------------------------------------------------- the window */
+.dr-compose {
+  position: fixed; inset: 0; z-index: 6;
+  display: grid; place-items: center;
+  padding: 1.2rem;
+  background: rgb(0 0 0 / 55%);
+  backdrop-filter: blur(2px);
+}
+.dr-compose[hidden] { display: none; }
+.dr-compose__win {
+  display: grid; grid-template-rows: auto 1fr auto;
+  width: min(62rem, 100%); height: min(44rem, 100%);
+  border: 1px solid var(--cp-rule); border-radius: calc(var(--cp-radius) * 1.5);
+  background: var(--cp-bg); color: var(--cp-ink);
+  box-shadow: 0 18px 60px rgb(0 0 0 / 45%);
+  font-size: 0.72rem; line-height: 1.35;
+  overflow: hidden;
+  animation: dr-compose-in 160ms ease-out;
+}
+@keyframes dr-compose-in { from { opacity: 0; transform: translateY(8px) scale(.99); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .dr-compose__win { animation: none; } }
+
+.dr-compose__head {
+  display: flex; align-items: center; gap: 0.8rem;
+  padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--cp-rule);
+}
+.dr-compose__eyebrow, .dr-compose__label {
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+  font-size: 0.6rem; color: var(--cp-muted); white-space: nowrap;
+}
+.dr-compose__title, .dr-compose__filter {
+  appearance: none; -webkit-appearance: none;
+  min-width: 0; font: inherit; color: inherit;
+  border: 1px solid var(--cp-rule); border-radius: var(--cp-radius);
+  background: var(--cp-field); padding: 0.4rem 0.6rem;
+}
+.dr-compose__title { flex: 1; font-size: 0.85rem; font-weight: 700; }
+.dr-compose__filter { width: 100%; margin-bottom: 0.5rem; }
+.dr-compose__filter::-webkit-search-cancel-button { -webkit-appearance: none; }
+.dr-compose__title:focus, .dr-compose__filter:focus { outline: none; border-color: var(--cp-accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--cp-accent) 30%, transparent); }
+
+.dr-compose__body {
+  display: grid; grid-template-columns: 1fr 1fr; min-height: 0;
+}
+.dr-compose__pane {
+  display: flex; flex-direction: column; min-height: 0;
+  padding: 0.7rem 0.9rem; overflow: hidden;
+}
+.dr-compose__pane--stack { border-left: 1px solid var(--cp-rule); background: color-mix(in srgb, var(--cp-field) 60%, transparent); }
+.dr-compose__panehead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+
+/* ---------------------------------------------------------------- library */
+.dr-compose__list { flex: 1; overflow: auto; margin: 0 -0.3rem; padding: 0 0.3rem; }
+.dr-compose__group {
+  position: sticky; top: 0; z-index: 1;
+  padding: 0.45rem 0 0.25rem; background: var(--cp-bg);
+  font-weight: 700; font-size: 0.62rem; color: var(--cp-muted);
+}
+.dr-compose__page {
+  display: grid; grid-template-columns: 1rem 1fr; column-gap: 0.55rem; align-items: center;
+  width: 100%; margin: 0 0 0.2rem; padding: 0.35rem 0.5rem;
+  border: 1px solid transparent; border-radius: var(--cp-radius);
+  background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.dr-compose__page:hover { background: var(--cp-field); }
+.dr-compose__page[aria-pressed="true"] { border-color: color-mix(in srgb, var(--cp-accent) 45%, transparent); background: color-mix(in srgb, var(--cp-accent) 10%, transparent); }
+.dr-compose__box {
+  grid-row: span 2; display: grid; place-items: center;
+  width: 0.95rem; height: 0.95rem; border: 1.5px solid var(--cp-muted); border-radius: 3px; box-sizing: border-box;
+}
+.dr-compose__box svg { width: 0.7rem; height: 0.7rem; fill: transparent; }
+.dr-compose__page[aria-pressed="true"] .dr-compose__box { border-color: var(--cp-accent); background: var(--cp-accent); }
+.dr-compose__page[aria-pressed="true"] .dr-compose__box svg { fill: var(--cp-on-accent); }
+.dr-compose__ptitle { font-weight: 600; }
+.dr-compose__ploc, .dr-compose__ititle small { color: var(--cp-muted); font-size: 0.6rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------------------------------------------------------------- stack */
+.dr-compose__stack { flex: 1; overflow: auto; list-style: none; margin: 0; padding: 0; counter-reset: none; }
+.dr-compose__item {
+  display: grid; grid-template-columns: 0.9rem 1.3rem 1fr repeat(3, 1.5rem); align-items: center; gap: 0.3rem;
+  margin: 0 0 0.3rem; padding: 0.35rem 0.4rem;
+  border: 1px solid var(--cp-rule); border-radius: var(--cp-radius); background: var(--cp-bg);
+  cursor: grab;
+}
+.dr-compose__item.is-drag { opacity: 0.45; }
+.dr-compose__item.is-over { border-color: var(--cp-accent); box-shadow: 0 -2px 0 var(--cp-accent); }
+.dr-compose__grip svg { width: 0.8rem; height: 0.8rem; fill: var(--cp-muted); }
+.dr-compose__num {
+  display: grid; place-items: center; width: 1.2rem; height: 1.2rem; border-radius: 50%;
+  background: color-mix(in srgb, var(--cp-accent) 16%, transparent); color: var(--cp-accent);
+  font-weight: 700; font-size: 0.6rem; font-variant-numeric: tabular-nums;
+}
+.dr-compose__ititle { display: grid; min-width: 0; font-weight: 600; }
+.dr-compose__ititle > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dr-compose__icon, .dr-compose__close {
+  display: grid; place-items: center; width: 1.5rem; height: 1.5rem; padding: 0;
+  border: 0; border-radius: 50%; background: transparent; color: var(--cp-muted); cursor: pointer;
+}
+.dr-compose__icon svg, .dr-compose__close svg { width: 0.8rem; height: 0.8rem; fill: currentColor; }
+.dr-compose__icon:hover:not(:disabled), .dr-compose__close:hover { background: var(--cp-field); color: var(--cp-accent); }
+.dr-compose__icon:disabled { opacity: 0.3; cursor: default; }
+.dr-compose__empty { list-style: none; padding: 1.2rem 0.5rem; color: var(--cp-muted); text-align: center; border: 1px dashed var(--cp-rule); border-radius: var(--cp-radius); }
+
+/* ---------------------------------------------------------------- switches */
+.dr-compose__opts { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; padding-top: 0.6rem; border-top: 1px solid var(--cp-rule); margin-top: 0.4rem; }
+.dr-compose__switch { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+.dr-compose__track { position: relative; width: 1.7rem; height: 0.95rem; border-radius: 1rem; background: var(--cp-rule); transition: background 120ms; }
+.dr-compose__track::after { content: ""; position: absolute; top: 0.12rem; left: 0.12rem; width: 0.71rem; height: 0.71rem; border-radius: 50%; background: var(--cp-bg); box-shadow: 0 1px 2px rgb(0 0 0 / 30%); transition: transform 120ms; }
+.dr-compose__switch[aria-checked="true"] .dr-compose__track { background: var(--cp-accent); }
+.dr-compose__switch[aria-checked="true"] .dr-compose__track::after { transform: translateX(0.75rem); }
+
+/* ---------------------------------------------------------------- footer + buttons */
+.dr-compose__foot { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; padding: 0.6rem 0.9rem; border-top: 1px solid var(--cp-rule); }
+.dr-compose__status { margin: 0; color: var(--cp-muted); font-size: 0.64rem; }
+.dr-compose__act, .dr-compose-bar__act { display: flex; gap: 0.45rem; flex-shrink: 0; }
+.dr-compose__btn {
+  padding: 0.4em 1.1em; border: 1px solid var(--cp-accent); border-radius: var(--cp-radius);
+  background: var(--cp-accent); color: var(--cp-on-accent); font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.dr-compose__btn--quiet { background: transparent; color: var(--cp-accent); }
+.dr-compose__link { padding: 0; border: 0; background: none; color: var(--cp-accent); font: inherit; font-size: 0.62rem; text-decoration: underline; cursor: pointer; }
+.dr-compose button:focus-visible, .dr-compose-bar button:focus-visible { outline: 2px solid var(--dr-accent, var(--md-accent-fg-color)); outline-offset: 2px; }
+
+@media (max-width: 44rem) {
+  .dr-compose { padding: 0; }
+  .dr-compose__win { height: 100%; border-radius: 0; }
+  .dr-compose__body { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+  .dr-compose__pane--stack { border-left: 0; border-top: 1px solid var(--cp-rule); }
+  .dr-compose__foot { flex-wrap: wrap; }
+}
+
+/* ---------------------------------------------------------------- the preview */
+html.dr-compose-on .md-content > .md-content__inner:not(.dr-compose-doc) { display: none !important; }
+.dr-compose-bar {
+  position: fixed; left: 50%; bottom: 1rem; z-index: 5; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 1rem; max-width: calc(100vw - 2rem);
+  padding: 0.5rem 0.6rem 0.5rem 0.9rem;
+  border: 1px solid var(--cp-rule); border-radius: 2rem;
+  background: var(--cp-bg); color: var(--cp-ink); box-shadow: 0 8px 28px rgb(0 0 0 / 35%);
+  font-size: 0.66rem;
+}
+.dr-compose-bar__txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dr-compose-bar .dr-compose__btn { border-radius: 2rem; }
+.dr-compose-cover .dr-compose-meta { color: var(--cp-muted, var(--md-default-fg-color--light)); }
+.dr-compose-toc a { font-weight: 600; }
+.dr-compose-sec + .dr-compose-sec { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--md-default-fg-color--lightest); }
+
+/* 🚫 NEITHER THE WORKSPACE NOR THE BAR PRINTS. 📄 The stitched document does,
+ * one article per sheet unless the reader switched that off. `!important` for
+ * print-flow.css's `display: revert !important`, as everywhere in this family. */
+@media print {
+  .dr-compose, .dr-compose-bar { display: none !important; }
+  .dr-compose-cover { break-after: page; }
+  .dr-compose-sec + .dr-compose-sec { margin-top: 0; padding-top: 0; border-top: 0; break-before: page; }
+  .dr-compose-doc--flow .dr-compose-sec + .dr-compose-sec { break-before: auto; margin-top: 1.5em; }
+}

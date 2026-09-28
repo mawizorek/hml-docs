@@ -268,3 +268,11 @@
   .dr-printctl,
   .dr-printctl__trigger { display: none !important; }
 }
+
+/* BUILD 11: the door into the composer, under the actions. */
+.dr-printctl__compose {
+  display: block; width: 100%; margin-top: 0.75rem; padding: 0.5rem 0 0;
+  border: 0; border-top: 1px solid var(--pc-rule); background: none;
+  color: var(--pc-accent); font: inherit; font-weight: 600; text-align: left; cursor: pointer;
+}
+.dr-printctl__compose:hover { text-decoration: underline; }

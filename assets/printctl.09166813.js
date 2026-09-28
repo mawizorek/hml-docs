@@ -200,6 +200,13 @@
     var reset = h("button", { type: "button", "class": "dr-printctl__btn dr-printctl__btn--quiet", text: "Reset" });
     var go = h("button", { type: "button", "class": "dr-printctl__btn", text: "Print" });
 
+    // BUILD 11: the composer (printcompose.js) stitches several pages into one.
+    var compose = h("button", { type: "button", "class": "dr-printctl__compose", text: "Compose from several pages\u2026" });
+    compose.addEventListener("click", function () {
+      close(false);
+      if (window.drPrintCompose) window.drPrintCompose.open();
+    });
+
     var panel = h("div", { "class": "dr-printctl", id: "dr-printctl-panel", role: "dialog", "aria-label": "Print settings", hidden: "" }, [
       h("span", { "class": "dr-printctl__caret", "aria-hidden": "true" }),
       h("div", { "class": "dr-printctl__head" }, [h("span", { "class": "dr-printctl__title", text: "Print settings" }), closeBtn]),
@@ -211,7 +218,8 @@
         h("div", { "class": "dr-printctl__rowctl" }, [sizeDefault, size.el])
       ]),
       note,
-      h("div", { "class": "dr-printctl__actions" }, [reset, go])
+      h("div", { "class": "dr-printctl__actions" }, [reset, go]),
+      compose
     ]);
 
     var trigger = h("button", {
