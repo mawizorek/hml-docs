@@ -40,6 +40,15 @@
  *   anything else relative        -> absolute URL
  *   img/src, srcset               -> absolute URL (else they 404 from here)
  *
+ * 📄 THE LETTERHEAD STAYS ON EVERY ARTICLE (fix, 2026-09-28). v1 stripped
+ * `buildstamp*` on the packet's A8 reasoning, but that reasoning assumed a FIXED
+ * stamp; the corner stamp is IN FLOW (print-chrome.css `display: block`), so
+ * each article keeps its own letterhead at the top of its first sheet, and its
+ * own revised line + owner at the foot -- a sheet pulled from the binder still
+ * says whose it is (packet A8's actual point). The cover borrows the first one.
+ * Only the screen-only `.buildstamp--foot` is dropped. Michael: "we seem to
+ * have lost header/footer content on the combined print".
+ *
  * State: sessionStorage (dies with the tab). A refresh keeps the stack; closing
  * the tab loses it. "Copy as binder" is the bridge to phase 2.
  */
@@ -55,7 +64,7 @@
 
   var STRIP = [
     "script", "noscript", ".md-content__button", ".md-source-file",
-    "[class*='dr-flow']", "[class*='buildstamp']", "[class*='dr-packet']",
+    "[class*='dr-flow']", ".buildstamp--foot", "[class*='dr-packet']",
     ".dr-printctl", ".dr-printctl__trigger"
   ].join(",");
   var CURTAIN = "[class*='router'],[id*='router'],[class*='curtain'],[id*='curtain']";
@@ -153,6 +162,7 @@
       var art = h("article", { "class": "md-content__inner md-typeset dr-compose-doc" });
       var skipped = [];
       var toc = h("ol", { "class": "dr-compose-toc" });
+      var letterhead = null;
       got.forEach(function (g, i) {
         var n = i + 1, page = BASE + g.loc, title = PAGES[BYLOC[g.loc]].title;
         var src = g.doc && g.doc.querySelector(".md-content__inner");
@@ -160,6 +170,8 @@
         src = src.cloneNode(true);
         if (src.querySelector(CURTAIN)) { skipped.push(title + " (behind a route code)"); return; }
         src.querySelectorAll(STRIP).forEach(function (el) { el.remove(); });
+        var stamp = src.querySelector(".buildstamp--corner");
+        if (stamp && !letterhead) letterhead = stamp.cloneNode(true);
         var sec = h("section", { "class": "dr-compose-sec", id: "s" + n });
         src.querySelectorAll("[id]").forEach(function (el) { el.id = "s" + n + "-" + el.id; });
         src.querySelectorAll("[src]").forEach(function (el) {
@@ -193,6 +205,7 @@
       });
       if (S.cover) {
         var cover = h("section", { "class": "dr-compose-cover", id: "s0" }, [
+          letterhead,
           h("h1", { text: S.title || "Print packet" }),
           h("p", { "class": "dr-compose-meta", text: toc.children.length + " articles" }),
           toc
