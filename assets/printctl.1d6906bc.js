@@ -34,6 +34,8 @@
  * =========================================================================
  * ⚠️ WHY A <style> ELEMENT AND NOT A CUSTOM PROPERTY
  * =========================================================================
+ * ⚠️ SUPERSEDED FOR THE INLINE AXIS -- see css(): left/right are now a content
+ * margin, because @page was not honoured on Michael's first real print.
  * print-control.md §6 asks every control to write ONE custom property on
  * `.md-typeset`. The type dial can (see css() below). A margin CANNOT: `@page`
  * is not an element, inherits nothing, and `var()` there does not resolve from
@@ -135,7 +137,24 @@
     var d = PRESETS.standard.m;
     var marginChanged = !state.m.every(function (v, i) { return v === d[i]; });
     if (marginChanged) {
-      out += "@page{margin:" + state.m.map(function (v) { return v + "mm"; }).join(" ") + "}";
+      // 🔴 INLINE AXIS = A MARGIN ON THE CONTENT, NOT ON @page (fix 2026-09-28).
+      // v1 wrote all four sides into @page. Michael's first print: text size landed,
+      // margins did not -- same <style> element, so the injection was fine and the
+      // @page rule was simply not honoured by the browser that printed it (the
+      // macOS print panel). A content margin works in every engine. It is written
+      // as an OFFSET from print.css's 12mm page margin, so where @page IS honoured
+      // the total is exactly what the reader picked, and the 40mm budget still
+      // holds (12 + 12 + (L-12) + (R-12) = L + R). A negative offset is legal and
+      // is how Custom goes below 12mm. !important + (0,3,2) beats print.css's
+      // `margin: 0 !important` at (0,1,0).
+      out += "@media print{html body .md-content .md-content__inner{" +
+        "margin-left:" + (state.m[3] - 12) + "mm !important;" +
+        "margin-right:" + (state.m[1] - 12) + "mm !important}}";
+      // BLOCK axis stays on @page: a content margin would only land on the first
+      // and last sheet. ⚠️ So top/bottom depend on the browser honouring @page.
+      if (state.m[0] !== 12 || state.m[2] !== 12) {
+        out += "@page{margin:" + state.m[0] + "mm 12mm " + state.m[2] + "mm 12mm}";
+      }
     }
     if (state.size) {
       // (0,1,1) beats print-type.css §0's (0,1,0). A VALUE override, not a new
