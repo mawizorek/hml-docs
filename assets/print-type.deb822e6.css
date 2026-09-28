@@ -93,7 +93,7 @@
    * be separate without going out of step.
    * --------------------------------------------------------------------- */
   .md-typeset {
-    --dr-print-base: 10pt;
+    --dr-print-base: 8.5pt;
 
     font-size: var(--dr-print-base);
     line-height: 1.45;
