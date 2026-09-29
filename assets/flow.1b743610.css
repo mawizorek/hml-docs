@@ -1,0 +1,110 @@
+/* flow.css -- the embedded completion form (`.dr-form*`) and the view embed
+ * (`.dr-view*`). Nothing else.
+ *
+ * ✅ SPLIT 2026-09-28, AS THIS FILE'S OWN HEADER DEMANDED ("NEXT EDIT TO EITHER
+ * CONCERN SPLITS THIS FILE"). The flow strip left: its rules now ship inline as
+ * `<style class="dr-flowctx">` from docrender/program.py, only on pages that
+ * draw a strip -- the cards/forms precedent, and the reason no new sheet had to
+ * be registered in docrender/assets.py (still past its write cap). The `.dr-at`
+ * arrival marker, the `:target` promotion and THE CAP (`.dr-flows__others`) are
+ * gone with promote.py. Why: docrender/program-dl.md D1.
+ *
+ * ⚠️ The filename is now a lodger's name: it holds embeds, not flows. Renaming
+ * means an assets.py edit, so it waits for that file's split. Stated, not hidden.
+ *
+ * 🔴 ANY RULE HERE THAT STYLES AN `<a>` INSIDE TYPESET CONTENT MUST OUT-SPECIFY
+ * `.md-typeset a` (0,1,1) OR IT ONLY HALF-APPLIES -- the strip's 2026-08-19 bug,
+ * kept as a warning because the file that learned it no longer holds the strip.
+ *
+ * TOKENS ALWAYS CARRY A MATERIAL FALLBACK: `--dr-*` is generated per site, and a
+ * nine-token local skin may not define one.
+ */
+
+/* --------------------------------------------------------- form  and  view */
+
+.dr-form,
+.dr-view {
+  margin: 1.5rem 0 0;
+}
+
+/* THE COLLAPSED EMBED. For a FORM it is SEQUENCING (a program page is both
+ * entrance and exit; an open form on arrival says "submit" before "read"). For
+ * a VIEW it is WEIGHT (a 700px frame buries the prose). `collapsed: true` -> a
+ * closed `<details>`; a fragment pointing inside it expands it with no script.
+ * One control, one style. A view's summary text is the author's `text:` and the
+ * engine has no default for it (views-dl.md D6-D7). */
+.dr-form__open > summary,
+.dr-view__open > summary {
+  cursor: pointer;
+  display: block;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--dr-good, var(--md-typeset-a-color));
+  border-radius: 0.25rem;
+  color: var(--dr-good, var(--md-typeset-a-color));
+  font-weight: 700;
+  font-size: 0.85rem;
+  scroll-margin-top: 4.5rem;
+}
+
+.dr-form__open > summary:hover,
+.dr-view__open > summary:hover {
+  background: var(--dr-good, var(--md-typeset-a-color));
+  color: var(--dr-on-accent, var(--md-primary-bg-color));
+}
+
+.dr-form__open[open] > summary,
+.dr-view__open[open] > summary {
+  margin-bottom: 0.8rem;
+}
+
+.dr-form iframe {
+  display: block;
+  width: 100%;
+}
+
+/* 🔴 NO `height` ON `.dr-view iframe` ON PURPOSE: views.py mirrors ClickUp's
+ * `height="700px"` into `min-height`, and a CSS height would make the
+ * frontmatter `height:` key a lie. */
+.dr-view iframe {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  border-radius: 0.25rem;
+}
+
+/* The fallback link is ALWAYS rendered: it is also the answer to "it did not
+ * load." 🚫 No caption rule here, ever -- views-dl.md D6. */
+.dr-form__fallback,
+.dr-view__fallback {
+  margin: 0.6rem 0 0;
+  font-size: 0.75rem;
+  color: var(--md-default-fg-color--light);
+}
+
+/* ------------------------------------------------------------------- print */
+
+@media print {
+  /* 🔴 AN IFRAME PRINTS AS A BLANK RECTANGLE, so it goes and the fallback link
+   * carries the address. For a VIEW that is a real loss, stated rather than
+   * solved (a build-time print copy was refused: two sources, one element).
+   * print-flow.css forces every <details> open, so a collapsed embed needs no
+   * rule of its own. The strip's print rules are gone: print-chrome.css hides
+   * `.dr-flows` on paper outright. */
+  .dr-form iframe,
+  .dr-view iframe {
+    display: none;
+  }
+
+  .dr-form__fallback,
+  .dr-view__fallback {
+    font-size: 0.85rem;
+  }
+
+  /* ⚠️ Unobservable for a FORM (forms.py hides its summary on paper) but live
+   * for a VIEW, so it stays. forms-dl.md names the form half as debt. */
+  .dr-form__open > summary,
+  .dr-view__open > summary {
+    border: 0;
+    padding: 0;
+  }
+}
