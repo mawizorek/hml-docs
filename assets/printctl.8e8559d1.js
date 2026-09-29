@@ -47,6 +47,12 @@
  * when author boxes exist (developer.chrome.com/blog/print-margins), so the
  * panel tells the reader to untick "Headers and footers".
  *
+ * 📖 DOUBLE-SIDED (2026-09-28, Michael: *"when printed on double sided, the
+ * gutter on the right side becomes a problem"*). "Binder, 2-sided" mirrors the
+ * gutter with `@page :right` / `@page :left` (sheet one is a right-hand page).
+ * A content margin cannot know which face of the sheet it lands on, so this
+ * preset IS @page: it works exactly where the page numbers print.
+ *
  * 📝 FOOTER NOTE (2026-09-28, Michael: *"custom footer text that either replaces
  * the 'posted by' line or adds footer text"*). Typed in the panel, inserted into
  * the DOM at `beforeprint` and removed at `afterprint`, so the screen never shows
@@ -78,10 +84,11 @@
   var PRESETS = {
     standard: { label: "Standard", note: "Site default, about \u00bd in all round", m: null },
     binder:   { label: "Binder", note: "1 in left gutter for the hole punch", m: [0.5, 0.5, 0.5, 1] },
+    duplex:   { label: "Binder, 2-sided", note: "1 in gutter on the inside edge, mirrored", m: [0.5, 0.5, 0.5, 1] },
     even:     { label: "Sign / form", note: "\u00be in even on every side", m: [0.75, 0.75, 0.75, 0.75] },
     custom:   { label: "Custom", note: "Set each side in \u215b in steps", m: undefined }
   };
-  var ORDER = ["standard", "binder", "even", "custom"];
+  var ORDER = ["standard", "binder", "duplex", "even", "custom"];
   var SIDES = ["Top", "Right", "Bottom", "Left"];
 
   // "" = Site default (print-type.css §0 owns it; 8.5pt at time of writing, so
@@ -208,7 +215,12 @@
 
   function css() {
     var out = "";
-    if (state.preset !== "standard") {
+    if (state.preset === "duplex") {
+      // [t, r, b, l]: the gutter (l) sits on the inside edge of both faces.
+      var d = state.m, tb = d[0] + "in ", bt = d[2] + "in ";
+      out += "@page:right{margin:" + tb + d[1] + "in " + bt + d[3] + "in}" +
+        "@page:left{margin:" + tb + d[3] + "in " + bt + d[1] + "in}";
+    } else if (state.preset !== "standard") {
       var m = state.m;
       out += "@media print{html body .md-content .md-content__inner{" +
         "margin-left:calc(" + m[3] + "in - 12mm) !important;" +
