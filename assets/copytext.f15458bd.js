@@ -32,6 +32,10 @@
  * carries the duty. 🔴 In rich mode the class is stripped, so the word must be
  * INJECTED or stripping the class would silently delete the hazard.
  *
+ * ✅ PROVEN 2026-10-04 on the template callout gallery: all fourteen labels landed
+ * in both rungs, and the deliberately UNDECLARED `sparkle` family reported `NOTE`
+ * -- which is what the renderer does too, so the copy and the page agree.
+ *
  * ⭐ TABLES DEGRADE TO LIST MODE RATHER THAN TO A PLAIN-TEXT TABLE, reusing a
  * ruling this engine already made instead of inventing a format. data.css flips to
  * list mode inside `@container dr-table (max-width: 640px)` because a table cannot
@@ -71,7 +75,12 @@
     "script", "noscript", "style", "button", "form", "input", "select",
     "textarea", ".buildstamp--corner", ".buildstamp--foot", ".dr-compose-toc",
     ".dr-compose-meta", "[aria-hidden='true']", ".md-source-file",
-    ".md-content__button", "[class*='dr-printctl']", "[class*='dr-copytext']"
+    ".md-content__button", "[class*='dr-printctl']", "[class*='dr-copytext']",
+    /* 🔴 MATERIAL'S PERMALINK IS NOT aria-hidden, which is why a pilcrow landed on
+     * every single heading of the first real paste. The aria-hidden rule above
+     * looked like it covered this and did not. Found 2026-10-04 by Michael pasting
+     * the gallery into a Doc. */
+    ".headerlink", ".md-nav", ".md-sidebar", ".pagefoot", ".pagefoot__rule"
   ].join(",");
 
   /* 🔴 AN ALLOWLIST, NOT A DENYLIST. A denylist silently passes every tag added
@@ -174,7 +183,17 @@
       if (tag === "UL" || tag === "OL") { out += "\n" + plain(c, depth) + "\n"; continue; }
       if (tag === "BR") { out += "\n"; continue; }
       if (tag === "HR") { out += "\n\n----\n"; continue; }
-      if (tag === "P" || tag === "BLOCKQUOTE" || tag === "PRE" || tag === "SECTION" || tag === "DIV") {
+      if (tag === "PRE") {
+        /* 🔴 VERBATIM, NEVER WALKED. v1 sent `pre` through the generic branch, so
+         * the text-node whitespace collapse flattened every newline and indent --
+         * and the page it was first tested on is the one whose whole lesson is a
+         * four-space indent, so the WRONG example and the CORRECT one came out
+         * BYTE-IDENTICAL. That is section 9.2's rule broken by this module itself:
+         * in a code block the whitespace IS the content. */
+        out += "\n\n" + c.textContent.replace(/\s+$/, "") + "\n";
+        continue;
+      }
+      if (tag === "P" || tag === "BLOCKQUOTE" || tag === "SECTION" || tag === "DIV") {
         out += "\n\n" + plain(c, depth).trim() + "\n";
         continue;
       }
@@ -222,6 +241,16 @@
         c.remove();
         continue;
       }
+      /* 🔴 AN IN-PAGE ANCHOR IS DEAD THE MOMENT THE CONTENT LEAVES. The composer
+       * namespaces fragments to `#sN-...` for its own stitched document, which is
+       * correct there and garbage in somebody else's Doc -- the first real paste
+       * turned them into `http://#s1-callout-gallery`. Drop the href, keep the
+       * TEXT: a reader loses a jump they could never have taken, not a word.
+       * Cross-page links are already absolute (ruling 3) and are untouched. */
+      if (c.tagName === "A") {
+        var href = c.getAttribute("href") || "";
+        if (!href || href.charAt(0) === "#") c.removeAttribute("href");
+      }
       var allowed = ATTRS[c.tagName] || [];
       var names = Array.prototype.slice.call(c.attributes).map(function (a) { return a.name; });
       names.forEach(function (n) {
@@ -233,7 +262,12 @@
   function asRich(root) {
     var box = root.cloneNode(true);
     scrub(box);
-    return box.innerHTML.replace(/\s*\n\s*/g, "\n").trim() + "\n";
+    /* ⚠️ NO WHITESPACE SQUEEZE HERE. v1 collapsed newline-plus-indent runs in the
+     * serialised HTML for tidiness, and that stripped the leading indent off every
+     * line inside a `pre` -- the same defect as the plain rung's, and invisible
+     * because the output still LOOKED like a code block. Tidy markup is not worth
+     * content. */
+    return box.innerHTML.trim() + "\n";
   }
 
   /* ------------------------------------------------------------- the clipboard */
