@@ -1,0 +1,88 @@
+/* THE COPY-AS-TEXT CONTROLS -- the wrapper, the status line, the print refusal.
+ * Logic in assets/copytext.js. Reasoning in specs/print-compose.md §9.
+ *
+ * ⭐ THIS SHEET IS DELIBERATELY SMALL BECAUSE THE CONTROLS BORROW THEIR HOST'S OWN
+ * CHROME. In the composer bar the switch wears `.dr-compose__switch` +
+ * `.dr-compose__track` and the button `.dr-compose__btn--quiet`; in the print panel
+ * they wear `.dr-printctl__switch` + `.dr-printctl__track`, `.dr-printctl__label`,
+ * `.dr-printctl__hint` and `.dr-printctl__compose`. Both sets already exist.
+ * Inventing a third control language for one section standing inside somebody
+ * else's furniture would be a second claimant on one look.
+ *
+ * 🔴 EVERY TOKEN CARRIES A MATERIAL FALLBACK (flow.css / packet.css law). Tokens
+ * are generated per site, so a `--dr-*` that exists on `uritp` may be absent on a
+ * nine-token local skin -- the failure that left eleven callout families painting
+ * `currentColor` on 2026-08-05. The worst case must be Material's look, never an
+ * invisible control.
+ *
+ * ⭐ POSITION FREE (assets.py D8), said out loud so nobody later defends it: every
+ * selector here is `.dr-copytext*`, which no other sheet in the tree mentions.
+ */
+
+.dr-copytext {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+/* ⚠️ THE STATUS LINE IS THE ONLY RECEIPT A COPY CAN GIVE. A clipboard write is
+ * invisible by construction -- nothing moves on screen -- so "it copied" and "it
+ * silently failed" are the same blank host without this. It carries aria-live in
+ * the JS for the same reason. */
+.dr-copytext__status {
+  max-width: 22ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--dr-ink-muted, var(--md-default-fg-color--light));
+  font-size: 0.62rem;
+}
+.dr-copytext__status:empty { display: none; }
+
+/* The bar is tighter than the composer's options row, so the borrowed switch
+ * needs to sit down one notch. Nothing else about it changes. */
+.dr-copytext__switch { font-size: 0.64rem; white-space: nowrap; }
+
+.dr-copytext__btn { white-space: nowrap; }
+
+/* ------------------------------------------------------------- in the panel
+ * ⭐ THE PANEL SECTION IS BLOCK FLOW, NOT THE BAR'S INLINE ROW. Its three children
+ * are a label, a full-width switch and a full-width door, which is the shape every
+ * other section of printctl's panel already has -- so the only thing this adds is
+ * the axis. The wrap also carries `.dr-printctl__pagenum`, which supplies the
+ * top margin, so none is restated here. */
+.dr-copytext--panel {
+  display: block;
+  width: 100%;
+}
+.dr-copytext--panel .dr-copytext__status,
+.dr-copytext--panel .dr-printctl__hint {
+  /* ⚠️ The bar truncates its receipt to one line because it is a floating pill
+   * with no room. The panel has room, so the message wraps instead of being cut --
+   * a receipt nobody can finish reading is most of the way back to no receipt. */
+  max-width: none;
+  overflow: visible;
+  white-space: normal;
+}
+
+@media (max-width: 44rem) {
+  /* The bar already wraps at this width; its status line is the first thing worth
+   * losing, because the button's own label says what it did. 🚫 The PANEL keeps
+   * its receipt at every width -- it is the surface a phone actually uses. */
+  .dr-copytext:not(.dr-copytext--panel) .dr-copytext__status { display: none; }
+}
+
+/* 🚫 NONE OF IT PRINTS. printcompose.css already hides `.dr-compose-bar` outright
+ * and printctl.css hides `.dr-printctl`, so these rules are currently unreachable
+ * in both hosts -- kept anyway, and the reason is stated rather than assumed: this
+ * is a FLOOR against the controls ever being re-homed outside a host that already
+ * refuses paper. `assets/flow.css` has the words for why it matters -- "A BUTTON ON
+ * PAPER IS A LIE" -- and `!important` is the family convention, because
+ * print-flow.css's `display: revert !important` has beaten a plain rule twice in
+ * this feature family. */
+@media print {
+  .dr-copytext, .dr-copytext__switch, .dr-copytext__btn, .dr-copytext__status {
+    display: none !important;
+  }
+}

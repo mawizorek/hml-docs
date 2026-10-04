@@ -58,6 +58,18 @@
  * because *"the glance at the cover is the last line of defence."* Identical
  * argument: the document must exist and be visible before it leaves.
  *
+ * 🔴 AND C1 WAS OVER-SCOPED, CORRECTED 2026-10-04 BY MICHAEL ON FIRST USE:
+ * *"In the first print menu, I should be able to copy the text. I shouldn't have
+ * to go through a whole build of a print packet before I get to that copy text
+ * button!"* ⭐ He is right, and the clause above is exactly WHY: on an ordinary page
+ * the document ALREADY exists and is ALREADY visible -- **the page IS its own
+ * preview.** The bar-only rule read as a safety law and was only ever a
+ * consequence of a stitched document not existing until it is built. ⚡ A rule
+ * stated once for a composed document had been generalised to a single page
+ * nobody had considered, which is how the common case ended up behind the rare
+ * one. So the control lives in BOTH hosts and the preview argument still binds
+ * where it applies: the composer.
+ *
  * State: sessionStorage, key `dr-copytext-v1` (ruling 7 shape; dies with the tab).
  */
 (function () {
@@ -67,6 +79,7 @@
   var KEY = "dr-copytext-v1";
   var DOC = ".dr-compose-doc";
   var BAR = ".dr-compose-bar";
+  var PANEL = ".dr-printctl";
 
   /* Elements that are furniture, not content. The composer already stripped the
    * page chrome; these are the few things that survive a stitch and would read as
@@ -302,9 +315,19 @@
 
   /* ------------------------------------------------------------------ the UI */
 
+  /* ⭐ WHAT GETS COPIED, AND THE ORDER IS LOAD-BEARING. `.dr-compose-doc` is
+   * ALSO classed `md-content__inner` (printcompose.js builds it that way), and when
+   * the composer is on, the page's own body is still in the DOM, merely hidden. So
+   * a plain `.md-content__inner` query in composed state returns the HIDDEN
+   * ORIGINAL -- the wrong document, silently, with no error. Composed first,
+   * always. */
+  function source() {
+    return document.querySelector(DOC) || document.querySelector(".md-content__inner");
+  }
+
   function copy(status) {
-    var root = document.querySelector(DOC);
-    if (!root) { status("Build the document first, then copy it."); return; }
+    var root = source();
+    if (!root) { status("Nothing on this page to copy."); return; }
     var lvl = level();
     var text = asPlain(root);
     var html = lvl === "rich" ? asRich(root) : "";
@@ -319,33 +342,54 @@
     );
   }
 
-  function controls(bar) {
-    if (bar.querySelector(".dr-copytext")) return;
-    var act = bar.querySelector(".dr-compose-bar__act") || bar;
+  /* ⭐ TWO HOSTS, TWO CHROMES, ONE BEHAVIOUR. The panel and the preview bar each
+   * already own a drawn switch and a button style, and this borrows whichever one
+   * it is standing in rather than importing a third look into somebody else's
+   * furniture. `printctl.css` and `printcompose.css` both define a `__switch` and a
+   * `__track`; only the prefix differs. */
+  var SKIN = {
+    panel: {
+      wrap: "dr-copytext dr-copytext--panel dr-printctl__pagenum",
+      sw: "dr-printctl__switch", track: "dr-printctl__track",
+      btn: "dr-printctl__compose", note: "dr-printctl__hint dr-copytext__status"
+    },
+    bar: {
+      wrap: "dr-copytext",
+      sw: "dr-compose__switch dr-copytext__switch", track: "dr-compose__track",
+      btn: "dr-compose__btn dr-compose__btn--quiet dr-copytext__btn",
+      note: "dr-copytext__status"
+    }
+  };
+
+  function controls(host, kind) {
+    if (!host || host.querySelector(".dr-copytext")) return;
+    var skin = SKIN[kind];
+    var slot = kind === "bar"
+      ? (host.querySelector(".dr-compose-bar__act") || host)
+      : host;
 
     var wrap = document.createElement("span");
-    wrap.className = "dr-copytext";
+    wrap.className = skin.wrap;
 
-    var note = document.createElement("span");
-    note.className = "dr-copytext__status";
+    var note = document.createElement("p");
+    note.className = skin.note;
     note.setAttribute("aria-live", "polite");
 
-    /* ⭐ A DRAWN SWITCH, reusing the composer's own `dr-compose__switch` chrome
-     * rather than inventing a second control language (print-compose §3 ruling 9,
-     * printctl v2 ruling 12: every control drawn). */
     var sw = document.createElement("button");
     sw.type = "button";
-    sw.className = "dr-compose__switch dr-copytext__switch";
+    sw.className = skin.sw;
     sw.setAttribute("role", "switch");
     sw.title = "Plain text drops headings, bold and tables to characters. " +
       "Callout labels survive either way.";
-    var track = document.createElement("span");
-    track.className = "dr-compose__track";
-    track.setAttribute("aria-hidden", "true");
     var label = document.createElement("span");
     label.textContent = "Plain text";
-    sw.appendChild(track);
-    sw.appendChild(label);
+    var track = document.createElement("span");
+    track.className = skin.track;
+    track.setAttribute("aria-hidden", "true");
+    /* The panel's switch reads label-then-track (it is `space-between`); the bar's
+     * reads track-then-label. Matching each host rather than picking one. */
+    if (kind === "panel") { sw.appendChild(label); sw.appendChild(track); }
+    else { sw.appendChild(track); sw.appendChild(label); }
     function sync() { sw.setAttribute("aria-checked", String(level() === "plain")); }
     sw.addEventListener("click", function () {
       setLevel(level() === "plain" ? "rich" : "plain");
@@ -356,31 +400,59 @@
 
     var go = document.createElement("button");
     go.type = "button";
-    go.className = "dr-compose__btn dr-compose__btn--quiet dr-copytext__btn";
-    go.textContent = "Copy text";
-    go.title = "Copy this document to the clipboard, ready to paste into an email";
+    go.className = skin.btn;
+    go.textContent = kind === "panel" ? "Copy this page as text" : "Copy text";
+    go.title = "Copy to the clipboard, ready to paste into an email";
     go.addEventListener("click", function () {
       copy(function (m) { note.textContent = m; });
     });
 
-    wrap.appendChild(note);
-    wrap.appendChild(sw);
-    wrap.appendChild(go);
-    act.insertBefore(wrap, act.firstChild);
+    if (kind === "panel") {
+      var head = document.createElement("span");
+      head.className = "dr-printctl__label";
+      head.textContent = "Copy as text";
+      wrap.appendChild(head);
+      wrap.appendChild(sw);
+      wrap.appendChild(go);
+      wrap.appendChild(note);
+      slot.appendChild(wrap);
+    } else {
+      wrap.appendChild(note);
+      wrap.appendChild(sw);
+      wrap.appendChild(go);
+      slot.insertBefore(wrap, slot.firstChild);
+    }
   }
 
-  /* 🔴 THE BAR IS BUILT BY printcompose.js AFTER A FETCH, so it is never present
-   * at load. Observing is what keeps this module out of that file. ⚠️ Fail open:
-   * if MutationObserver is missing the composer still prints, it just has no copy
-   * button -- never a broken bar. */
+  function scan() {
+    controls(document.querySelector(PANEL), "panel");
+    controls(document.querySelector(BAR), "bar");
+  }
+
+  /* 🔴 NEITHER HOST EXISTS AT LOAD. printcompose.js builds the bar after a fetch,
+   * and the panel is built by printctl.js and lives on <body>. Observing is what
+   * keeps this module out of BOTH files, each of which is at the ~22KB ceiling.
+   *
+   * ⚠️ TWO TRIGGERS, DELIBERATELY REDUNDANT, AND THE REASON IS AN UNREAD FILE.
+   * The observer catches a panel APPENDED to <body>. It cannot catch a panel whose
+   * innards are rebuilt in place, because that fires no mutation on <body> -- and I
+   * have not read printctl.js (22,389 B, at the read ceiling) to find out which it
+   * does. So the trigger click re-scans as well. ⭐ Re-scanning is free: `controls`
+   * returns immediately if its host already carries a `.dr-copytext`.
+   *
+   * ⚠️ Fail open: with no MutationObserver the click path still works, so the
+   * panel keeps its button and only the composer bar loses one. Never a broken
+   * host. */
   function watch() {
-    var seen = document.querySelector(BAR);
-    if (seen) controls(seen);
+    scan();
+    document.addEventListener("click", function (e) {
+      var t = e.target;
+      if (t && t.closest && t.closest(".dr-printctl__trigger")) {
+        window.setTimeout(scan, 0);
+      }
+    }, true);
     if (!window.MutationObserver) return;
-    new window.MutationObserver(function () {
-      var bar = document.querySelector(BAR);
-      if (bar) controls(bar);
-    }).observe(document.body, { childList: true, subtree: false });
+    new window.MutationObserver(scan).observe(document.body, { childList: true, subtree: false });
   }
 
   window.drCopyText = { asPlain: asPlain, asRich: asRich };
