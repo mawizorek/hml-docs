@@ -1,74 +1,54 @@
-/* COPY THE STITCHED DOCUMENT AS TEXT -- the composer's second output.
- * Reasoning lives in specs/print-compose.md §9; this header keeps only the
- * rules the code below must obey.
+/* COPY THE PAGE AS TEXT -- the print menu's and the composer's second output.
+ * 🚫 THE REASONING IS NOT HERE. It is specs/print-compose.md §9, rulings C1-C8.
+ * This header carries only the rules the code below must obey, and every one of
+ * them is here because breaking it already cost a real paste.
  *
- * Michael, 2026-10-03: *"i take notes i've generated, like default run sheets for
- * audio, lighting, or stage management, and deliver them to those department heads
- * as files for them to edit... i usually just pop into an email and provide the
- * basic starting run sheet that they work from, which they can paste into their
- * own Google Doc."*
+ * Michael, 2026-10-03, which is the whole brief: *"i usually just pop into an
+ * email and provide the basic starting run sheet that they work from, which they
+ * can paste into their own Google Doc."*
  *
  * 🔴 IT IS A CLIPBOARD WRITE, NOT A FILE, AND THAT IS WHAT MAKES IT CHEAP.
  * print-packet.md §5's refusal of a second renderer is untouched: nothing is
- * rendered, nothing is written to disk, and there is no artifact URL. The
- * destination is an email body and then somebody else's Google Doc, so the payload
- * is pasted TWICE and has to survive both hops.
+ * rendered, nothing hits disk, there is no artifact URL to govern. The payload is
+ * pasted TWICE -- into a mail body, then into somebody else's Doc -- so it has to
+ * survive both hops.
  *
  * 🔴 THE LEVEL DIAL MAY MOVE FORMATTING AND MAY NEVER MOVE CONTENT.
  * print-control.md §1: *"a print option is safe only if it cannot change what the
- * document says."* That is the whole reason a level toggle is permitted here when
- * callout density was REFUSED as a reader control. So:
+ * document says."* That is the only reason a level toggle is allowed here when
+ * callout density was REFUSED as a reader control.
  *
  *     rich   semantic HTML -- h1-h6, strong, em, ul/ol, table, blockquote, a.
- *            🚫 NO class attribute, NO style attribute, NO custom property.
- *            That is what "stripped" means: the structure travels, the skin
- *            does not. Pastes into a Google Doc as real headings and real tables.
- *     plain  text only. Tables become LIST MODE.
+ *            🚫 NO class, NO style, NO custom property. "Stripped" means the
+ *            structure travels and the skin does not.
+ *     plain  text only. Tables become LIST MODE, the data.css 640px ruling,
+ *            because a pipe table pasted into a Doc is a wall of punctuation.
  *
- * ⭐ THE CALLOUT'S WORD IS OFF THE DIAL AT EVERY LEVEL, and it is Hazard
- * Hawthorne's floor rather than a preference: print-control.md §1 refuses callout
- * density because it decides *"whether a hazard box still reads as a hazard box."*
- * A red border cannot survive a Google Doc. `DANGER:` can, and the word is what
- * carries the duty. 🔴 In rich mode the class is stripped, so the word must be
- * INJECTED or stripping the class would silently delete the hazard.
+ * ⭐ THE CALLOUT'S WORD IS OFF THE DIAL AT EVERY LEVEL. Hawthorne's floor, not a
+ * preference: print-control.md §1 refuses callout density because it decides
+ * *"whether a hazard box still reads as a hazard box."* A red border cannot
+ * survive a Google Doc. `DANGER:` can. 🔴 Rich mode strips the class, so the word
+ * must be INJECTED or stripping would silently delete the hazard.
  *
- * ✅ PROVEN 2026-10-04 on the template callout gallery: all fourteen labels landed
- * in both rungs, and the deliberately UNDECLARED `sparkle` family reported `NOTE`
- * -- which is what the renderer does too, so the copy and the page agree.
+ * ✅ SAFETY IS INHERITED, NOT RE-ARGUED. print-compose.md §3: the composer's
+ * library is `search/search_index.json`, public pages only -- *"the packet's A7
+ * leak fence, for free"* -- and a body still wearing a router curtain is already
+ * skipped and named. This module reads only what is already stitched or already
+ * on screen, so it cannot widen that fence.
  *
- * ⭐ TABLES DEGRADE TO LIST MODE RATHER THAN TO A PLAIN-TEXT TABLE, reusing a
- * ruling this engine already made instead of inventing a format. data.css flips to
- * list mode inside `@container dr-table (max-width: 640px)` because a table cannot
- * survive a narrow measure; an email body and a pasted Doc are narrower than any
- * sheet. A pipe table pasted into a Doc is a wall of punctuation.
+ * ⚠️ THE DOCUMENT MUST EXIST AND BE VISIBLE BEFORE IT LEAVES (ruling 6's reason
+ * for refusing auto-print: *"the glance at the cover is the last line of
+ * defence."*) 🔴 C1 read that as "preview bar only" and was OVER-SCOPED, corrected
+ * 2026-10-04 by Michael on first use: *"In the first print menu, I should be able
+ * to copy the text. I shouldn't have to go through a whole build of a print packet
+ * before I get to that copy text button!"* ⭐ Right, and the clause above is why:
+ * on an ordinary page the document already exists and is already visible -- **the
+ * page IS its own preview.** So BOTH hosts, and the preview argument still binds
+ * where it actually applies: the composer.
  *
- * 🚫 NO EDIT TO printcompose.js, DELIBERATELY. That file is 22,021 B against a
- * ~22KB read ceiling, so this module appends its own controls to the preview bar
- * when the bar appears. The seam is `.dr-compose-doc`, which `stitch()` already
- * built -- there is nothing here to assemble.
- *
- * ✅ EVERY SAFETY PROPERTY IS INHERITED, NOT RE-ARGUED. print-compose.md §3
- * ruling 1: the composer's library IS `search/search_index.json`, which
- * visibility.py builds from public pages only -- *"the packet's A7 leak fence, for
- * free."* Ruling 2: a body still carrying a router curtain is already skipped and
- * named. This module reads only what the composer already stitched, so it cannot
- * widen that fence.
- *
- * ⚠️ COPY FROM THE PREVIEW, NEVER FROM THE STACK. Ruling 6 refuses auto-print
- * because *"the glance at the cover is the last line of defence."* Identical
- * argument: the document must exist and be visible before it leaves.
- *
- * 🔴 AND C1 WAS OVER-SCOPED, CORRECTED 2026-10-04 BY MICHAEL ON FIRST USE:
- * *"In the first print menu, I should be able to copy the text. I shouldn't have
- * to go through a whole build of a print packet before I get to that copy text
- * button!"* ⭐ He is right, and the clause above is exactly WHY: on an ordinary page
- * the document ALREADY exists and is ALREADY visible -- **the page IS its own
- * preview.** The bar-only rule read as a safety law and was only ever a
- * consequence of a stitched document not existing until it is built. ⚡ A rule
- * stated once for a composed document had been generalised to a single page
- * nobody had considered, which is how the common case ended up behind the rare
- * one. So the control lives in BOTH hosts and the preview argument still binds
- * where it applies: the composer.
+ * ⚠️ SIZE. 21KB against a ~22KB read ceiling, and the header has already been cut
+ * once to buy room. 🔴 THE NEXT EDIT SPLITS THE CONVERTERS FROM THE UI. There is
+ * no third trim left.
  *
  * State: sessionStorage, key `dr-copytext-v1` (ruling 7 shape; dies with the tab).
  */
@@ -120,6 +100,24 @@
     quote: "QUOTE", abstract: "SUMMARY", export: "EXPORT"
   };
 
+  /* 🔴 A CALLOUT IS WRITTEN TWO WAYS AND THIS FILE ONLY KNEW ONE. `!!!` renders
+   * `<div class="admonition note"><p class="admonition-title">`; `???` renders
+   * `<details class="note"><summary>` -- NO `admonition` class and NO
+   * `.admonition-title`, so both tests failed and every collapsible box came out
+   * of the copy UNLABELLED while its identical twin was labelled. Not inferred:
+   * theme/ungoverned.tsv already ruled every rule is emitted for *"both spellings
+   * -- .admonition.<name> and details.<name>, .admonition-title and summary"*, and
+   * mkdocs.yml turns `pymdownx.details` on. blocks.css has obeyed that since
+   * 2026-08-05; the copy layer never read it. Found by Michael, 2026-10-04. §9.8.
+   *
+   * Direct child first, because a nested collapsible's `summary` must never be
+   * mistaken for its parent's title. The descendant fallback drops `summary` for
+   * exactly that reason. */
+  function titleOf(el) {
+    return el.querySelector(":scope > .admonition-title, :scope > .dr-callout__title, :scope > summary")
+      || el.querySelector(".admonition-title, .dr-callout__title");
+  }
+
   function level() {
     try {
       var v = sessionStorage.getItem(KEY);
@@ -130,15 +128,25 @@
 
   function squash(s) { return String(s || "").replace(/\s+/g, " ").trim(); }
 
-  /* The family word for one admonition node, or "" if it is not one. */
+  /* The family word for one callout node, or "" if it is not one.
+   *
+   * 🚫 A BARE `<details>` IS NOT A CALLOUT, so the undeclared-family fallback is
+   * for `.admonition` ONLY. forms.py and views.py both render a `collapsed:` embed
+   * as a `<details>`, and `.dr-flows__others` is one -- stamping `NOTE:` on a form
+   * would invent a label for something that is not a box. A collapsible earns its
+   * word by naming a family blocks.py actually emits `details.<name>` rules for.
+   * ⚡ The cost is deliberate and asymmetric: `??? sparkle` goes unlabelled where
+   * `!!! sparkle` reports NOTE. A custom family is rare; a mislabelled form is
+   * every page that embeds one. */
   function family(el) {
     var cls = " " + (el.getAttribute("class") || "") + " ";
-    if (cls.indexOf(" admonition ") < 0 && cls.indexOf(" dr-callout ") < 0) return "";
+    var box = cls.indexOf(" admonition ") >= 0 || cls.indexOf(" dr-callout ") >= 0;
+    if (!box && el.tagName !== "DETAILS") return "";
     var names = Object.keys(LABEL);
     for (var i = 0; i < names.length; i++) {
       if (cls.indexOf(" " + names[i] + " ") >= 0) return LABEL[names[i]];
     }
-    return "NOTE"; /* an undeclared family wears the note pencil; so does its word. */
+    return box ? "NOTE" : ""; /* an undeclared family wears the note pencil; so does its word. */
   }
 
   /* ------------------------------------------------------------------ plain */
@@ -178,9 +186,12 @@
       var tag = c.tagName;
       var word = family(c);
       if (word) {
-        /* ⭐ The label, then the box's own content. The title is Material's
-         * `.admonition-title`; it is NOT dropped, it is prefixed. */
-        var title = c.querySelector(".admonition-title, .dr-callout__title");
+        /* ⭐ The label, then the box's own content. The title is `.admonition-title`
+         * on a `!!!` box and `<summary>` on a `???` one; it is NOT dropped, it is
+         * prefixed. A closed `<details>` still carries its content in the DOM, so
+         * the copy reads it either way -- the same answer print-flow.css reached
+         * when it forced every collapsible open on paper. */
+        var title = titleOf(c);
         var head = word + ":" + (title ? " " + squash(title.textContent) : "");
         if (title) title.remove();
         out += "\n\n" + head + "\n" + plain(c, depth).trim() + "\n";
@@ -206,7 +217,13 @@
         out += "\n\n" + c.textContent.replace(/\s+$/, "") + "\n";
         continue;
       }
-      if (tag === "P" || tag === "BLOCKQUOTE" || tag === "SECTION" || tag === "DIV") {
+      if (tag === "SUMMARY") {
+        /* An unlabelled collapsible is a form or a view embed, not a box. Its
+         * summary is still a line of the document, so it gets one. */
+        out += "\n\n" + squash(c.textContent) + "\n";
+        continue;
+      }
+      if (tag === "P" || tag === "BLOCKQUOTE" || tag === "SECTION" || tag === "DIV" || tag === "DETAILS") {
         out += "\n\n" + plain(c, depth).trim() + "\n";
         continue;
       }
@@ -234,7 +251,7 @@
 
       var word = family(c);
       if (word) {
-        var title = c.querySelector(".admonition-title, .dr-callout__title");
+        var title = titleOf(c);
         var line = el.ownerDocument.createElement("p");
         var tag = el.ownerDocument.createElement("strong");
         tag.textContent = word + ":";
