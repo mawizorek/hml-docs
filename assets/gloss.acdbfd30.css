@@ -88,6 +88,22 @@
   position: relative;
 }
 
+/* Ordinary page links reuse the gloss; icon color is a validated theme role.
+ * Accessible names/descriptions are explicit attributes, not generated CSS text.
+ * No data-role-print is emitted for ordinary links, so no prose is added to paper.
+ */
+.md-typeset a.dr-link-icon {
+  display: inline-block;
+  min-width: 1.5em;
+  text-align: center;
+  color: var(--dr-link-icon-color, var(--dr-accent, var(--md-accent-fg-color)));
+}
+
+.md-typeset a.dr-link-icon:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
 /* THE BOX. Hidden by default, revealed on hover and on keyboard focus.
  *
  * `max-width` is in `ch` first because a gloss is a SENTENCE and a sentence has a
