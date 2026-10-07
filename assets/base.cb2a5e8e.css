@@ -262,14 +262,28 @@
 }
 
 /* ---------------------------------------------------------------------------
- * INLINE CONFIDENCE MARKERS (docrender/markers.py, theme/markers.tsv)
+ * INLINE MARKERS (docrender/markers.py, theme/markers.tsv)
  *
  * [To be confirmed]{.tbc} - [40 ft]{.conf} - [18 ft]{.est} - [48 ft]{.was}
  *
- * Every one says how much to TRUST the thing beside it. They sit INSIDE a
- * sentence, which is the whole reason they exist rather than being callouts: the
- * doubt belongs to one value, not to the paragraph. So they must be legible
- * without shouting -- a marked figure should still read as a figure.
+ * ⚠️ THIS SAID "CONFIDENCE MARKERS" AND "every one says how much to TRUST the
+ * thing beside it" UNTIL 2026-10-06. That stopped being true at DL J7: the
+ * vocabulary is now 21 rows across SIX families, and terminology, highlight and
+ * the three FMP families say nothing about trust. They still sit INSIDE a
+ * sentence rather than being callouts, and must be legible without shouting.
+ *
+ * 🔴 `white-space: nowrap` CAME OFF THE SAME DAY, SAME REASON. It was written
+ * for `[18 ft]{.est}`, and `est` carries `shape: soft` -- italic text, never a
+ * chip. The other twenty inherited it, including `hi`, which exists to flag a
+ * whole sentence. Michael: *"it can always break across a line."* ⚑ The rule
+ * never rotted, its PREMISE did -- written when every marker was a short
+ * measured value, re-read by nobody when that stopped being true. FOURTH
+ * container to pay for it: J20, PR #57, J25 d4/J26, then a callout.
+ *
+ * ⚠️ SO `box-decoration-break: clone` IS LOAD-BEARING, NOT POLISH. The default
+ * `slice` cuts a wrapping chip's border open and ships two half-boxes. PREFIXED
+ * SPELLING FIRST: WebKit needs it, and Orion is the browser that caught the J28
+ * container-query split and reported this bug. Same lesson as PR #91's mask.
  *
  * SHAPE AND COLOUR ARE SEPARATE. Every rule below styles SHAPE only and takes
  * its colour from `--dr-mark-color`, which the hook writes inline on the span
@@ -288,7 +302,6 @@
   --dr-mark-color: currentColor;
   font-size: 0.9em;
   cursor: help;
-  white-space: nowrap;
   color: var(--dr-mark-color);
 }
 .dr-mark--box {
@@ -297,6 +310,8 @@
   border-radius: var(--dr-radius, 3px);
   padding: 0.05em 0.34em;
   background: color-mix(in oklch, var(--dr-mark-color) 10%, transparent);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 .dr-mark--plain {
   font-weight: 500;
