@@ -5,13 +5,21 @@
  *
  * SIX FORMS, AND THE SPELLING IS DECIDED BY THE MARKUP RATHER THAN BY TASTE:
  *
- *     ## Emergency Contacts {.align-center}      a heading
- *     Some paragraph. {.align-right}             a paragraph
+ *     ## Emergency Contacts {.align-center}      a heading (same line)
+ *     Some paragraph.                            a paragraph -- the brace
+ *     {.align-right}                             on its OWN line, see below
  *     ![Rep plot](plot.png){.align-center}       an image (see IMAGES below)
  *     !!! qr "incident-report" print=true align=center
  *     !!! form "completion" align=center         (see EMBEDS below)
  *     !!! data "inventory"
  *         align: center
+ *
+ * 🔴 A PARAGRAPH'S BRACE GOES ON ITS OWN LINE, AND THIS HEADER TAUGHT IT WRONG
+ * (corrected 2026-10-08). Python-Markdown's attr_list reads a same-line trailing
+ * brace ONLY on a heading. On a paragraph it must be the block's last line, by
+ * itself; written inline it stays LITERAL TEXT and nothing reports it. Found on
+ * the uritp backstage sign, where `Cast and Crew Only {.align-center}` -- copied
+ * from the example above -- printed its own braces.
  *
  * =========================================================================
  * 🔴 IMAGES: A CLASS ON AN INLINE ELEMENT IS INERT, AND THIS FILE OVERSOLD
