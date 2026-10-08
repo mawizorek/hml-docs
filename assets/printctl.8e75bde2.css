@@ -331,3 +331,35 @@
 @media (prefers-reduced-motion: reduce) {
   .dr-printctl__track, .dr-printctl__track::after { transition: none; }
 }
+
+/* ---------------------------------------------------------------- typed size (v3)
+ * The size readout is an <input> so a sign size can be typed (printctl.js v3).
+ * Drawn, not OS: no border box, no spinner, it reads as the same readout the
+ * margin steppers show. 0.8rem = 16px under Material's 125% root, which keeps
+ * iPad Safari from zooming the page on focus (it zooms any field under 16px). */
+input.dr-printctl__val--input {
+  box-sizing: border-box;
+  width: 5.6rem;
+  min-width: 0;
+  margin: 0;
+  border-top: 0;
+  border-bottom: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: text;
+}
+input.dr-printctl__val--input::placeholder { color: var(--pc-muted); opacity: 1; font-weight: 600; font-size: 0.72rem; }
+input.dr-printctl__val--input:hover { background: color-mix(in srgb, var(--pc-accent) 6%, transparent); }
+input.dr-printctl__val--input:focus {
+  outline: none;
+  background: color-mix(in srgb, var(--pc-accent) 12%, transparent);
+  box-shadow: inset 0 -2px 0 var(--pc-accent);
+}

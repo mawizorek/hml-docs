@@ -11,6 +11,15 @@
  * header as just the printer icon?"* So: no native <select>, no native number
  * spinners, no floating pill. Every control is a <button>.
  *
+ * v3 (2026-10-07, Michael): *"why do we limit the print text size to 11pt? what
+ * if i want to scale up for a sign and print at 24 or 32pt? ... not a manual box
+ * but be able to type into the existing field as well as use the +/-."* So the
+ * size readout IS the input: type any number (6 to 72 pt, half-point steps,
+ * clamped out loud), and +/- walk a ladder that now runs past 11 into sign sizes.
+ * ⭐ Safe by §1's own test: the dial moves type, never the column, so the 640px
+ * table boundary cannot be crossed by it. Headings scale with it (em ramp), and
+ * hand-placed {.new-page} breaks drift exactly as §5c predicted.
+ *
  * =========================================================================
  * 🔴 THE INLINE BUDGET IS THE WHOLE DESIGN. READ IT BEFORE ADDING A PRESET.
  * =========================================================================
@@ -92,8 +101,23 @@
   var SIDES = ["Top", "Right", "Bottom", "Left"];
 
   // "" = Site default (print-type.css §0 owns it; 8.5pt at time of writing, so
-  // − from default lands on 8 and + on 9).
-  var SIZES = ["7.5", "8", "8.5", "9", "9.5", "10", "11"];
+  // − from default lands on 8 and + on 9). v3: the ladder is where +/- STOP, not
+  // what is allowed. Any typed value from SIZE_MIN to SIZE_MAX is legal.
+  var SIZES = ["7.5", "8", "8.5", "9", "9.5", "10", "11", "12", "14", "16", "18",
+    "20", "24", "28", "32", "40", "48", "60", "72"];
+  var SIZE_MIN = 6, SIZE_MAX = 72;
+  var SITE_BASE = 8.5;    // what "Site default" steps from. Display only.
+
+  // "32 pt", "32", " 24.3" -> { v: "32" | "24.5", msg }. Empty / junk = default.
+  function normSize(raw) {
+    var n = parseFloat(String(raw == null ? "" : raw).replace(",", "."));
+    if (!isFinite(n) || n <= 0) return { v: "", msg: "" };
+    var msg = "";
+    n = Math.round(n * 2) / 2;
+    if (n < SIZE_MIN) { n = SIZE_MIN; msg = "Text size stops at " + SIZE_MIN + " pt."; }
+    if (n > SIZE_MAX) { n = SIZE_MAX; msg = "Text size stops at " + SIZE_MAX + " pt."; }
+    return { v: String(n), msg: msg };
+  }
 
   var ICON_PRINT = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3m-3 11H8v-5h8zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1m-1-9H6v4h12z"/></svg>';
   var ICON_MINUS = '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 7.25h10v1.5H3z"/></svg>';
@@ -104,7 +128,7 @@
     try {
       var s = JSON.parse(window.sessionStorage.getItem(KEY) || "null");
       if (!s || !PRESETS[s.preset] || !Array.isArray(s.m) || s.m.length !== 4) return null;
-      if (s.size && SIZES.indexOf(s.size) < 0) s.size = "";
+      s.size = s.size ? normSize(s.size).v : "";
       if (typeof s.note !== "string") s.note = "";
       if (s.noteMode !== "replace") s.noteMode = "add";
       if (typeof s.pagenum !== "boolean") s.pagenum = true;
@@ -256,13 +280,23 @@
     return el;
   }
 
-  function stepper(label, onStep) {
-    var val = h("output", { "class": "dr-printctl__val", "aria-live": "polite" });
+  // `valEl` optional: v3's size stepper passes an <input> as its readout.
+  function stepper(label, onStep, valEl) {
+    var val = valEl || h("output", { "class": "dr-printctl__val", "aria-live": "polite" });
     var minus = h("button", { type: "button", "class": "dr-printctl__step", "aria-label": "Decrease " + label, html: ICON_MINUS });
     var plus = h("button", { type: "button", "class": "dr-printctl__step", "aria-label": "Increase " + label, html: ICON_PLUS });
     minus.addEventListener("click", function () { onStep(-1); });
     plus.addEventListener("click", function () { onStep(1); });
     return { el: h("div", { "class": "dr-printctl__stepper" }, [minus, val, plus]), val: val, minus: minus, plus: plus };
+  }
+
+  // Next ladder rung strictly past `cur` in direction `dir`, or null at the end.
+  // A typed 13 steps to 14 / 12, so the ladder never traps a typed value.
+  function rung(cur, dir) {
+    var i, v;
+    if (dir > 0) { for (i = 0; i < SIZES.length; i++) { v = parseFloat(SIZES[i]); if (v > cur + 1e-9) return SIZES[i]; } }
+    else { for (i = SIZES.length - 1; i >= 0; i--) { v = parseFloat(SIZES[i]); if (v < cur - 1e-9) return SIZES[i]; } }
+    return null;
   }
 
   function build() {
@@ -293,15 +327,38 @@
     });
     var custom = h("div", { "class": "dr-printctl__custom" }, sides.map(function (x) { return x.row; }));
 
-    var size = stepper("text size", function (dir) {
-      var i = SIZES.indexOf(state.size);
-      if (i < 0) i = dir < 0 ? 1 : 3;           // from Site default (8.5)
-      else i = Math.max(0, Math.min(SIZES.length - 1, i + dir));
-      state.size = SIZES[i];
+    // v3: the readout is typeable. Commits on Enter / blur; arrow keys step.
+    var sizeIn = h("input", { type: "text", inputmode: "decimal", autocomplete: "off", spellcheck: "false",
+      "class": "dr-printctl__val dr-printctl__val--input", "aria-label": "Text size in points (6 to 72)",
+      placeholder: "Site default" });
+    function stepSize(dir) {
+      var cur = state.size ? parseFloat(state.size) : SITE_BASE;
+      var next = rung(cur, dir);
+      if (next === null) return;
+      state.size = next;
       msg = ""; apply(); sync();
+    }
+    function commitSize() {
+      var r = normSize(sizeIn.value);
+      state.size = r.v;
+      msg = r.msg; apply(); sync();
+    }
+    sizeIn.addEventListener("focus", function () {
+      sizeIn.value = state.size; // bare number while editing
+      sizeIn.select();
     });
+    sizeIn.addEventListener("change", commitSize);
+    sizeIn.addEventListener("blur", function () { sync(); });
+    sizeIn.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); commitSize(); sizeIn.select(); }
+      else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+        e.preventDefault(); stepSize(e.key === "ArrowUp" ? 1 : -1);
+        sizeIn.value = state.size; sizeIn.select();
+      }
+    });
+    var size = stepper("text size", stepSize, sizeIn);
     var sizeDefault = h("button", { type: "button", "class": "dr-printctl__link", text: "Default" });
-    sizeDefault.addEventListener("click", function () { state.size = ""; apply(); sync(); });
+    sizeDefault.addEventListener("click", function () { state.size = ""; msg = ""; apply(); sync(); });
 
     var pnSwitch = h("button", { type: "button", role: "switch", "class": "dr-printctl__switch" }, [
       h("span", { "class": "dr-printctl__label", text: "Page numbers" }),
@@ -370,17 +427,19 @@
         x.s.minus.disabled = state.m[i] <= MIN_IN;
         x.s.plus.disabled = state.m[i] >= MAX_IN;
       });
-      var si = SIZES.indexOf(state.size);
-      size.val.textContent = state.size ? state.size + " pt" : "Site default";
-      size.minus.disabled = si === 0;
-      size.plus.disabled = si === SIZES.length - 1;
+      var cur = state.size ? parseFloat(state.size) : SITE_BASE;
+      if (document.activeElement !== sizeIn) sizeIn.value = state.size ? state.size + " pt" : "";
+      size.minus.disabled = rung(cur, -1) === null;
+      size.plus.disabled = rung(cur, 1) === null;
       sizeDefault.hidden = !state.size;
       pnSwitch.setAttribute("aria-checked", String(!!state.pagenum));
       pnHint.hidden = !state.pagenum;
       if (noteBox.value !== state.note) noteBox.value = state.note;
       modes.forEach(function (b) { b.setAttribute("aria-checked", String(b.getAttribute("data-mode") === state.noteMode)); });
       modes[0].parentNode.hidden = !state.note.trim();
-      var warn = state.size && parseFloat(state.size) < 9 ? "Under 9 pt reads fine off a laser printer but can close up on a photocopy." : "";
+      var warn = "";
+      if (state.size && cur < 9) warn = "Under 9 pt reads fine off a laser printer but can close up on a photocopy.";
+      else if (state.size && cur > 14) warn = "Sign size: headings scale up with it, and pages break in new places.";
       note.textContent = [msg, warn].filter(Boolean).join(" ");
       trigger.classList.toggle("dr-printctl__trigger--active", !isDefault());
     }
@@ -409,6 +468,7 @@
       msg = ""; apply(); sync();
     });
     go.addEventListener("click", function () {
+      if (document.activeElement === sizeIn) commitSize(); // typed but not yet committed
       apply(); close(false);
       window.setTimeout(function () { window.print(); }, 60);
     });
