@@ -20,6 +20,16 @@
  * table boundary cannot be crossed by it. Headings scale with it (em ramp), and
  * hand-placed {.new-page} breaks drift exactly as §5c predicted.
  *
+ * 📌 FURNITURE HOLDS STILL (v3.1, same night, Michael: *"there's an inconsistency
+ * in the scaling between the footer and the header -- one does and one doesn't"*).
+ * The letterhead is `0.58rem` + a 40.5mm mark (print-identity.css, frozen by the
+ * 08-29 ruling) and the page number is a literal 7.5pt, so neither rides the dial.
+ * The revised line, "Posted by" and the footer note are `em` children of
+ * `.md-typeset`, so they DID -- a 32pt sign got a 27pt "Revised Fall 2026". The dial
+ * is for the DOCUMENT; whose-document-it-is stays at the size the site prints it.
+ * So while a size is set, those three are pinned to what they compute to at the
+ * SITE base, read live from print-type.css §0 (siteBase()), not restated here.
+ *
  * =========================================================================
  * 🔴 THE INLINE BUDGET IS THE WHOLE DESIGN. READ IT BEFORE ADDING A PRESET.
  * =========================================================================
@@ -106,7 +116,38 @@
   var SIZES = ["7.5", "8", "8.5", "9", "9.5", "10", "11", "12", "14", "16", "18",
     "20", "24", "28", "32", "40", "48", "60", "72"];
   var SIZE_MIN = 6, SIZE_MAX = 72;
-  var SITE_BASE = 8.5;    // what "Site default" steps from. Display only.
+  var SITE_BASE = 8.5;    // FALLBACK only. siteBase() reads the real one.
+
+  // print-type.css §0's --dr-print-base, read from the loaded sheets so the pin
+  // below and the stepper's starting point cannot drift from it. Our own <style>
+  // is skipped (it carries the override). Cross-origin sheets throw: skipped.
+  var siteBaseCache = null;
+  function siteBase() {
+    if (siteBaseCache !== null) return siteBaseCache;
+    var found = null;
+    function walk(rules) {
+      for (var i = 0; rules && i < rules.length; i++) {
+        var r = rules[i];
+        if (r.cssRules) walk(r.cssRules);
+        if (r.style && r.style.getPropertyValue) {
+          var v = r.style.getPropertyValue("--dr-print-base");
+          var m = v && /^\s*([\d.]+)pt\s*$/.exec(v);
+          if (m) found = parseFloat(m[1]); // last wins, like the cascade at equal specificity
+        }
+      }
+    }
+    try {
+      var sheets = document.styleSheets || [];
+      for (var i = 0; i < sheets.length; i++) {
+        var own = sheets[i].ownerNode;
+        if (own && own.id === STYLE_ID) continue;
+        try { walk(sheets[i].cssRules); } catch (e) { /* cross-origin */ }
+      }
+    } catch (e) { /* no CSSOM */ }
+    // Cache only a REAL read: a sheet still loading must not freeze the fallback.
+    if (found && found > 0) siteBaseCache = found;
+    return siteBaseCache !== null ? siteBaseCache : SITE_BASE;
+  }
 
   // "32 pt", "32", " 24.3" -> { v: "32" | "24.5", msg }. Empty / junk = default.
   function normSize(raw) {
@@ -253,10 +294,17 @@
     }
     if (state.size) {
       // (0,1,1) beats print-type.css §0's (0,1,0). A value override, not a selector fight.
-      out += "@media print{html .md-typeset{--dr-print-base:" + state.size + "pt}}";
+      out += "@media print{html .md-typeset{--dr-print-base:" + state.size + "pt}";
+      // 📌 Furniture pin (header v3.1). Each selector out-specifies its owner by
+      // one element: base.css/foot.css (0,2,0), printctl.css's note (0,3,2).
+      var fb = siteBase();
+      out += "html .md-typeset .dr-revised,html .md-typeset .dr-owner{font-size:" + r2(fb * 0.85) + "pt}" +
+        "html body .md-typeset p.dr-printnote:not(.dr-owner){font-size:" + r2(fb * 0.85 * 0.8) + "pt}}";
     }
     return out + pageCss();
   }
+
+  function r2(n) { return Math.round(n * 100) / 100; }
 
   function apply() {
     var rules = css(), el = document.getElementById(STYLE_ID);
@@ -332,7 +380,7 @@
       "class": "dr-printctl__val dr-printctl__val--input", "aria-label": "Text size in points (6 to 72)",
       placeholder: "Site default" });
     function stepSize(dir) {
-      var cur = state.size ? parseFloat(state.size) : SITE_BASE;
+      var cur = state.size ? parseFloat(state.size) : siteBase();
       var next = rung(cur, dir);
       if (next === null) return;
       state.size = next;
@@ -427,7 +475,7 @@
         x.s.minus.disabled = state.m[i] <= MIN_IN;
         x.s.plus.disabled = state.m[i] >= MAX_IN;
       });
-      var cur = state.size ? parseFloat(state.size) : SITE_BASE;
+      var cur = state.size ? parseFloat(state.size) : siteBase();
       if (document.activeElement !== sizeIn) sizeIn.value = state.size ? state.size + " pt" : "";
       size.minus.disabled = rung(cur, -1) === null;
       size.plus.disabled = rung(cur, 1) === null;
