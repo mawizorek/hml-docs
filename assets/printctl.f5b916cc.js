@@ -20,15 +20,11 @@
  * table boundary cannot be crossed by it. Headings scale with it (em ramp), and
  * hand-placed {.new-page} breaks drift exactly as §5c predicted.
  *
- * 📌 FURNITURE HOLDS STILL (v3.1, same night, Michael: *"there's an inconsistency
- * in the scaling between the footer and the header -- one does and one doesn't"*).
- * The letterhead is `0.58rem` + a 40.5mm mark (print-identity.css, frozen by the
- * 08-29 ruling) and the page number is a literal 7.5pt, so neither rides the dial.
- * The revised line, "Posted by" and the footer note are `em` children of
- * `.md-typeset`, so they DID -- a 32pt sign got a 27pt "Revised Fall 2026". The dial
- * is for the DOCUMENT; whose-document-it-is stays at the size the site prints it.
- * So while a size is set, those three are pinned to what they compute to at the
- * SITE base, read live from print-type.css §0 (siteBase()), not restated here.
+ * 📐 v3.2 (same night): a separate HEADER & FOOTER scale, in %, beside the body
+ * size. When this file passed the read line (28,204 B) it split on two seams:
+ * printdial.js (both typeable fields, siteBase()) and printfurn.js (letterhead,
+ * page numbers, revised / posted-by pin, the footer note, the % scale). Each
+ * header carries its own argument; this file keeps the panel and margins.
  *
  * =========================================================================
  * 🔴 THE INLINE BUDGET IS THE WHOLE DESIGN. READ IT BEFORE ADDING A PRESET.
@@ -54,31 +50,13 @@
  * the budget above still holds. Top/bottom stay on @page, because a content
  * margin would land only on the first and last sheet. ⚠️ Browser-dependent.
  *
- * 🔢 PAGE NUMBERS (2026-09-28, Michael: *"build and design it ourself, not
- * chrome"*). "Page N of M" in `@page @bottom-center`, our type, ON by default.
- * When the composer is on, the document title rides `@bottom-left`, refreshed at
- * beforeprint because the title can change after apply(). ⭐ THIS IS NOT
- * runfoot.py AGAIN: that one also grew the page margin to 16mm and hid the
- * in-flow letterhead on the promise its boxes painted, so when they did not the
- * sheet came out bare. This adds a number and touches NOTHING else: no margin
- * change, no hiding. Worst case on a browser that drops margin boxes is no
- * number, never a lost letterhead. ⚠️ Chrome adds its own header/footer even
- * when author boxes exist (developer.chrome.com/blog/print-margins), so the
- * panel tells the reader to untick "Headers and footers".
+ * 🔢 PAGE NUMBERS + 📝 FOOTER NOTE: printfurn.js.
  *
  * 📖 DOUBLE-SIDED (2026-09-28, Michael: *"when printed on double sided, the
  * gutter on the right side becomes a problem"*). "Binder, 2-sided" mirrors the
  * gutter with `@page :right` / `@page :left` (sheet one is a right-hand page).
  * A content margin cannot know which face of the sheet it lands on, so this
  * preset IS @page: it works exactly where the page numbers print.
- *
- * 📝 FOOTER NOTE (2026-09-28, Michael: *"custom footer text that either replaces
- * the 'posted by' line or adds footer text"*). Typed in the panel, inserted into
- * the DOM at `beforeprint` and removed at `afterprint`, so the screen never shows
- * it. One note per ARTICLE: each `.dr-compose-sec` when the composer is on, else
- * the page body. "Replace" hides that article's `.dr-owner` and puts the note in
- * its place wearing the same class, so it inherits the owner's float + type.
- * 🚫 NOT A PER-SHEET FOOTER. It lands where the owner line lands: end of article.
  *
  * sessionStorage (deviation from §6, argued in print-control-dl.md ruling 5).
  * ✅ "Standard" + "Site default" + page numbers OFF emits NOTHING: byte-identical.
@@ -95,9 +73,6 @@
   var INLINE_MAX = 1.5;   // in, left + right. See header.
   var KEY = "dr-printctl-v2";
   var STYLE_ID = "dr-printctl-style";
-  // Margin boxes do not reliably inherit custom properties, so the stack is literal.
-  var PN_BOX = "font-family:Roboto,-apple-system,\"Helvetica Neue\",Arial,sans-serif;" +
-    "font-size:7.5pt;letter-spacing:0.04em;color:#5f5f5f;";
 
   // [top, right, bottom, left]. `m: null` = print.css's own 12mm, no override.
   var PRESETS = {
@@ -110,55 +85,10 @@
   var ORDER = ["standard", "binder", "duplex", "even", "custom"];
   var SIDES = ["Top", "Right", "Bottom", "Left"];
 
-  // "" = Site default (print-type.css §0 owns it; 8.5pt at time of writing, so
-  // − from default lands on 8 and + on 9). v3: the ladder is where +/- STOP, not
-  // what is allowed. Any typed value from SIZE_MIN to SIZE_MAX is legal.
-  var SIZES = ["7.5", "8", "8.5", "9", "9.5", "10", "11", "12", "14", "16", "18",
-    "20", "24", "28", "32", "40", "48", "60", "72"];
-  var SIZE_MIN = 6, SIZE_MAX = 72;
-  var SITE_BASE = 8.5;    // FALLBACK only. siteBase() reads the real one.
-
-  // print-type.css §0's --dr-print-base, read from the loaded sheets so the pin
-  // below and the stepper's starting point cannot drift from it. Our own <style>
-  // is skipped (it carries the override). Cross-origin sheets throw: skipped.
-  var siteBaseCache = null;
-  function siteBase() {
-    if (siteBaseCache !== null) return siteBaseCache;
-    var found = null;
-    function walk(rules) {
-      for (var i = 0; rules && i < rules.length; i++) {
-        var r = rules[i];
-        if (r.cssRules) walk(r.cssRules);
-        if (r.style && r.style.getPropertyValue) {
-          var v = r.style.getPropertyValue("--dr-print-base");
-          var m = v && /^\s*([\d.]+)pt\s*$/.exec(v);
-          if (m) found = parseFloat(m[1]); // last wins, like the cascade at equal specificity
-        }
-      }
-    }
-    try {
-      var sheets = document.styleSheets || [];
-      for (var i = 0; i < sheets.length; i++) {
-        var own = sheets[i].ownerNode;
-        if (own && own.id === STYLE_ID) continue;
-        try { walk(sheets[i].cssRules); } catch (e) { /* cross-origin */ }
-      }
-    } catch (e) { /* no CSSOM */ }
-    // Cache only a REAL read: a sheet still loading must not freeze the fallback.
-    if (found && found > 0) siteBaseCache = found;
-    return siteBaseCache !== null ? siteBaseCache : SITE_BASE;
-  }
-
-  // "32 pt", "32", " 24.3" -> { v: "32" | "24.5", msg }. Empty / junk = default.
-  function normSize(raw) {
-    var n = parseFloat(String(raw == null ? "" : raw).replace(",", "."));
-    if (!isFinite(n) || n <= 0) return { v: "", msg: "" };
-    var msg = "";
-    n = Math.round(n * 2) / 2;
-    if (n < SIZE_MIN) { n = SIZE_MIN; msg = "Text size stops at " + SIZE_MIN + " pt."; }
-    if (n > SIZE_MAX) { n = SIZE_MAX; msg = "Text size stops at " + SIZE_MAX + " pt."; }
-    return { v: String(n), msg: msg };
-  }
+  // The two size fields (body pt, header & footer %) live in printdial.js. Guarded:
+  // no file = no size rows, never a dead panel.
+  function D() { return window.drPrintDial || null; }
+  function siteBase() { return D() ? D().siteBase() : 8.5; }
 
   var ICON_PRINT = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3m-3 11H8v-5h8zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1m-1-9H6v4h12z"/></svg>';
   var ICON_MINUS = '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 7.25h10v1.5H3z"/></svg>';
@@ -169,10 +99,14 @@
     try {
       var s = JSON.parse(window.sessionStorage.getItem(KEY) || "null");
       if (!s || !PRESETS[s.preset] || !Array.isArray(s.m) || s.m.length !== 4) return null;
-      s.size = s.size ? normSize(s.size).v : "";
+      var d = D(), r;
+      r = d ? d.norm(d.DIALS.size, s.size) : { v: null };
+      s.size = s.size && r.v !== null ? String(r.v) : "";
       if (typeof s.note !== "string") s.note = "";
       if (s.noteMode !== "replace") s.noteMode = "add";
       if (typeof s.pagenum !== "boolean") s.pagenum = true;
+      r = d ? d.norm(d.DIALS.hf, s.hf) : { v: null };
+      s.hf = r.v === null ? 100 : r.v;
       return s;
     } catch (e) { return null; }
   }
@@ -180,8 +114,10 @@
     try { window.sessionStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* private mode */ }
   }
 
-  var BLANK = function () { return { preset: "standard", m: [0.5, 0.5, 0.5, 1], size: "", note: "", noteMode: "add", pagenum: true }; };
-  var state = load() || BLANK();
+  var BLANK = function () { return { preset: "standard", m: [0.5, 0.5, 0.5, 1], size: "", note: "", noteMode: "add", pagenum: true, hf: 100 }; };
+  // Read at start(), not here: printdial.js normalises it, and at DOMContentLoaded
+  // every script is in, so the asset ORDER cannot break a restore.
+  var state = BLANK();
 
   // 1.375 -> "1 ⅜"
   var FRAC = ["", "\u215b", "\u00bc", "\u215c", "\u00bd", "\u215d", "\u00be", "\u215e"];
@@ -208,74 +144,19 @@
     return msg;
   }
 
-  function isDefault() { return state.preset === "standard" && !state.size && !state.note.trim() && state.pagenum; }
+  function isDefault() { return state.preset === "standard" && !state.size && !state.note.trim() && state.pagenum && state.hf === 100; }
 
-  // ------------------------------------------------------------ footer note
-  var placed = [], hiddenOwners = [];
-  function composed() { return document.documentElement.classList.contains("dr-compose-on"); }
-  function units() {
-    if (composed()) {
-      return Array.prototype.slice.call(document.querySelectorAll(".dr-compose-doc .dr-compose-sec"));
-    }
-    var el = document.querySelector(".md-content .md-content__inner:not(.dr-compose-doc)");
-    return el ? [el] : [];
-  }
-  function placeNotes() {
-    clearNotes();
-    var text = state.note.trim();
-    if (!text) return;
-    var replace = state.noteMode === "replace";
-    units().forEach(function (u) {
-      var owner = u.querySelector(".dr-owner:not(.dr-printnote)");
-      var feet = u.querySelectorAll(".dr-owner, .dr-revised");
-      var last = feet.length ? feet[feet.length - 1] : null;
-      var p = document.createElement("p");
-      p.className = replace ? "dr-owner dr-printnote dr-printnote--owner" : "dr-printnote";
-      p.textContent = text;
-      if (replace && owner) {
-        owner.parentNode.insertBefore(p, owner);
-        owner.style.display = "none";
-        hiddenOwners.push(owner);
-      } else if (last) {
-        last.parentNode.insertBefore(p, last.nextSibling);
-      } else {
-        u.appendChild(p);
-      }
-      placed.push(p);
-    });
-  }
-  function clearNotes() {
-    placed.forEach(function (p) { if (p.parentNode) p.parentNode.removeChild(p); });
-    hiddenOwners.forEach(function (o) { o.style.display = ""; });
-    placed = []; hiddenOwners = [];
-  }
+  // Furniture lives in printfurn.js. Every call is guarded: no file = no furniture.
+  function furn() { return window.drPrintFurn || null; }
   // apply() first: the composer's title may have changed since the last one.
-  function beforePrint() { apply(); placeNotes(); }
+  function beforePrint() { apply(); if (furn()) furn().place(state); }
+  function afterPrint() { if (furn()) furn().clear(); }
   window.addEventListener("beforeprint", beforePrint);
-  window.addEventListener("afterprint", clearNotes);
+  window.addEventListener("afterprint", afterPrint);
   if (window.matchMedia) {
     var mq = window.matchMedia("print");
-    var onMq = function (e) { if (e.matches) beforePrint(); else clearNotes(); };
+    var onMq = function (e) { if (e.matches) beforePrint(); else afterPrint(); };
     if (mq.addEventListener) mq.addEventListener("change", onMq); else if (mq.addListener) mq.addListener(onMq);
-  }
-
-  // ------------------------------------------------------------ page numbers
-  function cssStr(t) {
-    return '"' + String(t).replace(/\s+/g, " ").trim().replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"';
-  }
-  function docTitle() {
-    if (!composed()) return "";
-    var h1 = document.querySelector(".dr-compose-cover h1");
-    if (h1) return h1.textContent.trim();
-    var bar = document.querySelector(".dr-compose-bar__txt");
-    return bar ? bar.textContent.split(" \u00b7 ")[0].trim() : "";
-  }
-  function pageCss() {
-    if (!state.pagenum) return "";
-    var out = "@page{@bottom-center{content:\"Page \" counter(page) \" of \" counter(pages);" + PN_BOX + "}";
-    var t = docTitle();
-    if (t) out += "@bottom-left{content:" + cssStr(t) + ";" + PN_BOX + "text-align:left}";
-    return out + "}";
   }
 
   function css() {
@@ -294,17 +175,11 @@
     }
     if (state.size) {
       // (0,1,1) beats print-type.css §0's (0,1,0). A value override, not a selector fight.
-      out += "@media print{html .md-typeset{--dr-print-base:" + state.size + "pt}";
-      // 📌 Furniture pin (header v3.1). Each selector out-specifies its owner by
-      // one element: base.css/foot.css (0,2,0), printctl.css's note (0,3,2).
-      var fb = siteBase();
-      out += "html .md-typeset .dr-revised,html .md-typeset .dr-owner{font-size:" + r2(fb * 0.85) + "pt}" +
-        "html body .md-typeset p.dr-printnote:not(.dr-owner){font-size:" + r2(fb * 0.85 * 0.8) + "pt}}";
+      out += "@media print{html .md-typeset{--dr-print-base:" + state.size + "pt}}";
     }
-    return out + pageCss();
+    // 📌 Letterhead, page numbers, revised / posted-by pin + the % scale.
+    return out + (furn() ? furn().css(state, siteBase()) : "");
   }
-
-  function r2(n) { return Math.round(n * 100) / 100; }
 
   function apply() {
     var rules = css(), el = document.getElementById(STYLE_ID);
@@ -338,15 +213,6 @@
     return { el: h("div", { "class": "dr-printctl__stepper" }, [minus, val, plus]), val: val, minus: minus, plus: plus };
   }
 
-  // Next ladder rung strictly past `cur` in direction `dir`, or null at the end.
-  // A typed 13 steps to 14 / 12, so the ladder never traps a typed value.
-  function rung(cur, dir) {
-    var i, v;
-    if (dir > 0) { for (i = 0; i < SIZES.length; i++) { v = parseFloat(SIZES[i]); if (v > cur + 1e-9) return SIZES[i]; } }
-    else { for (i = SIZES.length - 1; i >= 0; i--) { v = parseFloat(SIZES[i]); if (v < cur - 1e-9) return SIZES[i]; } }
-    return null;
-  }
-
   function build() {
     var note = h("p", { "class": "dr-printctl__note", "aria-live": "polite" });
     var msg = "";
@@ -375,38 +241,25 @@
     });
     var custom = h("div", { "class": "dr-printctl__custom" }, sides.map(function (x) { return x.row; }));
 
-    // v3: the readout is typeable. Commits on Enter / blur; arrow keys step.
-    var sizeIn = h("input", { type: "text", inputmode: "decimal", autocomplete: "off", spellcheck: "false",
-      "class": "dr-printctl__val dr-printctl__val--input", "aria-label": "Text size in points (6 to 72)",
-      placeholder: "Site default" });
-    function stepSize(dir) {
-      var cur = state.size ? parseFloat(state.size) : siteBase();
-      var next = rung(cur, dir);
-      if (next === null) return;
-      state.size = next;
-      msg = ""; apply(); sync();
+    // v3 / v3.2: the two typeable dials (printdial.js). Body size is a pt string in
+    // state ("" = site default); the header & footer scale is a % number (100 = off).
+    var ui = { h: h, stepper: stepper }, sizeF = null, hfF = null;
+    if (D()) {
+      sizeF = D().field(ui, "size", {
+        get: function () { return state.size ? parseFloat(state.size) : null; },
+        set: function (n, m) { state.size = n === null ? "" : String(n); msg = m; apply(); sync(); }
+      });
+      hfF = D().field(ui, "hf", {
+        get: function () { return state.hf === 100 ? null : state.hf; },
+        set: function (n, m) { state.hf = n === null ? 100 : n; msg = m; apply(); sync(); }
+      });
     }
-    function commitSize() {
-      var r = normSize(sizeIn.value);
-      state.size = r.v;
-      msg = r.msg; apply(); sync();
+    function dialRow(label, f) {
+      return f ? h("div", { "class": "dr-printctl__row" }, [
+        h("span", { "class": "dr-printctl__label", text: label }),
+        h("div", { "class": "dr-printctl__rowctl" }, [f.dflt, f.el])
+      ]) : null;
     }
-    sizeIn.addEventListener("focus", function () {
-      sizeIn.value = state.size; // bare number while editing
-      sizeIn.select();
-    });
-    sizeIn.addEventListener("change", commitSize);
-    sizeIn.addEventListener("blur", function () { sync(); });
-    sizeIn.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") { e.preventDefault(); commitSize(); sizeIn.select(); }
-      else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
-        e.preventDefault(); stepSize(e.key === "ArrowUp" ? 1 : -1);
-        sizeIn.value = state.size; sizeIn.select();
-      }
-    });
-    var size = stepper("text size", stepSize, sizeIn);
-    var sizeDefault = h("button", { type: "button", "class": "dr-printctl__link", text: "Default" });
-    sizeDefault.addEventListener("click", function () { state.size = ""; msg = ""; apply(); sync(); });
 
     var pnSwitch = h("button", { type: "button", role: "switch", "class": "dr-printctl__switch" }, [
       h("span", { "class": "dr-printctl__label", text: "Page numbers" }),
@@ -449,10 +302,8 @@
       h("div", { "class": "dr-printctl__label", text: "Margins" }),
       h("div", { "class": "dr-printctl__opts", role: "radiogroup", "aria-label": "Margins" }, radios),
       custom,
-      h("div", { "class": "dr-printctl__row" }, [
-        h("span", { "class": "dr-printctl__label", text: "Text size" }),
-        h("div", { "class": "dr-printctl__rowctl" }, [sizeDefault, size.el])
-      ]),
+      dialRow("Text size", sizeF),
+      dialRow("Header & footer", hfF),
       pnWrap,
       noteWrap,
       note,
@@ -476,10 +327,8 @@
         x.s.plus.disabled = state.m[i] >= MAX_IN;
       });
       var cur = state.size ? parseFloat(state.size) : siteBase();
-      if (document.activeElement !== sizeIn) sizeIn.value = state.size ? state.size + " pt" : "";
-      size.minus.disabled = rung(cur, -1) === null;
-      size.plus.disabled = rung(cur, 1) === null;
-      sizeDefault.hidden = !state.size;
+      if (sizeF) sizeF.sync();
+      if (hfF) hfF.sync();
       pnSwitch.setAttribute("aria-checked", String(!!state.pagenum));
       pnHint.hidden = !state.pagenum;
       if (noteBox.value !== state.note) noteBox.value = state.note;
@@ -516,7 +365,8 @@
       msg = ""; apply(); sync();
     });
     go.addEventListener("click", function () {
-      if (document.activeElement === sizeIn) commitSize(); // typed but not yet committed
+      if (sizeF) sizeF.flush(); // typed but not yet committed
+      if (hfF) hfF.flush();
       apply(); close(false);
       window.setTimeout(function () { window.print(); }, 60);
     });
@@ -538,7 +388,7 @@
     sync();
   }
 
-  function start() { apply(); build(); }
+  function start() { state = load() || BLANK(); apply(); build(); }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
   else start();
 })();
