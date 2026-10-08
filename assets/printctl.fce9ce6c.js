@@ -26,6 +26,10 @@
  * page numbers, revised / posted-by pin, the footer note, the % scale). Each
  * header carries its own argument; this file keeps the panel and margins.
  *
+ * 🙈 v3.3 (2026-10-08): Hide header / Hide footer switches. Built and argued in
+ * printfurn.js (switches() + hideCss()); this file only carries the two state
+ * keys and places the rows. ~21 KB: the next feature here starts with a split.
+ *
  * =========================================================================
  * 🔴 THE INLINE BUDGET IS THE WHOLE DESIGN. READ IT BEFORE ADDING A PRESET.
  * =========================================================================
@@ -105,6 +109,8 @@
       if (typeof s.note !== "string") s.note = "";
       if (s.noteMode !== "replace") s.noteMode = "add";
       if (typeof s.pagenum !== "boolean") s.pagenum = true;
+      s.nohead = s.nohead === true;
+      s.nofoot = s.nofoot === true;
       r = d ? d.norm(d.DIALS.hf, s.hf) : { v: null };
       s.hf = r.v === null ? 100 : r.v;
       return s;
@@ -114,7 +120,7 @@
     try { window.sessionStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* private mode */ }
   }
 
-  var BLANK = function () { return { preset: "standard", m: [0.5, 0.5, 0.5, 1], size: "", note: "", noteMode: "add", pagenum: true, hf: 100 }; };
+  var BLANK = function () { return { preset: "standard", m: [0.5, 0.5, 0.5, 1], size: "", note: "", noteMode: "add", pagenum: true, hf: 100, nohead: false, nofoot: false }; };
   // Read at start(), not here: printdial.js normalises it, and at DOMContentLoaded
   // every script is in, so the asset ORDER cannot break a restore.
   var state = BLANK();
@@ -144,7 +150,7 @@
     return msg;
   }
 
-  function isDefault() { return state.preset === "standard" && !state.size && !state.note.trim() && state.pagenum && state.hf === 100; }
+  function isDefault() { return state.preset === "standard" && !state.size && !state.note.trim() && state.pagenum && state.hf === 100 && !state.nohead && !state.nofoot; }
 
   // Furniture lives in printfurn.js. Every call is guarded: no file = no furniture.
   function furn() { return window.drPrintFurn || null; }
@@ -270,6 +276,9 @@
       text: "\u201cPage 3 of 29\u201d centred on every sheet. In the print dialog, untick \u201cHeaders and footers\u201d so the browser\u2019s own URL and page count don\u2019t print too." });
     var pnWrap = h("div", { "class": "dr-printctl__pagenum" }, [pnSwitch, pnHint]);
 
+    // v3.3: Hide header / Hide footer (printfurn.js). Guarded like every furn() call.
+    var hideF = furn() && furn().switches ? furn().switches(h, function () { return state; }, function () { apply(); sync(); }) : null;
+
     var noteBox = h("textarea", { "class": "dr-printctl__text", rows: "2", maxlength: "240",
       placeholder: "e.g. Printed for the Fall 2026 crew binder", "aria-label": "Footer note" });
     noteBox.value = state.note;
@@ -305,6 +314,7 @@
       dialRow("Text size", sizeF),
       dialRow("Header & footer", hfF),
       pnWrap,
+      hideF ? hideF.el : null,
       noteWrap,
       note,
       h("div", { "class": "dr-printctl__actions" }, [reset, go]),
@@ -331,6 +341,7 @@
       if (hfF) hfF.sync();
       pnSwitch.setAttribute("aria-checked", String(!!state.pagenum));
       pnHint.hidden = !state.pagenum;
+      if (hideF) hideF.sync();
       if (noteBox.value !== state.note) noteBox.value = state.note;
       modes.forEach(function (b) { b.setAttribute("aria-checked", String(b.getAttribute("data-mode") === state.noteMode)); });
       modes[0].parentNode.hidden = !state.note.trim();

@@ -51,6 +51,25 @@
  * `.dr-compose-sec` with the composer on, else the page body. "Replace" hides that
  * article's `.dr-owner` and wears its class, so it inherits the float + type.
  * 🚫 NOT A PER-SHEET FOOTER. It lands where the owner line lands: end of article.
+ *
+ * =========================================================================
+ * 🙈 HIDE HEADER / HIDE FOOTER (2026-10-08, Michael: *"hide headers should just
+ * be part of the print menu ... two options that could both be checked"*)
+ * =========================================================================
+ * Born from the revert of a frontmatter `hide: header` (docrender/chrome.py,
+ * PR #277) that removed the SCREEN bar -- and with it the print menu -- while the
+ * PRINTED letterhead kept printing. Paper furniture is a print-time choice.
+ *
+ *     Hide header   .buildstamp--corner (the letterhead) + the @page @top-* boxes
+ *     Hide footer   .dr-revised + .dr-owner + the footer note + @bottom-left/right
+ *
+ * ⭐ PAGE NUMBERS ARE NOT IN "FOOTER". They keep their own switch, so
+ * @bottom-center is never touched here; "no footer but numbered" is legal.
+ * ⚠️ `!important` because print-flow.css's `display: revert !important` has
+ * beaten plain display rules in this panel's family twice (printctl.css).
+ * ⚠️ Emitted LAST in css() so a composer title on @bottom-left loses to it.
+ * 🚫 SESSION STATE like every other control here: Reset or a new tab clears it.
+ * ⚠️ Not paper-verified at ship.
  */
 (function () {
   "use strict";
@@ -87,6 +106,41 @@
     return out + "}";
   }
 
+  // ------------------------------------------------------------ hide head / foot
+  function hideCss(state) {
+    var out = "";
+    if (state.nohead) {
+      out += "@media print{html body .buildstamp--corner{display:none !important}}" +
+        "@page{@top-left{content:none}@top-center{content:none}@top-right{content:none}}";
+    }
+    if (state.nofoot) {
+      out += "@media print{html body .md-typeset .dr-revised,html body .md-typeset .dr-owner," +
+        "html body .md-typeset .dr-printnote{display:none !important}}" +
+        "@page{@bottom-left{content:none}@bottom-right{content:none}}";
+    }
+    return out;
+  }
+
+  // The two switches, built here so printctl.js stays under its size line. `get`
+  // is a GETTER because printctl reassigns its state object on Reset.
+  function switches(h, get, onChange) {
+    var rows = [
+      ["nohead", "Hide header", "No letterhead at the top of the sheet."],
+      ["nofoot", "Hide footer", "No revised / posted-by line or footer note. Page numbers keep their own switch."]
+    ].map(function (d) {
+      var b = h("button", { type: "button", role: "switch", "class": "dr-printctl__switch", title: d[2] }, [
+        h("span", { "class": "dr-printctl__label", text: d[1] }),
+        h("span", { "class": "dr-printctl__track", "aria-hidden": "true" })
+      ]);
+      b.addEventListener("click", function () { var s = get(); s[d[0]] = !s[d[0]]; onChange(); });
+      return { k: d[0], b: b };
+    });
+    return {
+      el: h("div", { "class": "dr-printctl__pagenum" }, rows.map(function (r) { return r.b; })),
+      sync: function () { var s = get(); rows.forEach(function (r) { r.b.setAttribute("aria-checked", String(!!s[r.k])); }); }
+    };
+  }
+
   // ------------------------------------------------------------ furniture css
   // `base` = the SITE body size in pt (never the dial). Untouched = "".
   function css(state, base) {
@@ -99,7 +153,8 @@
       if (k !== 1) out += "html .buildstamp--corner{zoom:" + k + "}";
       out += "}";
     }
-    return out + pageCss(state, k);
+    // hideCss LAST: it must beat the composer title on @bottom-left.
+    return out + pageCss(state, k) + hideCss(state);
   }
 
   // ------------------------------------------------------------ footer note
@@ -141,5 +196,5 @@
     placed = []; hiddenOwners = [];
   }
 
-  window.drPrintFurn = { css: css, place: place, clear: clear };
+  window.drPrintFurn = { css: css, place: place, clear: clear, switches: switches };
 })();
