@@ -36,8 +36,7 @@
  * PLACEMENT WORTH ARGUING. `text-align: justify` does not change a letterform; it
  * distributes a line's slack into the WORD SPACES. That is a spacing decision on
  * the HORIZONTAL axis, and every other rule in this file is a spacing decision on
- * the vertical one. One subject, two axes. `hyphens: auto` rides with it because
- * it is the mechanism that keeps that distribution from producing rivers.
+ * the vertical one. One subject, two axes. (`hyphens: auto` retired 2026-10-08, §9.)
  *
  * =========================================================================
  * 🔴 THE SECTION NUMBERS TRAVELLED WITH THE SECTIONS. DO NOT RENUMBER THEM.
@@ -206,13 +205,21 @@
    * default and a flush one is the codex's, and no other declaration in the print
    * group moves the impression as far per byte.
    *
-   * 🔴 `hyphens: auto` IS NOT A COMPANION NICETY, IT IS THE HALF THAT MAKES
+   * ~~🔴 `hyphens: auto` IS NOT A COMPANION NICETY, IT IS THE HALF THAT MAKES
    * JUSTIFICATION WORK. A justified line distributes its slack into word spaces,
    * so without hyphenation one long word pushed to the next line leaves the line
    * above it stretched -- the "rivers" of white that make bad justified type worse
-   * to read than ragged type. **Ship both or neither.**
+   * to read than ragged type. **Ship both or neither.**~~
    *
-   * ⚠️ AND IT DEPENDS ON A `lang` ATTRIBUTE THIS REPO DOES NOT DECLARE. A browser
+   * 🪦 RETIRED 2026-10-08 (Michael: *"i also don't really liek seeing hyphenatied
+   * words at print"*). "Both or neither" is a NARROW-measure rule; this sheet runs
+   * ~100 chars/line (honest limit, below), enough word spaces to absorb a pushed
+   * word. DELETED, not set to `manual`: that is the initial value, so writing it
+   * is a dead control; `&shy;` still works. ⚠️ Unmeasured on paper, the first
+   * print verifies. Rivers → `text-wrap: pretty`, not `auto` back.
+   *
+   * ⚠️ (MOOT while `auto` is retired.) AND IT DEPENDS ON A `lang` ATTRIBUTE THIS
+   * REPO DOES NOT DECLARE. A browser
    * cannot hyphenate a language nobody named; `hyphens: auto` on an unlabelled
    * document silently does nothing at all. MkDocs writes `<html lang>` from
    * `theme.language`, which defaults to `en` -- so this works today BY
@@ -294,8 +301,6 @@
   .md-typeset p:not(.buildstamp):not(.dr-owner),
   .md-typeset li {
     text-align: justify;
-    -webkit-hyphens: auto;
-    hyphens: auto;
   }
 
   /* -------------------------------------------------------------------------
