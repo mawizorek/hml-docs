@@ -301,8 +301,10 @@
    * that no longer exists is a declaration that can never be observed. ⚑ Same
    * family as the chevron rule that could not match and the `.buildstamp` revival
    * that could never win: *a rule is only as real as the state it is allowed to
-   * observe.* Deleted rather than left as a harmless spare. */
+   * observe.* Deleted rather than left as a harmless spare.
+   * 🔴 `th:first-child`: data.css pins it at (0,2,2), so `thead th` lost (10-10). */
   .dr-data__table thead th,
+  .dr-data__table thead th:first-child,
   .dr-data__table tbody td:first-child,
   .dr-data__caption,
   .dr-data__section-label {
