@@ -5,6 +5,11 @@
  * why the text lives on the target page rather than in this repo, and
  * objects/role.yml for the field it comes from.
  *
+ * ALSO CONSUMED BY docrender/hoverspan.py (2026-10-09, specs/hover-inline.md):
+ * `[Text]{hover="..."}` emits `span.dr-gloss.dr-hover` with the SAME attributes,
+ * so plain-text hover and a glossed link share one box and cannot look different.
+ * That is why the box selectors below say `.dr-gloss`, not `a.dr-gloss`.
+ *
  * ==========================================================================
  * WHY THIS IS NOT `title=`, WHICH IS A RULING AND NOT A PREFERENCE
  * ==========================================================================
@@ -26,6 +31,8 @@
  * buildstamp needed one because its host was a `<span>`. A link is already
  * focusable, so `:focus-visible` reaches this for free. Do not add a tabindex --
  * it would make the element focusable twice and change nothing.
+ * ⚠️ THE PLAIN-TEXT SPAN IS THE buildstamp CASE, NOT THE LINK CASE: hoverspan.py
+ * DOES emit `tabindex="0"` on it, because a span is not focusable otherwise.
  *
  * ==========================================================================
  * ONE PSEUDO-ELEMENT, TWO MEDIA, TWO ATTRIBUTES
@@ -44,7 +51,8 @@
  * missing attribute returns the empty string, so an ungated rule would print a
  * bare " ()" on every role whose paper string is deliberately empty --
  * `print_gloss: ""` means print NOTHING, and an empty pair of brackets is not
- * nothing. `[data-role-print]` is the guard.
+ * nothing. `[data-role-print]` is the guard. A plain-text hover carries it only
+ * when the author wrote the `print` flag (hover-inline R3).
  *
  * ==========================================================================
  * NO CONTAINER QUERY HERE, AND THE ABSENCE IS DELIBERATE
@@ -76,15 +84,16 @@
  * Same rule flow.css states for the same reason. Do not "tidy" a fallback away.
  */
 
-/* The host. `position: relative` on an inline anchor is enough to anchor an
+/* The host. `position: relative` on an inline element is enough to anchor an
  * absolutely positioned pseudo-element, and costs no layout of its own.
  *
- * NO `cursor: help` HERE, DELIBERATELY. base.css gives that to `.dr-mark`, the
+ * NO `cursor: help` ON LINKS, DELIBERATELY. base.css gives that to `.dr-mark`, the
  * SPAN form, where it is right because nothing else says the text is annotated.
- * This is a LINK: it is underlined, it navigates, and a help cursor on something
- * clickable tells the reader the wrong thing about what a click will do. The
- * hover box is a bonus on top of a link, not the reason the text is marked. */
-.md-typeset a.dr-gloss {
+ * A link is underlined, it navigates, and a help cursor on something clickable
+ * tells the reader the wrong thing about what a click will do. The hover box is a
+ * bonus on top of a link, not the reason the text is marked. The plain-text span
+ * below is the opposite case and DOES get the help cursor. */
+.md-typeset .dr-gloss {
   position: relative;
 }
 
@@ -104,12 +113,34 @@
   outline-offset: 2px;
 }
 
+/* PLAIN-TEXT HOVER (hover-inline R5, R6). A span has no underline and no focus of
+ * its own, so it gets both: a dotted underline + help cursor so a reader knows
+ * something is there, and `tabindex="0"` from hoverspan.py. `:focus` (not only
+ * `:focus-visible`) reveals the box, because a TAP focuses without being
+ * "visible" focus -- that is the whole touch story, with no JavaScript. */
+.md-typeset span.dr-hover {
+  text-decoration: underline dotted;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  cursor: help;
+}
+
+.md-typeset span.dr-hover:focus {
+  outline: none;
+}
+
+.md-typeset span.dr-hover:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 /* THE BOX. Hidden by default, revealed on hover and on keyboard focus.
  *
  * `max-width` is in `ch` first because a gloss is a SENTENCE and a sentence has a
  * comfortable measure regardless of screen; the `vw` half is the floor for a
  * phone. See the header on why this is not a container query. */
-.md-typeset a.dr-gloss::after {
+.md-typeset .dr-gloss::after {
   content: attr(data-gloss);
 
   position: absolute;
@@ -129,8 +160,10 @@
   text-align: left;
   font-size: 0.78em;
   font-weight: 400;
+  font-style: normal;
   line-height: 1.35;
   letter-spacing: normal;
+  text-transform: none;
   text-decoration: none;
 
   color: var(--dr-ink, var(--md-default-fg-color));
@@ -144,8 +177,9 @@
   transition: opacity var(--dr-motion-fast, 120ms) ease-in-out;
 }
 
-.md-typeset a.dr-gloss:hover::after,
-.md-typeset a.dr-gloss:focus-visible::after {
+.md-typeset .dr-gloss:hover::after,
+.md-typeset .dr-gloss:focus-visible::after,
+.md-typeset span.dr-hover:focus::after {
   opacity: 1;
 }
 
@@ -153,7 +187,7 @@
  * stop animating gets the box instantly rather than not at all -- the content is
  * never what a preference removes. */
 @media (prefers-reduced-motion: reduce) {
-  .md-typeset a.dr-gloss::after {
+  .md-typeset .dr-gloss::after {
     transition: none;
   }
 }
@@ -178,7 +212,7 @@
 @media print {
   /* The screen box, off. The pseudo-element is REUSED below rather than hidden,
    * so this resets what made it a floating box. */
-  .md-typeset a.dr-gloss::after {
+  .md-typeset .dr-gloss::after {
     content: none !important;
     position: static !important;
     opacity: 1 !important;
@@ -191,9 +225,15 @@
     z-index: auto !important;
   }
 
+  /* The dotted underline is a screen affordance ("hover me"). Paper cannot be
+   * hovered, so it goes; a hover printed by the `print` flag reads as prose. */
+  .md-typeset span.dr-hover {
+    text-decoration: none !important;
+  }
+
   /* The parenthesis, on. Inherits the surrounding type so it reads as part of
    * the sentence rather than as an annotation bolted onto it. */
-  .md-typeset a.dr-gloss[data-role-print]::after,
+  .md-typeset .dr-gloss[data-role-print]::after,
   .md-typeset a[data-role-print]::after {
     content: " (" attr(data-role-print) ")" !important;
     position: static !important;
