@@ -233,7 +233,12 @@
   }
 
   function asPlain(root) {
-    return plain(root.cloneNode(true), 0)
+    /* 🔴 DROP FIRST, WHOLE TREE. Headings, summaries and cells are read with
+     * textContent, which never meets the per-child DROP check above -- so every
+     * heading's ¶ permalink rode along (Michael, 2026-10-10). */
+    var box = root.cloneNode(true);
+    box.querySelectorAll(DROP).forEach(function (n) { n.remove(); });
+    return plain(box, 0)
       .replace(/[ \t]+\n/g, "\n")
       .replace(/\n{3,}/g, "\n\n")
       .trim() + "\n";
