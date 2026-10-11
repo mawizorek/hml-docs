@@ -2,7 +2,7 @@
 
 Public, rendered markdown for HML_LLC standard operating procedures.
 
-**Status:** M0 bootstrap. Content tree empty. Engine not yet ported.
+**Status:** M0 bootstrap. **Landing page live; no SOP pages written yet.** Engine extracted to `doc-render-engine`; not yet pinned here.
 **Audience:** Dad. This is the only rendering link he knows about.
 **Live site (target):** `https://mawizorek.github.io/hml-docs/`
 
@@ -10,11 +10,14 @@ Public, rendered markdown for HML_LLC standard operating procedures.
 
 ## 1. Read this first
 
-**The architecture lives in one place and it is not this file.** The doc-tree rule, the frontmatter contract, the object declarations, the build-hook order, the size budget, and the cross-repo link mechanism are all specified in the URITP archive README, which is the current source of truth for how every one of these sites is built:
+**The architecture lives in one place and it is not this file.** The doc-tree rule, the frontmatter contract, the object declarations, the build-hook order, the size budget, and the cross-repo link mechanism are specified by the engine and the template site:
 
-👉 **https://github.com/mawizorek/uritp-doc-archive/blob/main/README.md**
+👉 **Renderer, schema and build law:** https://github.com/mawizorek/doc-render-engine/blob/main/README.md and the executable contract at https://github.com/mawizorek/doc-render-engine/blob/main/objects/_base.yml
+👉 **Authoring contract (frontmatter, links, markers, callouts, data tables):** https://github.com/mawizorek/template-docs/blob/main/authoring/index.md
 
-This README covers only what is TRUE OF THIS SITE AND NOTHING ELSE. If you find yourself copying a paragraph out of the architecture README into this one, stop. A copied paragraph is a paragraph that will be wrong here in three months while still being right there.
+🪦 **This pointer used to name `mawizorek/uritp-doc-archive`.** That repo no longer exists; it was renamed to `mawizorek/uritp-docs` and is now 🔒 PRIVATE. **GitHub's rename redirect means reads against the dead name still succeed,** so that pointer did not fail, it silently served a different repo. Corrected 2026-10-10. 🔴 It also pointed at a PRIVATE repo from a PUBLIC one, and visibility is per-repo and never inherited — do not carry a privacy judgment across that link in either direction.
+
+This README covers only what is TRUE OF THIS SITE AND NOTHING ELSE. If you find yourself copying a paragraph out of the architecture docs into this one, stop. A copied paragraph is a paragraph that will be wrong here in three months while still being right there.
 
 ---
 
@@ -42,6 +45,8 @@ URITP and Ogunquit are both theatres. They want the same object types, the same 
 
 So the boring repo is the valuable one. Treat a painful build here as the test working, not as this repo being awkward.
 
+⚠️ **Still true as of 2026-10-10, and worth saying out loud: the test has not been run.** This repo has one landing page and no SOP content, so no non-theatre object type has been attempted and the portability question remains open. Ogunquit has six authored pages; this one has none. **The easy sibling moved and the hard sibling did not.**
+
 ---
 
 ## 4. What is different here
@@ -52,9 +57,9 @@ So the boring repo is the valuable one. Treat a painful build here as the test w
 | Base URL | `https://mawizorek.github.io/hml-docs/` |
 | Audience | Dad |
 | Content shape | Procedures and standards. **No venue/space tree.** |
-| Object types | Expected to need at least one non-theatre type. This is the interesting part. |
+| Object types | Expected to need at least one non-theatre type. This is the interesting part, and it is **not yet exercised.** |
 | Palette / theme | Its own. Not URITP's, not OPH's. |
-| Peers | `uritp`, `oph` |
+| Peers | `uritp-docs`, `theatre-docs` (the OPH site) |
 
 **On object types:** do not force a procedure into a `space`-shaped declaration to avoid writing a new one, and do not invent five new types on the first afternoon either. Write the pages first, see what shape they actually are, then declare. A type that was derived from real pages survives; a type that was guessed gets rewritten.
 
@@ -71,16 +76,18 @@ Target model is a **pinned reusable workflow**. Two rules come with it:
 - **Pin by tag, never by branch.** These are separate repos so they fail separately; a floating reference re-couples them.
 - **URITP moves first.** URITP tracks the moving tag as the canary. This repo pins an exact version and only advances after URITP has run on it. Dad never sees a broken deploy.
 
-Until the engine repo exists, the render tree is copied in as a starting point, understood to be temporary and tracked.
+⚠️ **Current state:** `doc-render-engine` exists and is active, but **no workflow is checked in here and no engine version is pinned.** Pages plus `.nojekyll` is the whole deployment today.
 
 ---
 
 ## 6. Working in here
 
 - Branch, commit, PR, self-merge. Never direct to `main`.
-- The doc tree holds markdown and nothing else. Ever.
+- **The doc tree holds markdown, plus the TSV data sidecars a page declares in its `data:` slot** (the shared data-table mechanism; a sidecar shares its page's filename stem). Nothing else. Ever.
 - Run the scope test in section 2 before every single page. It is one question and it takes two seconds.
 
 ---
 
-*Bootstrapped 2026-08-03 alongside `uritp-doc-archive` and `oph-docs`. Filenames and conventions pending the cross-repo naming lock; see the architecture README, section 12.*
+*Bootstrapped 2026-08-03 alongside `uritp-docs` (then named `uritp-doc-archive`) and `theatre-docs` (the OPH site). Filenames and conventions pending the cross-repo naming lock.*
+
+*Currency pass 2026-10-10 under DOC REVIEW 001 (Documentation Team): status line, architecture pointer, markdown-only rule, peer repo names. The section 2 scope line was deliberately left exactly as written.*
