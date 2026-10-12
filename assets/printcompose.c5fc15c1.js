@@ -22,9 +22,10 @@
  * 📄 EACH ARTICLE KEEPS ITS LETTERHEAD AND FOOT; only screen-only
  * `.buildstamp--foot` is stripped. The cover borrows the first letterhead.
  *
- * 📚 BINDERS (phase 2): `binders.json` from docrender/binder.py lists presets
- * (program pages with `binder: true`) plus an {url: id} map, so "Copy as binder"
- * returns real `chain:` ids. Missing file = no presets row, nothing else changes.
+ * 📚 PRESETS (binder-type.md B9): `binders.json` from docrender/binder.py lists
+ * `type: binder` pages and programs with `export: [packet]`, each with a `kind`,
+ * plus an {url: id} map, so "Copy as binder" returns real `chain:` ids. Section
+ * entries carry no `loc` and are skipped here. Missing file = no presets row.
  *
  * State: sessionStorage (dies with the tab).
  */
@@ -268,7 +269,7 @@
     titleEl.value = S.title;
     titleEl.addEventListener("input", function () { S.title = titleEl.value; save(); });
     listEl = h("div", { "class": "dr-compose__list", role: "list" });
-    binderEl = h("div", { "class": "dr-compose__binders", role: "group", "aria-label": "Binders", hidden: "" });
+    binderEl = h("div", { "class": "dr-compose__binders", role: "group", "aria-label": "Presets", hidden: "" });
     stackEl = h("ol", { "class": "dr-compose__stack" });
     statusEl = h("p", { "class": "dr-compose__status", "aria-live": "polite" });
 
@@ -381,9 +382,16 @@
     binderEl.textContent = "";
     binderEl.hidden = !BINDERS.length;
     if (!BINDERS.length) return;
-    binderEl.appendChild(h("span", { "class": "dr-compose__label", text: "Binders" }));
+    var kind = null;
     BINDERS.forEach(function (b) {
-      var locs = (b.pages || []).map(function (p) { return String(p.loc || ""); })
+      var k = b.kind === "program" ? "program" : "binder";
+      if (k !== kind) {
+        kind = k;
+        binderEl.appendChild(h("span", { "class": "dr-compose__label", text: k === "program" ? "Programs" : "Binders" }));
+      }
+      // A section entry has no `loc`; without this it would match the site root.
+      var real = (b.pages || []).filter(function (p) { return p && typeof p.loc === "string"; });
+      var locs = real.map(function (p) { return p.loc; })
         .filter(function (l) { return BYLOC[l] !== undefined; });
       var chip = h("button", { type: "button", "class": "dr-compose__chip", title: locs.length + " pages" }, [
         h("span", { text: b.title || b.id }), h("small", { text: String(locs.length) })
@@ -394,7 +402,7 @@
         S.title = b.title || "";
         titleEl.value = S.title;
         save(); draw();
-        var lost = (b.pages || []).length - locs.length;
+        var lost = real.length - locs.length;
         status("Loaded " + (b.title || b.id) + ": " + locs.length + " pages" + (lost ? " (" + lost + " not on this site)" : "") + ". Reorder freely.");
       });
       binderEl.appendChild(chip);
@@ -407,7 +415,7 @@
     var t = S.title || "Print packet";
     var slug = t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "binder";
     var y = "---\ntitle: " + JSON.stringify(t) + "\nid: binder-" + slug +
-      "\ntype: program\nstatus: unlisted\nbinder: true\nchain:\n" +
+      "\ntype: binder\nstatus: unlisted\nchain:\n" +
       S.stack.map(function (l) {
         return IDS[l] ? "  - " + IDS[l] : "  # /" + l + " has no id: give it one, then list it here";
       }).join("\n") + "\n---\n";
