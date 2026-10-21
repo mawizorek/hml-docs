@@ -220,11 +220,24 @@
     break-inside: avoid;
   }
 
-  /* A panel here is two to four bullets. Keeping one whole is cheap; if one
-   * ever grows past a page the browser ignores `avoid` on its own, which is
-   * the correct failure. */
+  /* ⚠️ RELAXED TO `auto` ON 2026-10-21. Was `avoid`, with a note: "A panel
+   * here is two to four bullets. Keeping one whole is cheap; if one ever grows
+   * past a page the browser ignores `avoid` on its own, which is the correct
+   * failure."
+   *
+   * 🔴 THE ASSUMPTION WAS WRONG AT EIGHT ITEMS. The PSM designations panel on
+   * policy-todd-access carries 8 checklist items. Combined with the label's
+   * `break-after: avoid`, Chrome treated the label + its 8-item panel as one
+   * atomic block. When that block did not fit in the remaining page space,
+   * Chrome pushed everything to the next page, leaving a half-page gap after
+   * the Designations paragraph.
+   *
+   * `auto` lets Chrome split a panel that genuinely needs it. Short panels
+   * (2-4 items) still will not split in practice because they fit on any page;
+   * the label's `break-after: avoid` still keeps a label glued to the first
+   * line of its panel, which is the protection that actually matters. */
   .md-typeset .tabbed-block {
-    break-inside: avoid;
+    break-inside: auto;
   }
 
   /* -------------------------------------------------------------------------
